@@ -12,7 +12,7 @@
 >
 
 <!-- Реален barcode scanner -->
-<script src="https://unpkg.com/html5-qrcode" defer></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8" defer crossorigin="anonymous"></script>
 
 <style>
 
@@ -1944,6 +1944,114 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 .result-action-grid{display:grid;gap:10px;margin-top:16px;}
 
 </style>
+
+<style id="mobile-nav-beauty">
+@media (max-width: 720px){
+  .mobile-bottom-nav,
+  nav.mobile-bottom-nav,
+  .bottom-nav,
+  #mobileNav{
+    position:fixed !important;
+    left:12px !important;
+    right:12px !important;
+    bottom:12px !important;
+    width:auto !important;
+    max-width:none !important;
+    height:72px !<nav class="nav-links">
+
+    <a href="#kak-raboti">
+      Как работи
+    </a>
+
+    <a href="#zashto">
+      Защо е важно
+    </a>
+
+    <a href="#proverka">
+      Какво проверяваме
+    </a>
+
+    <a href="#vuprosi">
+      Въпроси
+    </a>
+
+  </nav>0,.94) !important;
+    border:1px solid rgba(255,255,255,.12) !important;
+    box-shadow:0 14px 40px rgba(0,0,0,.32),0 2px 10px rgba(0,0,0,.18) !important;
+    backdrop-filter:blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter:blur(18px) saturate(140%) !important;
+    z-index:99999 !important;
+  }
+
+  .mobile-bottom-nav button,
+  nav.mobile-bottom-nav button,
+  .bottom-nav button,
+  #mobileNav button{
+    min-width:0 !important;
+    min-height:58px !important;
+    padding:5px 3px !important;
+    border:0 !important;
+    border-radius:18px !important;
+    background:transparent !important;
+    color:rgba(255,255,255,.70) !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:3px !important;
+    font-size:10px !important;
+    font-weight:700 !important;
+    letter-spacing:.1px !important;
+    transition:transform .18s ease,background .18s ease,color .18s ease !important;
+    -webkit-tap-highlight-color:transparent !important;
+  }
+
+  .mobile-bottom-nav button:active,
+  nav.mobile-bottom-nav button:active,
+  .bottom-nav button:active,
+  #mobileNav button:active{
+    transform:scale(.94) !important;
+  }
+
+  .mobile-bottom-nav button .nav-icon,
+  nav.mobile-bottom-nav button .nav-icon,
+  .bottom-nav button .nav-icon,
+  #mobileNav button .nav-icon{
+    width:31px !important;
+    height:31px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:11px !important;
+    background:rgba(255,255,255,.07) !important;
+    font-size:17px !important;
+    line-height:1 !important;
+  }
+
+  /* Make Плати visually prominent without making it aggressive. */
+  .mobile-bottom-nav button:last-child,
+  nav.mobile-bottom-nav button:last-child,
+  .bottom-nav button:last-child,
+  #mobileNav button:last-child{
+    color:#fff !important;
+    background:linear-gradient(145deg,rgba(255,184,77,.22),rgba(255,130,55,.12)) !important;
+    box-shadow:inset 0 0 0 1px rgba(255,190,90,.18) !important;
+  }
+
+  .mobile-bottom-nav button:last-child .nav-icon,
+  nav.mobile-bottom-nav button:last-child .nav-icon,
+  .bottom-nav button:last-child .nav-icon,
+  #mobileNav button:last-child .nav-icon{
+    background:rgba(255,180,70,.18) !important;
+  }
+
+  /* Give the page breathing room above the floating nav. */
+  body{
+    padding-bottom:98px !important;
+  }
+}
+</style>
+
 </head>
 
 <body>
@@ -3364,57 +3472,158 @@ async function openScanner(){
 async function startCamera(){
   if(scannerRunning) return;
 
-  const error = document.getElementById("cameraError");
-  error.classList.remove("active");
-  error.textContent = "";
+  const errorBox = document.getElementById("cameraError");
+  errorBox.classList.remove("active");
+  errorBox.textContent = "";
 
+  /*
+   * Камерата на телефона работи само в secure context.
+   * Това означава HTTPS (или localhost при разработка).
+   */
   if(!window.isSecureContext){
     showCameraError(
-      "Камерата изисква HTTPS. Отвори сайта през защитен HTTPS адрес."
+      "Камерата изисква HTTPS. Отвори сайта през https:// адрес, а не през http:// или file://."
     );
     return;
   }
 
-  if(!navigator.mediaDevices?.getUserMedia){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     showCameraError(
-      "Този браузър не позволява достъп до камерата."
+      "Този браузър не предоставя достъп до камерата. Използвай актуален Chrome, Safari или Edge."
     );
     return;
   }
 
   if(typeof Html5Qrcode === "undefined"){
     showCameraError(
-      "Скенерът още се зарежда. Изчакай секунда и опитай отново."
+      "Скенерът още не е зареден. Провери интернет връзката и опитай отново."
     );
     return;
   }
 
   try{
+    /*
+     * Първо искаме реално разрешение за камерата.
+     * Това е по-надеждно на мобилни браузъри от директен
+     * start({facingMode:{ideal:"environment"}}).
+     */
+    let permissionStream = null;
+
+    try{
+      permissionStream = await navigator.mediaDevices.getUserMedia({
+        video:{
+          facingMode:{ideal:"environment"}
+        },
+        audio:false
+      });
+    }catch(permissionError){
+      console.error("getUserMedia permission error:", permissionError);
+      throw permissionError;
+    }
+
+    /*
+     * След като разрешението е дадено, освобождаваме
+     * тестовия stream. Html5-qrcode ще отвори камерата отново.
+     */
+    permissionStream.getTracks().forEach(track => track.stop());
+
+    await new Promise(resolve => setTimeout(resolve,250));
+
+    /*
+     * Извличаме камерите. На някои телефони първият
+     * start с facingMode не избира правилно задната камера.
+     * Ако имаме deviceId, използваме конкретната камера.
+     */
+    let cameras = [];
+
+    try{
+      cameras = await Html5Qrcode.getCameras();
+    }catch(cameraListError){
+      console.warn("Не успяхме да получим списък с камерите:",cameraListError);
+    }
+
     document.getElementById("reader").innerHTML = "";
 
     scanner = new Html5Qrcode("reader");
 
-    const formats = [
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.UPC_E
-    ];
+    /*
+     * Не използваме experimentalFeatures — не са необходими
+     * за EAN сканирането и могат да създадат несъвместимост
+     * с различни мобилни браузъри.
+     */
+    const formats = [];
 
-    await scanner.start(
-      {facingMode:{ideal:"environment"}},
-      {
-        fps:12,
-        qrbox:{width:280,height:150},
-        aspectRatio:1.7777778,
-        formatsToSupport:formats,
-        experimentalFeatures:{useBarCodeDetectorIfSupported:true}
-      },
-      onBarcodeDetected,
-      () => {}
-    );
+    if(window.Html5QrcodeSupportedFormats){
+      const F = window.Html5QrcodeSupportedFormats;
+
+      if(F.EAN_13 !== undefined) formats.push(F.EAN_13);
+      if(F.EAN_8 !== undefined) formats.push(F.EAN_8);
+      if(F.UPC_A !== undefined) formats.push(F.UPC_A);
+      if(F.UPC_E !== undefined) formats.push(F.UPC_E);
+    }
+
+    const config = {
+      fps:12,
+      qrbox:{width:280,height:150},
+      aspectRatio:1.7777778
+    };
+
+    if(formats.length){
+      config.formatsToSupport = formats;
+    }
+
+    /*
+     * Избираме за предпочитане камера, чието име подсказва
+     * rear/back/environment. Ако браузърът не дава имена,
+     * използваме последната камера като fallback.
+     */
+    let cameraConfig = {
+      facingMode:"environment"
+    };
+
+    if(cameras.length){
+      const rearCamera =
+        cameras.find(c => /back|rear|environment|задн|основ/i.test(c.label)) ||
+        cameras[cameras.length - 1];
+
+      cameraConfig = {
+        deviceId:{
+          exact:rearCamera.id
+        }
+      };
+    }
+
+    try{
+      await scanner.start(
+        cameraConfig,
+        config,
+        onBarcodeDetected,
+        () => {}
+      );
+    }catch(firstStartError){
+      /*
+       * Fallback: ако конкретният deviceId не работи,
+       * пробваме директно environment camera.
+       */
+      console.warn("Първият camera start не успя:",firstStartError);
+
+      try{
+        await scanner.clear();
+      }catch(_){}
+
+      document.getElementById("reader").innerHTML = "";
+      scanner = new Html5Qrcode("reader");
+
+      await scanner.start(
+        {facingMode:"environment"},
+        config,
+        onBarcodeDetected,
+        () => {}
+      );
+    }
 
     scannerRunning = true;
+
   }catch(error){
     console.error("Camera start error:",error);
     showCameraError(getCameraErrorMessage(error));
@@ -3440,7 +3649,7 @@ async function stopScanner(){
   }
 
   try{
-    if(scannerRunning) await scanner.stop();
+    await scanner.stop();
   }catch(error){
     console.warn("Scanner stop:",error);
   }
@@ -3884,7 +4093,7 @@ initializeQuota();
 <nav class="app-bottom-nav" aria-label="Основна навигация">
   <button class="active" onclick="scrollToTop()"><span class="nav-icon">⌂</span>Начало</button>
   <button onclick="openScanner()"><span class="nav-icon">▣</span>Сканирай</button>
-  <button onclick="document.getElementById('proverka').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">✓</span>Проверки</button>
+  <button onclick="startPayment()"><span class="nav-icon">€</span>Плати</button>
   <button onclick="document.getElementById('vuprosi').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">?</span>Помощ</button>
 </nav>
 
