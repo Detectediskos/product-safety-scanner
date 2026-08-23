@@ -1489,6 +1489,165 @@ footer{
 }
 
 /* =====================================================
+   CUSTOM STATUS MODAL
+===================================================== */
+
+.status-modal{
+  position:fixed;
+  inset:0;
+  z-index:1250;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(8,15,11,.72);
+  backdrop-filter:blur(14px);
+}
+
+.status-modal.active{
+  display:flex;
+}
+
+.status-card{
+  position:relative;
+  width:min(460px,100%);
+  padding:34px 28px 28px;
+  background:#fff;
+  color:var(--ink);
+  border:1px solid rgba(220,229,222,.95);
+  border-radius:30px;
+  text-align:center;
+  box-shadow:0 30px 100px rgba(0,0,0,.28);
+  animation:statusIn .22s ease-out;
+}
+
+@keyframes statusIn{
+  from{
+    opacity:0;
+    transform:translateY(10px) scale(.98);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+.status-close{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:38px;
+  height:38px;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:#f5f8f6;
+  color:#526058;
+  font-size:22px;
+  line-height:1;
+}
+
+.status-icon{
+  width:72px;
+  height:72px;
+  margin:2px auto 16px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--green-light);
+  color:var(--green);
+  font-size:32px;
+  font-weight:900;
+}
+
+.status-icon.warning{
+  background:var(--orange-light);
+  color:var(--orange);
+}
+
+.status-icon.error{
+  background:var(--red-light);
+  color:var(--red);
+}
+
+.status-kicker{
+  color:var(--green);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+
+.status-kicker.warning{
+  color:var(--orange);
+}
+
+.status-kicker.error{
+  color:var(--red);
+}
+
+.status-card h3{
+  margin-top:9px;
+  font-size:28px;
+  line-height:1.1;
+  letter-spacing:-.04em;
+}
+
+.status-card p{
+  margin:10px auto 0;
+  max-width:370px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.7;
+}
+
+.status-detail{
+  margin:20px 0 0;
+  padding:13px 15px;
+  border-radius:15px;
+  background:#f3f7f4;
+  color:#34443b;
+  font-size:13px;
+  font-weight:750;
+}
+
+.status-actions{
+  display:grid;
+  gap:10px;
+  margin-top:20px;
+}
+
+.status-primary{
+  border:none;
+  padding:15px 18px;
+  border-radius:13px;
+  background:var(--green);
+  color:white;
+  font-weight:850;
+  box-shadow:0 10px 25px rgba(23,122,77,.18);
+}
+
+.status-secondary{
+  border:1px solid var(--line);
+  padding:14px 18px;
+  border-radius:13px;
+  background:white;
+  color:var(--ink);
+  font-weight:750;
+}
+
+@media(max-width:470px){
+  .status-modal{
+    padding:12px;
+  }
+
+  .status-card{
+    border-radius:25px;
+    padding:30px 20px 22px;
+  }
+}
+
+
+/* =====================================================
    LOADING OVERLAY
 ===================================================== */
 
@@ -2851,6 +3010,47 @@ a:focus-visible{
 
 
 <!-- =====================================================
+     CUSTOM STATUS MODAL
+===================================================== -->
+
+<div class="status-modal" id="statusModal" aria-hidden="true">
+
+  <div class="status-card" role="dialog" aria-modal="true" aria-labelledby="statusTitle">
+
+    <button
+      class="status-close"
+      onclick="closeStatusModal()"
+      aria-label="Затвори"
+    >×</button>
+
+    <div class="status-icon" id="statusIcon">✓</div>
+
+    <div class="status-kicker" id="statusKicker">
+      ПРОВЕРКА
+    </div>
+
+    <h3 id="statusTitle">
+      Готово
+    </h3>
+
+    <p id="statusMessage">
+      Операцията е завършена.
+    </p>
+
+    <div class="status-detail" id="statusDetail"></div>
+
+    <div class="status-actions" id="statusActions">
+      <button class="status-primary" onclick="closeStatusModal()">
+        Продължи
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
      LOADING
 ===================================================== -->
 
@@ -3429,11 +3629,20 @@ async function continueWithProduct(){
 
       hideLoading();
 
-      alert(
-        access.free_scans_remaining === 0
-          ? "Безплатната проверка е използвана. Следващият анализ ще бъде платен."
-          : "Безплатната проверка е активирана. Следващият етап е свързването с анализа на продукта."
-      );
+      showStatusModal({
+        type: "success",
+        kicker: "БЕЗПЛАТНА ПРОВЕРКА",
+        icon: "✓",
+        title: "Проверката е активирана",
+        message:
+          "Вашето безплатно сканиране е отчетено успешно. Баркодът е получен. Сега следва връзката с анализа на конкретния продукт.",
+        detail:
+          access.free_scans_remaining === 1
+            ? "Оставa 1 безплатна проверка на това устройство."
+            : "Това беше последната безплатна проверка на това устройство.",
+        primaryText: "Продължи",
+        primaryAction: "closeStatusModal()"
+      });
 
       return;
 
@@ -3545,9 +3754,18 @@ function startPaymentForProduct(){
     НЕ поставяме PayPal Secret в HTML.
   */
 
-  alert(
-    "PayPal е следващата връзка. Плащането ще бъде стартирано през защитената Supabase Edge Function."
-  );
+  showStatusModal({
+    type: "warning",
+    kicker: "СИГУРНО ПЛАЩАНЕ",
+    icon: "€",
+    title: "Плащането ще бъде стартирано",
+    message:
+      "Следващата стъпка е защитеното плащане с PayPal. PayPal Secret не се съхранява в този сайт.",
+    detail:
+      "Цена на подробния анализ: €0.99",
+    primaryText: "Затвори",
+    primaryAction: "closeStatusModal()"
+  });
 
 }
 
@@ -3570,6 +3788,94 @@ function startPayment(){
     .scrollIntoView({
       behavior:"smooth"
     });
+
+}
+
+
+/* =====================================================
+   CUSTOM STATUS MODAL
+===================================================== */
+
+function showStatusModal({
+  type = "success",
+  kicker = "ПРОВЕРКА",
+  icon = "✓",
+  title = "Готово",
+  message = "",
+  detail = "",
+  primaryText = "Продължи",
+  primaryAction = "closeStatusModal()"
+} = {}){
+
+  const modal =
+    document.getElementById("statusModal");
+
+  const iconEl =
+    document.getElementById("statusIcon");
+
+  const kickerEl =
+    document.getElementById("statusKicker");
+
+  const titleEl =
+    document.getElementById("statusTitle");
+
+  const messageEl =
+    document.getElementById("statusMessage");
+
+  const detailEl =
+    document.getElementById("statusDetail");
+
+  const actionsEl =
+    document.getElementById("statusActions");
+
+  iconEl.className = "status-icon";
+  kickerEl.className = "status-kicker";
+
+  if(type === "warning"){
+    iconEl.classList.add("warning");
+    kickerEl.classList.add("warning");
+  }
+
+  if(type === "error"){
+    iconEl.classList.add("error");
+    kickerEl.classList.add("error");
+  }
+
+  iconEl.textContent = icon;
+  kickerEl.textContent = kicker;
+  titleEl.textContent = title;
+  messageEl.textContent = message;
+
+  if(detail){
+    detailEl.textContent = detail;
+    detailEl.style.display = "block";
+  }else{
+    detailEl.textContent = "";
+    detailEl.style.display = "none";
+  }
+
+  actionsEl.innerHTML = `
+    <button
+      class="status-primary"
+      onclick="${primaryAction}"
+    >
+      ${escapeHtml(primaryText)}
+    </button>
+  `;
+
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+
+}
+
+
+function closeStatusModal(){
+
+  const modal =
+    document.getElementById("statusModal");
+
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden", "true");
 
 }
 
@@ -3784,10 +4090,28 @@ document.addEventListener(
 
       closeSuccessModal();
 
+      closeStatusModal();
+
     }
 
   }
 );
+
+
+/* =====================================================
+   CLICK OUTSIDE STATUS MODAL
+===================================================== */
+
+document
+  .getElementById("statusModal")
+  .addEventListener(
+    "click",
+    event => {
+      if(event.target.id === "statusModal"){
+        closeStatusModal();
+      }
+    }
+  );
 
 
 /* =====================================================
