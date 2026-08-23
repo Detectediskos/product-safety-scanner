@@ -4,32 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Провери продукта — Контрол на безопасността</title>
+<title>Провери продукта</title>
 
 <meta
   name="description"
-  content="Сканирай продукта и получи разбираема информация за състава, добавките и приложимите регулаторни ограничения."
+  content="Сканирай продукта и разбери повече за неговия състав и приложимите регулаторни ограничения."
 >
 
+<!-- Реален barcode scanner -->
+<script src="https://unpkg.com/html5-qrcode" defer></script>
+
 <style>
+
 :root{
   --bg:#f4f7f3;
   --white:#ffffff;
   --ink:#17201b;
-  --muted:#69756d;
+  --muted:#68756d;
   --line:#dce5de;
 
   --green:#177a4d;
   --green-dark:#0d5b38;
   --green-light:#e4f2e9;
 
-  --orange:#c47a18;
-  --orange-light:#fff1d9;
-
   --red:#c83b3b;
   --red-light:#fde9e9;
 
-  --shadow:0 24px 70px rgba(20,40,28,.09);
+  --orange:#c47a18;
+  --orange-light:#fff1d9;
+
+  --shadow:0 24px 70px rgba(20,40,28,.10);
 
   --radius:28px;
   --max:1180px;
@@ -48,6 +52,7 @@ html{
 body{
   background:var(--bg);
   color:var(--ink);
+
   font-family:
     Inter,
     -apple-system,
@@ -56,6 +61,7 @@ body{
     Roboto,
     Arial,
     sans-serif;
+
   line-height:1.55;
 }
 
@@ -69,24 +75,56 @@ a{
   color:inherit;
 }
 
+/* =====================================================
+   GENERAL
+===================================================== */
+
 .container{
   width:min(var(--max),calc(100% - 40px));
   margin:auto;
 }
 
-/* =========================
+.btn{
+  border:none;
+  border-radius:14px;
+
+  padding:16px 24px;
+
+  font-size:14px;
+  font-weight:800;
+
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    box-shadow .2s ease;
+}
+
+.btn-primary{
+  background:var(--green);
+  color:white;
+
+  box-shadow:
+    0 12px 28px rgba(23,122,77,.20);
+}
+
+.btn-primary:hover{
+  background:var(--green-dark);
+  transform:translateY(-2px);
+}
+
+/* =====================================================
    HEADER
-========================= */
+===================================================== */
 
 header{
   position:sticky;
   top:0;
   z-index:100;
 
-  background:rgba(244,247,243,.88);
+  background:rgba(244,247,243,.90);
   backdrop-filter:blur(18px);
 
-  border-bottom:1px solid rgba(220,229,222,.7);
+  border-bottom:1px solid rgba(220,229,222,.75);
 }
 
 .nav{
@@ -104,6 +142,7 @@ header{
 
   font-size:17px;
   font-weight:800;
+
   letter-spacing:-.03em;
 }
 
@@ -119,16 +158,16 @@ header{
 
   border-radius:13px;
 
-  font-size:20px;
+  font-size:21px;
   font-weight:900;
 }
 
 .nav-links{
   display:flex;
-  align-items:center;
   gap:28px;
 
   color:#526058;
+
   font-size:14px;
   font-weight:600;
 }
@@ -137,50 +176,16 @@ header{
   color:var(--green);
 }
 
-/* =========================
-   BUTTONS
-========================= */
-
-.btn{
-  border:none;
-  border-radius:14px;
-
-  padding:15px 22px;
-
-  font-weight:750;
-  font-size:14px;
-
-  transition:.2s ease;
-}
-
-.btn-primary{
-  background:var(--green);
-  color:white;
-
-  box-shadow:
-    0 12px 25px rgba(23,122,77,.18);
-}
-
-.btn-primary:hover{
-  background:var(--green-dark);
-  transform:translateY(-2px);
-}
-
-.btn-light{
-  background:white;
-  border:1px solid var(--line);
-  color:var(--ink);
-}
-
-/* =========================
+/* =====================================================
    HERO
-========================= */
+===================================================== */
 
 .hero{
   padding:90px 0 110px;
 
   display:grid;
   grid-template-columns:1.05fr .95fr;
+
   gap:80px;
 
   align-items:center;
@@ -195,10 +200,12 @@ header{
   color:var(--green-dark);
 
   padding:8px 13px;
+
   border-radius:999px;
 
   font-size:12px;
-  font-weight:800;
+  font-weight:850;
+
   letter-spacing:.07em;
   text-transform:uppercase;
 }
@@ -206,15 +213,16 @@ header{
 .badge-dot{
   width:7px;
   height:7px;
+
   border-radius:50%;
+
   background:var(--green);
 }
 
 .hero h1{
   margin-top:24px;
 
-  font-size:
-    clamp(44px,6vw,78px);
+  font-size:clamp(44px,6vw,78px);
 
   line-height:.98;
 
@@ -233,28 +241,25 @@ header{
   color:var(--muted);
 
   font-size:18px;
+
   line-height:1.7;
 }
 
 .hero-actions{
   margin-top:34px;
-
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
 }
 
 .hero-note{
-  margin-top:17px;
+  margin-top:16px;
 
   color:#7b857e;
 
   font-size:12px;
 }
 
-/* =========================
-   SCANNER
-========================= */
+/* =====================================================
+   SCANNER VISUAL
+===================================================== */
 
 .scanner-wrap{
   display:flex;
@@ -288,6 +293,7 @@ header{
 
 .scanner-top{
   position:absolute;
+
   top:27px;
   left:28px;
   right:28px;
@@ -311,14 +317,18 @@ header{
   gap:7px;
 
   font-size:11px;
+
   color:#a7e6c4;
 }
 
 .live-dot{
   width:7px;
   height:7px;
+
   border-radius:50%;
+
   background:#67d99f;
+
   box-shadow:0 0 14px #67d99f;
 }
 
@@ -340,6 +350,7 @@ header{
 
 .corner{
   position:absolute;
+
   width:38px;
   height:38px;
 
@@ -350,28 +361,36 @@ header{
 .corner.tl{
   top:-2px;
   left:-2px;
+
   border-width:3px 0 0 3px;
+
   border-radius:20px 0 0 0;
 }
 
 .corner.tr{
   top:-2px;
   right:-2px;
+
   border-width:3px 3px 0 0;
+
   border-radius:0 20px 0 0;
 }
 
 .corner.bl{
   bottom:-2px;
   left:-2px;
+
   border-width:0 0 3px 3px;
+
   border-radius:0 0 0 20px;
 }
 
 .corner.br{
   bottom:-2px;
   right:-2px;
+
   border-width:0 3px 3px 0;
+
   border-radius:0 0 20px 0;
 }
 
@@ -391,6 +410,7 @@ header{
 }
 
 @keyframes scan{
+
   0%,100%{
     top:18px;
     opacity:.4;
@@ -400,6 +420,7 @@ header{
     top:168px;
     opacity:1;
   }
+
 }
 
 .barcode{
@@ -425,6 +446,7 @@ header{
 
 .scanner-bottom{
   position:absolute;
+
   bottom:29px;
 
   width:100%;
@@ -436,9 +458,9 @@ header{
   font-size:12px;
 }
 
-/* =========================
-   INTRO
-========================= */
+/* =====================================================
+   SECTIONS
+===================================================== */
 
 .section{
   padding:100px 0;
@@ -450,6 +472,7 @@ header{
 
 .section-head{
   max-width:680px;
+
   margin-bottom:45px;
 }
 
@@ -460,14 +483,14 @@ header{
   font-weight:850;
 
   letter-spacing:.12em;
+
   text-transform:uppercase;
 }
 
 .section h2{
   margin-top:10px;
 
-  font-size:
-    clamp(32px,4vw,52px);
+  font-size:clamp(32px,4vw,52px);
 
   line-height:1.05;
 
@@ -482,13 +505,16 @@ header{
   font-size:17px;
 }
 
-/* =========================
-   HOW IT WORKS
-========================= */
+/* =====================================================
+   STEPS
+===================================================== */
 
 .steps{
   display:grid;
-  grid-template-columns:repeat(6,1fr);
+
+  grid-template-columns:
+    repeat(6,1fr);
+
   gap:12px;
 }
 
@@ -498,16 +524,19 @@ header{
   min-height:190px;
 
   border:1px solid var(--line);
+
   border-radius:22px;
 
-  background:var(--white);
+  background:white;
 
   transition:.2s ease;
 }
 
 .step:hover{
   transform:translateY(-4px);
-  box-shadow:0 15px 35px rgba(20,40,28,.06);
+
+  box-shadow:
+    0 15px 35px rgba(20,40,28,.06);
 }
 
 .step-number{
@@ -549,13 +578,15 @@ header{
   font-size:13px;
 }
 
-/* =========================
-   WHY IMPORTANT
-========================= */
+/* =====================================================
+   WHY
+===================================================== */
 
 .why{
   display:grid;
+
   grid-template-columns:.9fr 1.1fr;
+
   gap:80px;
 
   align-items:center;
@@ -592,6 +623,7 @@ header{
   content:"";
 
   position:absolute;
+
   inset:25px;
 
   border:1px solid rgba(23,122,77,.18);
@@ -629,6 +661,7 @@ header{
   color:var(--muted);
 
   font-size:16px;
+
   line-height:1.8;
 }
 
@@ -640,11 +673,13 @@ header{
   margin-top:28px;
 
   display:grid;
+
   gap:13px;
 }
 
 .info-item{
   display:flex;
+
   gap:12px;
 
   align-items:flex-start;
@@ -662,19 +697,23 @@ header{
   border-radius:50%;
 
   background:var(--green-light);
+
   color:var(--green);
 
   font-size:12px;
   font-weight:900;
 }
 
-/* =========================
-   WHAT WE CHECK
-========================= */
+/* =====================================================
+   CHECK GRID
+===================================================== */
 
 .check-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+
+  grid-template-columns:
+    repeat(3,1fr);
+
   gap:16px;
 }
 
@@ -684,17 +723,21 @@ header{
   background:#f8faf8;
 
   border:1px solid var(--line);
+
   border-radius:24px;
 }
 
 .check-number{
   font-size:12px;
+
   color:var(--green);
+
   font-weight:850;
 }
 
 .check-card h3{
   margin-top:20px;
+
   font-size:20px;
 }
 
@@ -704,12 +747,13 @@ header{
   color:var(--muted);
 
   font-size:14px;
+
   line-height:1.7;
 }
 
-/* =========================
+/* =====================================================
    PAYMENT
-========================= */
+===================================================== */
 
 .payment{
   padding:90px 0;
@@ -727,10 +771,10 @@ header{
 
   border-radius:32px;
 
-  padding:
-    clamp(30px,6vw,65px);
+  padding:clamp(30px,6vw,65px);
 
   display:grid;
+
   grid-template-columns:1fr auto;
 
   gap:50px;
@@ -747,8 +791,7 @@ header{
 .payment-box h2{
   margin-top:10px;
 
-  font-size:
-    clamp(32px,4vw,52px);
+  font-size:clamp(32px,4vw,52px);
 
   line-height:1.05;
 
@@ -779,6 +822,7 @@ header{
 
 .price span{
   color:#b9d9c8;
+
   font-size:13px;
 }
 
@@ -792,6 +836,7 @@ header{
   padding:14px 20px;
 
   border:none;
+
   border-radius:12px;
 
   background:#ffc439;
@@ -801,12 +846,13 @@ header{
   font-weight:850;
 }
 
-/* =========================
+/* =====================================================
    RESULT
-========================= */
+===================================================== */
 
 .result-demo{
   max-width:800px;
+
   margin:auto;
 
   background:white;
@@ -832,6 +878,7 @@ header{
   display:inline-flex;
 
   background:var(--red);
+
   color:white;
 
   padding:8px 12px;
@@ -839,6 +886,7 @@ header{
   border-radius:999px;
 
   font-size:11px;
+
   font-weight:850;
 }
 
@@ -858,7 +906,10 @@ header{
 
 .result-data{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+
+  grid-template-columns:
+    repeat(3,1fr);
+
   gap:1px;
 
   background:var(--line);
@@ -886,12 +937,13 @@ header{
   font-size:21px;
 }
 
-/* =========================
+/* =====================================================
    FAQ
-========================= */
+===================================================== */
 
 .faq{
   max-width:850px;
+
   margin:auto;
 }
 
@@ -907,6 +959,7 @@ summary{
   padding:23px 0;
 
   font-weight:750;
+
   font-size:16px;
 }
 
@@ -921,12 +974,13 @@ details p{
   color:var(--muted);
 
   font-size:14px;
+
   line-height:1.7;
 }
 
-/* =========================
-   FINAL CTA
-========================= */
+/* =====================================================
+   FINAL
+===================================================== */
 
 .final{
   padding:100px 0 120px;
@@ -939,8 +993,7 @@ details p{
 
   margin:auto;
 
-  font-size:
-    clamp(35px,5vw,60px);
+  font-size:clamp(35px,5vw,60px);
 
   line-height:1;
 
@@ -955,12 +1008,13 @@ details p{
   color:var(--muted);
 }
 
-/* =========================
+/* =====================================================
    FOOTER
-========================= */
+===================================================== */
 
 footer{
   background:#111a15;
+
   color:#aebbb3;
 
   padding:40px 0;
@@ -970,6 +1024,7 @@ footer{
   display:flex;
 
   justify-content:space-between;
+
   gap:25px;
 
   font-size:12px;
@@ -979,14 +1034,489 @@ footer{
   color:white;
 }
 
-/* =========================
+/* =====================================================
+   CAMERA MODAL
+===================================================== */
+
+.camera-modal{
+  position:fixed;
+
+  inset:0;
+
+  z-index:1000;
+
+  display:none;
+
+  background:
+    rgba(7,13,10,.78);
+
+  backdrop-filter:blur(14px);
+
+  padding:20px;
+
+  overflow:auto;
+}
+
+.camera-modal.active{
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+}
+
+.camera-panel{
+  width:min(560px,100%);
+
+  background:#101713;
+
+  color:white;
+
+  border-radius:30px;
+
+  overflow:hidden;
+
+  box-shadow:
+    0 35px 100px rgba(0,0,0,.35);
+}
+
+.camera-header{
+  padding:22px 22px 18px;
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+}
+
+.camera-title{
+  font-size:19px;
+
+  font-weight:800;
+
+  letter-spacing:-.03em;
+}
+
+.camera-subtitle{
+  margin-top:3px;
+
+  color:#9eaba4;
+
+  font-size:12px;
+}
+
+.close-camera{
+  width:40px;
+  height:40px;
+
+  border:none;
+
+  border-radius:50%;
+
+  background:#243029;
+
+  color:white;
+
+  font-size:22px;
+}
+
+.camera-area{
+  position:relative;
+
+  margin:0 16px;
+
+  min-height:360px;
+
+  border-radius:22px;
+
+  overflow:hidden;
+
+  background:#050806;
+}
+
+/*
+  html5-qrcode поставя видеото вътре
+  в този контейнер.
+*/
+
+#reader{
+  width:100%;
+}
+
+#reader video{
+  width:100% !important;
+
+  min-height:360px;
+
+  object-fit:cover;
+
+  border-radius:22px;
+}
+
+#reader img{
+  display:none !important;
+}
+
+/* Нашата рамка върху камерата */
+
+.camera-frame{
+  position:absolute;
+
+  width:76%;
+  height:150px;
+
+  left:12%;
+  top:50%;
+
+  transform:translateY(-50%);
+
+  border:2px solid rgba(255,255,255,.9);
+
+  border-radius:22px;
+
+  pointer-events:none;
+
+  z-index:5;
+}
+
+.camera-frame::before,
+.camera-frame::after{
+  content:"";
+
+  position:absolute;
+
+  width:35px;
+  height:35px;
+
+  border-color:#68dca1;
+
+  border-style:solid;
+}
+
+.camera-frame::before{
+  left:-2px;
+  top:-2px;
+
+  border-width:4px 0 0 4px;
+
+  border-radius:20px 0 0 0;
+}
+
+.camera-frame::after{
+  right:-2px;
+  bottom:-2px;
+
+  border-width:0 4px 4px 0;
+
+  border-radius:0 0 20px 0;
+}
+
+.camera-line{
+  position:absolute;
+
+  left:15px;
+  right:15px;
+
+  top:50%;
+
+  height:2px;
+
+  background:#68dca1;
+
+  box-shadow:
+    0 0 18px #68dca1;
+
+  animation:cameraScan 2.2s ease-in-out infinite;
+}
+
+@keyframes cameraScan{
+
+  0%,100%{
+    transform:translateY(-58px);
+    opacity:.45;
+  }
+
+  50%{
+    transform:translateY(58px);
+    opacity:1;
+  }
+
+}
+
+.camera-instruction{
+  padding:18px 22px 10px;
+
+  text-align:center;
+
+  font-size:14px;
+
+  color:#d9e4dd;
+}
+
+.camera-help{
+  padding:0 22px 22px;
+
+  text-align:center;
+
+  color:#8f9e95;
+
+  font-size:12px;
+}
+
+.camera-error{
+  display:none;
+
+  margin:0 20px 20px;
+
+  padding:16px;
+
+  border-radius:15px;
+
+  background:#3a1c1c;
+
+  border:1px solid #633333;
+
+  color:#ffd4d4;
+
+  font-size:13px;
+
+  line-height:1.5;
+}
+
+.camera-error.active{
+  display:block;
+}
+
+.camera-footer{
+  display:flex;
+
+  justify-content:center;
+
+  padding:0 20px 22px;
+}
+
+.camera-close-button{
+  border:1px solid #34423a;
+
+  background:#202b25;
+
+  color:white;
+
+  padding:13px 22px;
+
+  border-radius:13px;
+
+  font-weight:700;
+}
+
+/* =====================================================
+   SCAN SUCCESS MODAL
+===================================================== */
+
+.success-modal{
+  position:fixed;
+
+  inset:0;
+
+  z-index:1100;
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  background:rgba(8,15,11,.70);
+
+  backdrop-filter:blur(12px);
+}
+
+.success-modal.active{
+  display:flex;
+}
+
+.success-card{
+  width:min(440px,100%);
+
+  padding:35px 28px;
+
+  background:white;
+
+  border-radius:28px;
+
+  text-align:center;
+
+  box-shadow:var(--shadow);
+}
+
+.success-icon{
+  width:72px;
+  height:72px;
+
+  margin:auto;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:50%;
+
+  background:var(--green-light);
+
+  color:var(--green);
+
+  font-size:34px;
+
+  font-weight:900;
+}
+
+.success-card h3{
+  margin-top:20px;
+
+  font-size:27px;
+
+  letter-spacing:-.04em;
+}
+
+.success-card p{
+  margin-top:8px;
+
+  color:var(--muted);
+
+  font-size:14px;
+}
+
+.detected-code{
+  margin:22px 0;
+
+  padding:15px;
+
+  border-radius:14px;
+
+  background:#f2f6f3;
+
+  font-size:22px;
+
+  font-weight:800;
+
+  letter-spacing:.08em;
+}
+
+.success-actions{
+  display:grid;
+
+  gap:10px;
+}
+
+.success-primary{
+  border:none;
+
+  padding:15px;
+
+  border-radius:13px;
+
+  background:var(--green);
+
+  color:white;
+
+  font-weight:800;
+}
+
+.success-secondary{
+  border:1px solid var(--line);
+
+  padding:14px;
+
+  border-radius:13px;
+
+  background:white;
+
+  font-weight:700;
+}
+
+/* =====================================================
+   LOADING OVERLAY
+===================================================== */
+
+.loading{
+  position:fixed;
+
+  inset:0;
+
+  z-index:1200;
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(8,15,11,.70);
+
+  backdrop-filter:blur(10px);
+}
+
+.loading.active{
+  display:flex;
+}
+
+.loading-card{
+  width:min(360px,calc(100% - 40px));
+
+  padding:32px;
+
+  background:white;
+
+  border-radius:25px;
+
+  text-align:center;
+
+  box-shadow:var(--shadow);
+}
+
+.spinner{
+  width:45px;
+  height:45px;
+
+  margin:auto;
+
+  border:4px solid #dce9e1;
+
+  border-top-color:var(--green);
+
+  border-radius:50%;
+
+  animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+.loading-card h3{
+  margin-top:18px;
+
+  font-size:20px;
+}
+
+.loading-card p{
+  margin-top:6px;
+
+  color:var(--muted);
+
+  font-size:13px;
+}
+
+/* =====================================================
    RESPONSIVE
-========================= */
+===================================================== */
 
 @media(max-width:1050px){
 
   .hero{
     grid-template-columns:1fr;
+
     gap:50px;
   }
 
@@ -1000,6 +1530,7 @@ footer{
 
   .why{
     grid-template-columns:1fr;
+
     gap:40px;
   }
 
@@ -1033,6 +1564,7 @@ footer{
 
   .hero-actions{
     display:grid;
+
     grid-template-columns:1fr;
   }
 
@@ -1058,6 +1590,7 @@ footer{
 
   .payment-box{
     grid-template-columns:1fr;
+
     text-align:center;
   }
 
@@ -1109,161 +1642,205 @@ footer{
     height:280px;
   }
 
+  .camera-modal{
+    padding:8px;
+  }
+
+  .camera-panel{
+    border-radius:22px;
+  }
+
+  .camera-area{
+    margin:0 8px;
+
+    min-height:330px;
+  }
+
+  #reader video{
+    min-height:330px;
+  }
+
 }
+
+/* =====================================================
+   ACCESSIBILITY
+===================================================== */
+
+button:focus-visible,
+a:focus-visible{
+  outline:3px solid rgba(23,122,77,.35);
+
+  outline-offset:3px;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- ================================================
+<!-- =====================================================
      HEADER
-================================================ -->
+===================================================== -->
 
 <header>
 
-  <div class="container nav">
+<div class="container nav">
 
-    <a href="#" class="logo">
+  <a href="#" class="logo">
 
-      <span class="logo-icon">✓</span>
+    <span class="logo-icon">
+      ✓
+    </span>
 
-      <span>
-        Провери продукта
-      </span>
+    <span>
+      Провери продукта
+    </span>
 
+  </a>
+
+  <nav class="nav-links">
+
+    <a href="#kak-raboti">
+      Как работи
     </a>
 
-    <nav class="nav-links">
+    <a href="#zashto">
+      Защо е важно
+    </a>
 
-      <a href="#kak-raboti">
-        Как работи
-      </a>
+    <a href="#proverka">
+      Какво проверяваме
+    </a>
 
-      <a href="#zashto">
-        Защо е важно
-      </a>
+    <a href="#vuprosi">
+      Въпроси
+    </a>
 
-      <a href="#proverka">
-        Какво проверяваме
-      </a>
+  </nav>
 
-      <a href="#vuprosi">
-        Въпроси
-      </a>
-
-    </nav>
-
-  </div>
+</div>
 
 </header>
 
 
-<!-- ================================================
-     HERO
-================================================ -->
+<!-- =====================================================
+     MAIN
+===================================================== -->
 
 <main>
 
+
+<!-- =====================================================
+     HERO
+===================================================== -->
+
 <section class="container hero">
 
-  <div>
+<div>
 
-    <div class="badge">
+  <div class="badge">
 
-      <span class="badge-dot"></span>
+    <span class="badge-dot"></span>
 
-      Контрол на продукта
-
-    </div>
-
-    <h1>
-
-      Не купувай
-      <span>на сляпо.</span>
-
-    </h1>
-
-    <p class="hero-text">
-
-      Сканирай баркода на продукта и получи
-      разбираема информация за неговия състав,
-      откритите добавки и приложимите регулаторни
-      ограничения.
-
-    </p>
-
-    <div class="hero-actions">
-
-      <button
-        class="btn btn-primary"
-        onclick="startScan()"
-      >
-
-        СКАНИРАЙ ПРОДУКТ
-
-      </button>
-
-    </div>
-
-    <p class="hero-note">
-
-      Сканирането започва директно от камерата
-      на устройството.
-
-    </p>
+    Контрол на продукта
 
   </div>
 
 
-  <div class="scanner-wrap">
+  <h1>
 
-    <div class="scanner">
+    Не купувай
+    <span>на сляпо.</span>
 
-      <div class="scanner-top">
+  </h1>
 
-        <span class="scanner-name">
-          СКЕНЕР
-        </span>
 
-        <span class="live">
+  <p class="hero-text">
 
-          <span class="live-dot"></span>
+    Сканирай баркода на продукта и получи
+    разбираема информация за неговия състав,
+    откритите добавки и приложимите
+    регулаторни ограничения.
 
-          Готов
+  </p>
 
-        </span>
 
-      </div>
+  <div class="hero-actions">
 
-      <div class="scan-area">
+    <button
+      class="btn btn-primary"
+      onclick="openScanner()"
+    >
 
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
+      СКАНИРАЙ ПРОДУКТ
 
-        <div class="scan-line"></div>
+    </button>
 
-      </div>
+  </div>
 
-      <div class="barcode"></div>
 
-      <div class="scanner-bottom">
+  <p class="hero-note">
 
-        Постави баркода в рамката
+    Камерата ще се използва само за
+    разпознаване на баркода.
 
-      </div>
+  </p>
+
+</div>
+
+
+<div class="scanner-wrap">
+
+  <div class="scanner">
+
+    <div class="scanner-top">
+
+      <span class="scanner-name">
+        СКЕНЕР
+      </span>
+
+      <span class="live">
+
+        <span class="live-dot"></span>
+
+        Готов за сканиране
+
+      </span>
+
+    </div>
+
+
+    <div class="scan-area">
+
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+
+      <div class="scan-line"></div>
+
+    </div>
+
+
+    <div class="barcode"></div>
+
+
+    <div class="scanner-bottom">
+
+      Постави баркода в рамката
 
     </div>
 
   </div>
+
+</div>
 
 </section>
 
 
-<!-- ================================================
+<!-- =====================================================
      HOW IT WORKS
-================================================ -->
+===================================================== -->
 
 <section
   class="section section-white"
@@ -1272,128 +1849,164 @@ footer{
 
 <div class="container">
 
-  <div class="section-head">
+<div class="section-head">
 
-    <div class="section-label">
-      Как работи
-    </div>
-
-    <h2>
-      От баркод до ясен резултат.
-    </h2>
-
-    <p class="section-lead">
-
-      Създадохме процеса така, че потребителят
-      да не трябва да разбира от регулации,
-      химични обозначения или сложни таблици.
-
-    </p>
-
+  <div class="section-label">
+    Как работи
   </div>
 
+  <h2>
+    От баркод до ясен резултат.
+  </h2>
 
-  <div class="steps">
+  <p class="section-lead">
 
-    <div class="step">
+    Процесът е създаден така, че да не
+    се налага да разбираш от сложни
+    регулации и технически обозначения.
 
-      <span class="step-number">01</span>
+  </p>
 
-      <div class="step-icon">⌁</div>
-
-      <h3>Сканиране</h3>
-
-      <p>
-        Насочваш камерата към баркода.
-      </p>
-
-    </div>
+</div>
 
 
-    <div class="step">
+<div class="steps">
 
-      <span class="step-number">02</span>
+<div class="step">
 
-      <div class="step-icon">✓</div>
+  <span class="step-number">
+    01
+  </span>
 
-      <h3>Разпознаване</h3>
-
-      <p>
-        Системата намира продукта.
-      </p>
-
-    </div>
-
-
-    <div class="step">
-
-      <span class="step-number">03</span>
-
-      <div class="step-icon">i</div>
-
-      <h3>Продуктова информация</h3>
-
-      <p>
-        Показваме наличните данни за продукта.
-      </p>
-
-    </div>
-
-
-    <div class="step">
-
-      <span class="step-number">04</span>
-
-      <div class="step-icon">€</div>
-
-      <h3>Анализ</h3>
-
-      <p>
-        Избираш платен подробен анализ за €0.99.
-      </p>
-
-    </div>
-
-
-    <div class="step">
-
-      <span class="step-number">05</span>
-
-      <div class="step-icon">✓</div>
-
-      <h3>Проверка</h3>
-
-      <p>
-        Съставът се сравнява с приложимите правила.
-      </p>
-
-    </div>
-
-
-    <div class="step">
-
-      <span class="step-number">06</span>
-
-      <div class="step-icon">!</div>
-
-      <h3>Резултат</h3>
-
-      <p>
-        Получаваш разбираемо обяснение.
-      </p>
-
-    </div>
-
+  <div class="step-icon">
+    ⌁
   </div>
+
+  <h3>
+    Сканиране
+  </h3>
+
+  <p>
+    Насочваш камерата към баркода.
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    02
+  </span>
+
+  <div class="step-icon">
+    ✓
+  </div>
+
+  <h3>
+    Разпознаване
+  </h3>
+
+  <p>
+    Системата разпознава продукта.
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    03
+  </span>
+
+  <div class="step-icon">
+    i
+  </div>
+
+  <h3>
+    Информация
+  </h3>
+
+  <p>
+    Показваме наличните данни.
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    04
+  </span>
+
+  <div class="step-icon">
+    €
+  </div>
+
+  <h3>
+    Анализ
+  </h3>
+
+  <p>
+    Избираш подробен анализ за €0.99.
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    05
+  </span>
+
+  <div class="step-icon">
+    ✓
+  </div>
+
+  <h3>
+    Проверка
+  </h3>
+
+  <p>
+    Данните се сравняват с правилата.
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    06
+  </span>
+
+  <div class="step-icon">
+    !
+  </div>
+
+  <h3>
+    Резултат
+  </h3>
+
+  <p>
+    Получаваш разбираемо обяснение.
+  </p>
+
+</div>
+
+</div>
 
 </div>
 
 </section>
 
 
-<!-- ================================================
-     WHY IMPORTANT
-================================================ -->
+<!-- =====================================================
+     WHY
+===================================================== -->
 
 <section
   class="section"
@@ -1402,119 +2015,131 @@ footer{
 
 <div class="container why">
 
-  <div class="why-visual">
+<div class="why-visual">
 
-    <div class="protection-card">
+  <div class="protection-card">
 
-      <div class="protection-symbol">
-        ✓
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <div>
-
-    <div class="section-head">
-
-      <div class="section-label">
-        Защо е важно
-      </div>
-
-      <h2>
-        Контролът започва преди покупката.
-      </h2>
-
-    </div>
-
-    <div class="why-text">
-
-      <p>
-
-        Всеки ден купуваме храни, напитки,
-        хранителни добавки и други продукти,
-        без винаги да имаме време да разчетем
-        сложния състав на етикета.
-
-      </p>
-
-      <p>
-
-        На етикета могат да присъстват обозначения,
-        които са трудни за разбиране — например
-        Е-номера, различни наименования на вещества,
-        концентрации и специфични условия за употреба.
-
-      </p>
-
-      <p>
-
-        Затова целта на системата е да превърне
-        сложната информация в разбираем резултат,
-        който помага на потребителя да вземе
-        информирано решение.
-
-      </p>
-
-    </div>
-
-
-    <div class="info-list">
-
-      <div class="info-item">
-
-        <span class="info-check">✓</span>
-
-        <span>
-          Проверка на съставките и откритите добавки.
-        </span>
-
-      </div>
-
-      <div class="info-item">
-
-        <span class="info-check">✓</span>
-
-        <span>
-          Сравнение с приложими регулаторни ограничения.
-        </span>
-
-      </div>
-
-      <div class="info-item">
-
-        <span class="info-check">✓</span>
-
-        <span>
-          Откриване на случаи, които изискват внимание.
-        </span>
-
-      </div>
-
-      <div class="info-item">
-
-        <span class="info-check">✓</span>
-
-        <span>
-          Ясно обяснение на резултата.
-        </span>
-
-      </div>
-
+    <div class="protection-symbol">
+      ✓
     </div>
 
   </div>
 
 </div>
 
+
+<div>
+
+<div class="section-head">
+
+  <div class="section-label">
+    Защо е важно
+  </div>
+
+  <h2>
+    Контролът започва преди покупката.
+  </h2>
+
+</div>
+
+
+<div class="why-text">
+
+<p>
+
+Всеки ден купуваме храни, напитки
+и хранителни добавки, без винаги
+да имаме време да разчетем сложната
+информация върху етикета.
+
+</p>
+
+<p>
+
+Е-номера, наименования на вещества,
+концентрации и различни условия за
+употреба често са трудни за разбиране
+от обикновения потребител.
+
+</p>
+
+<p>
+
+Целта на системата е да превърне
+сложната информация в разбираем
+резултат и да помогне за
+по-информиран избор.
+
+</p>
+
+</div>
+
+
+<div class="info-list">
+
+<div class="info-item">
+
+  <span class="info-check">
+    ✓
+  </span>
+
+  <span>
+    Проверка на съставките и добавките.
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <span class="info-check">
+    ✓
+  </span>
+
+  <span>
+    Сравнение с приложими ограничения.
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <span class="info-check">
+    ✓
+  </span>
+
+  <span>
+    Откриване на случаи, изискващи внимание.
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <span class="info-check">
+    ✓
+  </span>
+
+  <span>
+    Ясно обяснение на резултата.
+  </span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
 </section>
 
 
-<!-- ================================================
+<!-- =====================================================
      WHAT WE CHECK
-================================================ -->
+===================================================== -->
 
 <section
   class="section section-white"
@@ -1523,321 +2148,309 @@ footer{
 
 <div class="container">
 
-  <div class="section-head">
+<div class="section-head">
 
-    <div class="section-label">
-      Какво проверяваме
-    </div>
-
-    <h2>
-      Не просто четем етикета.
-    </h2>
-
-    <p class="section-lead">
-
-      Системата структурира наличната информация
-      и я поставя в контекста на приложимите правила.
-
-    </p>
-
+  <div class="section-label">
+    Какво проверяваме
   </div>
 
+  <h2>
+    Не просто четем етикета.
+  </h2>
 
-  <div class="check-grid">
+  <p class="section-lead">
 
-    <div class="check-card">
+    Системата структурира наличната
+    информация и я поставя в контекста
+    на приложимите правила.
 
-      <span class="check-number">
-        01
-      </span>
+  </p>
 
-      <h3>
-        Състав
-      </h3>
-
-      <p>
-
-        Проверяваме наличните съставки,
-        техните наименования и информацията,
-        свързана с тях.
-
-      </p>
-
-    </div>
+</div>
 
 
-    <div class="check-card">
+<div class="check-grid">
 
-      <span class="check-number">
-        02
-      </span>
+<div class="check-card">
 
-      <h3>
-        Добавки
-      </h3>
+  <span class="check-number">
+    01
+  </span>
 
-      <p>
+  <h3>
+    Състав
+  </h3>
 
-        Разпознаваме обозначени хранителни
-        добавки и свързаните с тях регулаторни
-        ограничения.
+  <p>
+    Проверяваме наличните съставки
+    и свързаната с тях информация.
+  </p>
 
-      </p>
-
-    </div>
-
-
-    <div class="check-card">
-
-      <span class="check-number">
-        03
-      </span>
-
-      <h3>
-        Количества
-      </h3>
-
-      <p>
-
-        Когато има необходимите данни,
-        проверяваме посочената концентрация
-        спрямо приложимия лимит.
-
-      </p>
-
-    </div>
+</div>
 
 
-    <div class="check-card">
+<div class="check-card">
 
-      <span class="check-number">
-        04
-      </span>
+  <span class="check-number">
+    02
+  </span>
 
-      <h3>
-        Категория
-      </h3>
+  <h3>
+    Добавки
+  </h3>
 
-      <p>
+  <p>
+    Разпознаваме хранителни добавки
+    и приложимите ограничения.
+  </p>
 
-        Регулаторната оценка зависи от вида
-        и категорията на продукта.
-
-      </p>
-
-    </div>
+</div>
 
 
-    <div class="check-card">
+<div class="check-card">
 
-      <span class="check-number">
-        05
-      </span>
+  <span class="check-number">
+    03
+  </span>
 
-      <h3>
-        Предупреждения
-      </h3>
+  <h3>
+    Количества
+  </h3>
 
-      <p>
+  <p>
+    Когато има необходимите данни,
+    проверяваме концентрацията.
+  </p>
 
-        Отбелязваме ситуации, при които са
-        необходими допълнителни данни или
-        човешка проверка.
-
-      </p>
-
-    </div>
+</div>
 
 
-    <div class="check-card">
+<div class="check-card">
 
-      <span class="check-number">
-        06
-      </span>
+  <span class="check-number">
+    04
+  </span>
 
-      <h3>
-        Краен резултат
-      </h3>
+  <h3>
+    Категория
+  </h3>
 
-      <p>
+  <p>
+    Оценката зависи от категорията
+    и предназначението на продукта.
+  </p>
 
-        Представяме резултата с ясна оценка
-        и обяснение на причината за нея.
+</div>
 
-      </p>
 
-    </div>
+<div class="check-card">
 
-  </div>
+  <span class="check-number">
+    05
+  </span>
+
+  <h3>
+    Предупреждения
+  </h3>
+
+  <p>
+    Отбелязваме ситуации, при които
+    са необходими допълнителни данни.
+  </p>
+
+</div>
+
+
+<div class="check-card">
+
+  <span class="check-number">
+    06
+  </span>
+
+  <h3>
+    Краен резултат
+  </h3>
+
+  <p>
+    Представяме резултата с ясна
+    оценка и обяснение.
+  </p>
+
+</div>
+
+</div>
 
 </div>
 
 </section>
 
 
-<!-- ================================================
+<!-- =====================================================
      PAYMENT
-================================================ -->
+===================================================== -->
 
 <section class="payment">
 
 <div class="container">
 
-  <div class="payment-box">
+<div class="payment-box">
 
-    <div>
+<div>
 
-      <div class="section-label">
-        Подробен анализ
-      </div>
-
-      <h2>
-        Провери продукта
-        преди да го избереш.
-      </h2>
-
-      <p>
-
-        След откриване на продукта можеш да
-        направиш подробен анализ на състава
-        и приложимите регулаторни ограничения.
-
-        Единичният анализ струва €0.99.
-
-      </p>
-
-    </div>
-
-
-    <div class="price">
-
-      <strong>
-        €0.99
-      </strong>
-
-      <span>
-        за един анализ
-      </span>
-
-      <button
-        class="paypal"
-        onclick="startPayment()"
-      >
-        Плати с PayPal
-      </button>
-
-    </div>
-
+  <div class="section-label">
+    Подробен анализ
   </div>
+
+  <h2>
+    Провери продукта
+    преди да го избереш.
+  </h2>
+
+  <p>
+
+    След откриване на продукта можеш
+    да направиш подробен анализ на
+    състава и приложимите регулаторни
+    ограничения.
+
+    Един анализ струва €0.99.
+
+  </p>
+
+</div>
+
+
+<div class="price">
+
+  <strong>
+    €0.99
+  </strong>
+
+  <span>
+    за един анализ
+  </span>
+
+  <button
+    class="paypal"
+    onclick="startPayment()"
+  >
+    Плати с PayPal
+  </button>
+
+</div>
+
+</div>
 
 </div>
 
 </section>
 
 
-<!-- ================================================
+<!-- =====================================================
      RESULT
-================================================ -->
+===================================================== -->
 
 <section class="section">
 
 <div class="container">
 
-  <div class="section-head">
+<div class="section-head">
 
-    <div class="section-label">
-      Примерен резултат
-    </div>
-
-    <h2>
-      Резултатът трябва да бъде разбираем.
-    </h2>
-
-    <p class="section-lead">
-
-      Вместо сложна таблица получаваш информация
-      за това какво е установено и защо е важно.
-
-    </p>
-
+  <div class="section-label">
+    Резултат
   </div>
 
+  <h2>
+    Резултатът трябва да бъде разбираем.
+  </h2>
 
-  <div class="result-demo">
+  <p class="section-lead">
 
-    <div class="result-header">
+    Вместо сложна таблица получаваш
+    информация за това какво е установено
+    и защо е важно.
 
-      <span class="result-badge">
-        ЛИМИТЪТ Е ПРЕВИШЕН
-      </span>
+  </p>
 
-      <h3>
-        Установено е превишаване
-      </h3>
-
-      <p>
-
-        При проверката е установена хранителна
-        добавка, за която посоченото количество
-        е над приложимото максимално ниво.
-
-      </p>
-
-    </div>
+</div>
 
 
-    <div class="result-data">
+<div class="result-demo">
 
-      <div class="data">
+<div class="result-header">
 
-        <span>
-          Добавка
-        </span>
+  <span class="result-badge">
+    ЛИМИТЪТ Е ПРЕВИШЕН
+  </span>
 
-        <strong>
-          E 100
-        </strong>
+  <h3>
+    Установено е превишаване
+  </h3>
 
-      </div>
+  <p>
 
+    При проверката е установена
+    хранителна добавка, за която
+    посоченото количество е над
+    приложимото максимално ниво.
 
-      <div class="data">
+  </p>
 
-        <span>
-          Установено количество
-        </span>
-
-        <strong>
-          120 mg/kg
-        </strong>
-
-      </div>
+</div>
 
 
-      <div class="data">
+<div class="result-data">
 
-        <span>
-          Максимално ниво
-        </span>
+<div class="data">
 
-        <strong>
-          100 mg/kg
-        </strong>
+  <span>
+    Добавка
+  </span>
 
-      </div>
+  <strong>
+    E 100
+  </strong>
 
-    </div>
+</div>
 
-  </div>
+
+<div class="data">
+
+  <span>
+    Установено количество
+  </span>
+
+  <strong>
+    120 mg/kg
+  </strong>
+
+</div>
+
+
+<div class="data">
+
+  <span>
+    Максимално ниво
+  </span>
+
+  <strong>
+    100 mg/kg
+  </strong>
+
+</div>
+
+</div>
+
+</div>
 
 </div>
 
 </section>
 
 
-<!-- ================================================
+<!-- =====================================================
      FAQ
-================================================ -->
+===================================================== -->
 
 <section
   class="section section-white"
@@ -1846,146 +2459,145 @@ footer{
 
 <div class="container">
 
-  <div class="section-head">
+<div class="section-head">
 
-    <div class="section-label">
-      Въпроси
-    </div>
-
-    <h2>
-      Най-важното накратко.
-    </h2>
-
+  <div class="section-label">
+    Въпроси
   </div>
 
+  <h2>
+    Най-важното накратко.
+  </h2>
 
-  <div class="faq">
-
-    <details>
-
-      <summary>
-        Какво трябва да направя?
-      </summary>
-
-      <p>
-
-        Насочи камерата към баркода на продукта.
-        Когато продуктът бъде разпознат,
-        ще получиш информация за наличните данни
-        и възможност да стартираш подробен анализ.
-
-      </p>
-
-    </details>
+</div>
 
 
-    <details>
+<div class="faq">
 
-      <summary>
-        Защо се заплаща подробният анализ?
-      </summary>
+<details>
 
-      <p>
+<summary>
+  Какво трябва да направя?
+</summary>
 
-        Подробният анализ включва обработка на
-        информацията за продукта и проверка на
-        състава спрямо приложимите регулаторни
-        правила. Цената на единичния анализ е €0.99.
+<p>
 
-      </p>
+Насочи камерата към баркода на продукта.
+Когато продуктът бъде разпознат, ще получиш
+информация за наличните данни и възможност
+да стартираш подробен анализ.
 
-    </details>
+</p>
 
-
-    <details>
-
-      <summary>
-        Какво означава „лимитът е превишен“?
-      </summary>
-
-      <p>
-
-        Това означава, че за конкретната проверка
-        е установено количество, което надвишава
-        наличното в системата приложимо максимално
-        ниво. Резултатът трябва да се разглежда
-        в контекста на конкретния продукт и
-        наличните данни.
-
-      </p>
-
-    </details>
+</details>
 
 
-    <details>
+<details>
 
-      <summary>
-        Винаги ли системата може да даде окончателен резултат?
-      </summary>
+<summary>
+  Защо се заплаща подробният анализ?
+</summary>
 
-      <p>
+<p>
 
-        Не. При липсваща концентрация, непълни
-        данни или случаи, изискващи допълнителна
-        експертна оценка, системата може да маркира
-        проверката за човешки преглед.
+Подробният анализ включва обработка
+на информацията за продукта и проверка
+спрямо приложимите регулаторни правила.
+Цената на единичния анализ е €0.99.
 
-      </p>
+</p>
 
-    </details>
+</details>
 
 
-    <details>
+<details>
 
-      <summary>
-        Заменя ли проверката официален контрол?
-      </summary>
+<summary>
+  Какво означава „лимитът е превишен“?
+</summary>
 
-      <p>
+<p>
 
-        Не. Системата е инструмент за информационна
-        и регулаторна ориентировъчна проверка.
-        Тя не заменя официалния контрол,
-        лабораторно изпитване или компетентен
-        регулаторен орган.
+Това означава, че за конкретната проверка
+е установено количество, което надвишава
+наличното приложимо максимално ниво.
 
-      </p>
+</p>
 
-    </details>
+</details>
 
-  </div>
+
+<details>
+
+<summary>
+  Винаги ли може да бъде даден окончателен резултат?
+</summary>
+
+<p>
+
+Не. При липсващи данни, липсваща концентрация
+или случаи, изискващи допълнителна експертна
+оценка, проверката може да бъде маркирана
+за човешки преглед.
+
+</p>
+
+</details>
+
+
+<details>
+
+<summary>
+  Заменя ли системата официалния контрол?
+</summary>
+
+<p>
+
+Не. Системата е информационен инструмент
+и не заменя официален контрол, лабораторно
+изпитване или оценка от компетентен орган.
+
+</p>
+
+</details>
+
+</div>
 
 </div>
 
 </section>
 
 
-<!-- ================================================
-     FINAL CTA
-================================================ -->
+<!-- =====================================================
+     FINAL
+===================================================== -->
 
 <section class="final">
 
 <div class="container">
 
-  <h2>
-    Следващият продукт,
-    който купуваш, може да бъде проверен.
-  </h2>
+<h2>
 
-  <p>
+Следващият продукт,
+който купуваш,
+може да бъде проверен.
 
-    Сканирай баркода и получи информация,
-    която ти помага да вземеш по-информирано решение.
+</h2>
 
-  </p>
+<p>
 
-  <button
-    class="btn btn-primary"
-    onclick="startScan()"
-  >
-    СКАНИРАЙ ПРОДУКТ
-  </button>
+Сканирай баркода и получи информация,
+която ти помага да направиш
+по-информиран избор.
+
+</p>
+
+<button
+  class="btn btn-primary"
+  onclick="openScanner()"
+>
+  СКАНИРАЙ ПРОДУКТ
+</button>
 
 </div>
 
@@ -1994,83 +2606,753 @@ footer{
 </main>
 
 
-<!-- ================================================
+<!-- =====================================================
      FOOTER
-================================================ -->
+===================================================== -->
 
 <footer>
 
 <div class="container footer">
 
-  <div>
-    <strong>
-      Провери продукта
-    </strong>
+<div>
 
-    <br>
+  <strong>
+    Провери продукта
+  </strong>
 
-    Контрол. Информация. Информиран избор.
-  </div>
+  <br>
 
-  <div>
+  Контрол. Информация. Информиран избор.
 
-    Инструментът предоставя информационна
-    регулаторна проверка и не замества
-    официален контрол или лабораторно изпитване.
+</div>
 
-  </div>
+<div>
+
+  Информационен инструмент.
+  Не замества официален контрол
+  или лабораторно изпитване.
+
+</div>
 
 </div>
 
 </footer>
 
 
+<!-- =====================================================
+     CAMERA MODAL
+===================================================== -->
+
+<div
+  class="camera-modal"
+  id="cameraModal"
+>
+
+<div class="camera-panel">
+
+<div class="camera-header">
+
+<div>
+
+  <div class="camera-title">
+    Сканиране на продукт
+  </div>
+
+  <div class="camera-subtitle">
+    Насочи камерата към баркода
+  </div>
+
+</div>
+
+
+<button
+  class="close-camera"
+  onclick="closeScanner()"
+  aria-label="Затвори"
+>
+  ×
+</button>
+
+</div>
+
+
+<div class="camera-area">
+
+  <div id="reader"></div>
+
+  <div class="camera-frame">
+
+    <div class="camera-line"></div>
+
+  </div>
+
+</div>
+
+
+<div class="camera-instruction">
+
+  Постави целия баркод в рамката
+
+</div>
+
+
+<div class="camera-help">
+
+  Дръж телефона стабилно и осигури
+  достатъчно светлина.
+
+</div>
+
+
+<div
+  class="camera-error"
+  id="cameraError"
+></div>
+
+
+<div class="camera-footer">
+
+<button
+  class="camera-close-button"
+  onclick="closeScanner()"
+>
+  Затвори скенера
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+     SUCCESS MODAL
+===================================================== -->
+
+<div
+  class="success-modal"
+  id="successModal"
+>
+
+<div class="success-card">
+
+<div class="success-icon">
+  ✓
+</div>
+
+
+<h3>
+  Баркодът е разпознат
+</h3>
+
+
+<p>
+
+Получихме номера на продукта.
+Сега можем да проверим дали
+продуктът съществува в системата.
+
+</p>
+
+
+<div
+  class="detected-code"
+  id="detectedCode"
+>
+  —
+</div>
+
+
+<div class="success-actions">
+
+<button
+  class="success-primary"
+  onclick="continueWithProduct()"
+>
+  Продължи с проверката
+</button>
+
+
+<button
+  class="success-secondary"
+  onclick="scanAgain()"
+>
+  Сканирай отново
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+     LOADING
+===================================================== -->
+
+<div
+  class="loading"
+  id="loading"
+>
+
+<div class="loading-card">
+
+<div class="spinner"></div>
+
+<h3>
+  Проверяваме продукта
+</h3>
+
+<p>
+  Моля, изчакай няколко секунди...
+</p>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
 <script>
 
-function startScan(){
+let scanner = null;
+
+let scannerRunning = false;
+
+let detectedBarcode = null;
+
+
+/* =====================================================
+   OPEN SCANNER
+===================================================== */
+
+async function openScanner(){
+
+  const modal =
+    document.getElementById("cameraModal");
+
+  const error =
+    document.getElementById("cameraError");
+
+  error.classList.remove("active");
+
+  error.textContent = "";
+
+  modal.classList.add("active");
 
   /*
-    Тук по-късно ще бъде включена
-    реалната камера и barcode scanner.
-
-    След разпознаване:
-    1. barcode
-    2. Supabase scan request
-    3. PRODUCT_FOUND
-    4. €0.99
-    5. PayPal
-    6. анализ
-    7. резултат
+    Изчакваме DOM-а да се визуализира.
   */
 
-  alert(
-    "Скенерът ще бъде активиран тук. Следващата стъпка е свързването на камерата с базата."
-  );
+  await new Promise(resolve => {
+    setTimeout(resolve, 250);
+  });
+
+  startCamera();
+
 }
 
+
+/* =====================================================
+   START CAMERA
+===================================================== */
+
+async function startCamera(){
+
+  if(scannerRunning){
+    return;
+  }
+
+  const error =
+    document.getElementById("cameraError");
+
+  error.classList.remove("active");
+
+  error.textContent = "";
+
+  /*
+    Проверка дали браузърът поддържа камера.
+  */
+
+  if(!navigator.mediaDevices ||
+     !navigator.mediaDevices.getUserMedia){
+
+    showCameraError(
+      "Този браузър не позволява достъп до камерата. Моля, използвай актуална версия на Chrome, Safari или друг съвременен браузър."
+    );
+
+    return;
+  }
+
+
+  /*
+    Проверяваме дали библиотеката е заредена.
+  */
+
+  if(typeof Html5Qrcode === "undefined"){
+
+    showCameraError(
+      "Скенерът все още се зарежда. Изчакай няколко секунди и опитай отново."
+    );
+
+    return;
+  }
+
+
+  try{
+
+    scanner =
+      new Html5Qrcode("reader");
+
+
+    /*
+      Задна камера на телефона.
+    */
+
+    const config = {
+
+      fps:10,
+
+      qrbox:{
+        width:280,
+        height:150
+      },
+
+      aspectRatio:1.7777778,
+
+      formatsToSupport:[
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E
+      ]
+
+    };
+
+
+    await scanner.start(
+
+      {
+        facingMode:"environment"
+      },
+
+      config,
+
+      onBarcodeDetected,
+
+      onScanError
+
+    );
+
+
+    scannerRunning = true;
+
+  }
+  catch(error){
+
+    console.error(
+      "Camera error:",
+      error
+    );
+
+    showCameraError(
+      getCameraErrorMessage(error)
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   BARCODE DETECTED
+===================================================== */
+
+async function onBarcodeDetected(decodedText){
+
+  if(!decodedText){
+    return;
+  }
+
+  /*
+    Защита от многократно засичане.
+  */
+
+  if(detectedBarcode){
+    return;
+  }
+
+  detectedBarcode =
+    decodedText.trim();
+
+
+  await stopScanner();
+
+
+  document
+    .getElementById("detectedCode")
+    .textContent =
+      detectedBarcode;
+
+
+  document
+    .getElementById("successModal")
+    .classList.add("active");
+
+}
+
+
+/* =====================================================
+   SCAN ERROR
+===================================================== */
+
+function onScanError(errorMessage){
+
+  /*
+    html5-qrcode извиква тази функция
+    постоянно, докато търси баркод.
+
+    Затова не показваме грешки на потребителя
+    при всяко неуспешно засичане.
+  */
+
+}
+
+
+/* =====================================================
+   STOP SCANNER
+===================================================== */
+
+async function stopScanner(){
+
+  if(!scanner){
+    return;
+  }
+
+  try{
+
+    if(scannerRunning){
+
+      await scanner.stop();
+
+    }
+
+  }
+  catch(error){
+
+    console.warn(
+      "Scanner stop:",
+      error
+    );
+
+  }
+
+  try{
+
+    await scanner.clear();
+
+  }
+  catch(error){
+
+    console.warn(
+      "Scanner clear:",
+      error
+    );
+
+  }
+
+  scannerRunning = false;
+
+  scanner = null;
+
+}
+
+
+/* =====================================================
+   CLOSE SCANNER
+===================================================== */
+
+async function closeScanner(){
+
+  await stopScanner();
+
+  document
+    .getElementById("cameraModal")
+    .classList.remove("active");
+
+}
+
+
+/* =====================================================
+   SCAN AGAIN
+===================================================== */
+
+async function scanAgain(){
+
+  detectedBarcode = null;
+
+  document
+    .getElementById("successModal")
+    .classList.remove("active");
+
+  await new Promise(resolve => {
+    setTimeout(resolve,250);
+  });
+
+  startCamera();
+
+}
+
+
+/* =====================================================
+   CONTINUE WITH PRODUCT
+===================================================== */
+
+async function continueWithProduct(){
+
+  document
+    .getElementById("successModal")
+    .classList.remove("active");
+
+
+  /*
+    ТУК ЩЕ ВРЪЖЕМ SUPABASE.
+
+    Следващата стъпка ще бъде:
+
+    detectedBarcode
+        ↓
+    scan request
+        ↓
+    lookup
+        ↓
+    PRODUCT_FOUND
+        ↓
+    продукт
+        ↓
+    €0.99
+        ↓
+    PayPal
+
+    Засега показваме красив loading екран,
+    за да не симулираме фалшив резултат.
+  */
+
+  showLoading();
+
+  await new Promise(resolve => {
+    setTimeout(resolve,1200);
+  });
+
+  hideLoading();
+
+  /*
+    Временно отиваме към секцията
+    за подробен анализ.
+  */
+
+  document
+    .querySelector(".payment")
+    .scrollIntoView({
+      behavior:"smooth"
+    });
+
+}
+
+
+/* =====================================================
+   PAYMENT
+===================================================== */
 
 function startPayment(){
 
   /*
-    Тук ще бъде свързана реалната
-    PayPal Edge Function:
+    PayPal ще бъде свързан тук
+    чрез Supabase Edge Function:
 
     paypal-create-order
 
-    След това:
-    PayPal Checkout
-    →
-    Capture
-    →
-    PAID
-    →
-    анализ
+    Няма да поставяме PayPal Secret
+    в този HTML файл.
   */
 
-  alert(
-    "PayPal ще бъде свързан към този бутон в следващия етап."
-  );
+  showLoading();
+
+  setTimeout(() => {
+
+    hideLoading();
+
+    alert(
+      "PayPal ще бъде свързан към този бутон в следващата стъпка."
+    );
+
+  },800);
+
 }
+
+
+/* =====================================================
+   LOADING
+===================================================== */
+
+function showLoading(){
+
+  document
+    .getElementById("loading")
+    .classList.add("active");
+
+}
+
+
+function hideLoading(){
+
+  document
+    .getElementById("loading")
+    .classList.remove("active");
+
+}
+
+
+/* =====================================================
+   CAMERA ERROR
+===================================================== */
+
+function showCameraError(message){
+
+  const error =
+    document.getElementById("cameraError");
+
+  error.textContent =
+    message;
+
+  error.classList.add("active");
+
+}
+
+
+function getCameraErrorMessage(error){
+
+  if(!error){
+    return "Не успяхме да стартираме камерата. Опитай отново.";
+  }
+
+  const text =
+    String(
+      error.message ||
+      error.name ||
+      error
+    ).toLowerCase();
+
+
+  if(
+    text.includes("permission") ||
+    text.includes("notallowed")
+  ){
+
+    return(
+      "Достъпът до камерата е отказан. " +
+      "Разреши използването на камерата от настройките на браузъра и опитай отново."
+    );
+
+  }
+
+
+  if(
+    text.includes("notfound") ||
+    text.includes("devicesnotfound")
+  ){
+
+    return(
+      "Не открихме камера на това устройство."
+    );
+
+  }
+
+
+  if(
+    text.includes("notreadable") ||
+    text.includes("trackstart")
+  ){
+
+    return(
+      "Камерата се използва от друго приложение. " +
+      "Затвори го и опитай отново."
+    );
+
+  }
+
+
+  if(
+    text.includes("secure") ||
+    text.includes("https")
+  ){
+
+    return(
+      "Камерата работи само през защитена HTTPS връзка. " +
+      "Увери се, че сайтът е отворен през HTTPS."
+    );
+
+  }
+
+
+  return(
+    "Не успяхме да стартираме камерата. " +
+    "Провери разрешението за камера и опитай отново."
+  );
+
+}
+
+
+/* =====================================================
+   CLOSE MODALS WITH ESC
+===================================================== */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if(event.key === "Escape"){
+
+      closeScanner();
+
+      document
+        .getElementById("successModal")
+        .classList.remove("active");
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   CLICK OUTSIDE SUCCESS MODAL
+===================================================== */
+
+document
+  .getElementById("successModal")
+  .addEventListener(
+    "click",
+    event => {
+
+      if(
+        event.target.id ===
+        "successModal"
+      ){
+
+        document
+          .getElementById("successModal")
+          .classList.remove("active");
+
+      }
+
+    }
+  );
 
 </script>
 
