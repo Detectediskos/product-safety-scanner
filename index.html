@@ -1,1498 +1,2076 @@
 <!DOCTYPE html>
 <html lang="bg">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Product Safety Scanner</title>
-  <meta
-    name="description"
-    content="Провери продукта. Разбери какво съдържа. Вземи информирано решение."
-  >
-
-  <style>
-    :root {
-      --bg: #f5f7f4;
-      --surface: #ffffff;
-      --surface-soft: #edf3ee;
-      --text: #18201b;
-      --muted: #6d776f;
-      --line: #dce4de;
-
-      --green: #18794e;
-      --green-dark: #105c3a;
-      --green-soft: #e2f2e9;
-
-      --orange: #c77b19;
-      --orange-soft: #fff1dc;
-
-      --red: #c93636;
-      --red-soft: #fde8e8;
-
-      --shadow:
-        0 20px 60px rgba(22, 40, 29, 0.08);
-
-      --radius-lg: 28px;
-      --radius-md: 18px;
-      --radius-sm: 12px;
-
-      --max-width: 1180px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      min-height: 100vh;
-      background:
-        radial-gradient(
-          circle at 85% 5%,
-          rgba(24, 121, 78, 0.08),
-          transparent 28%
-        ),
-        var(--bg);
-
-      color: var(--text);
-
-      font-family:
-        Inter,
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-      line-height: 1.5;
-    }
-
-    button,
-    input {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .app {
-      min-height: 100vh;
-    }
-
-    /* =====================================================
-       HEADER
-    ===================================================== */
-
-    header {
-      width: 100%;
-      padding: 22px 24px;
-    }
-
-    .nav {
-      max-width: var(--max-width);
-      margin: auto;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Провери продукта — Контрол на безопасността</title>
+
+<meta
+  name="description"
+  content="Сканирай продукта и получи разбираема информация за състава, добавките и приложимите регулаторни ограничения."
+>
+
+<style>
+:root{
+  --bg:#f4f7f3;
+  --white:#ffffff;
+  --ink:#17201b;
+  --muted:#69756d;
+  --line:#dce5de;
+
+  --green:#177a4d;
+  --green-dark:#0d5b38;
+  --green-light:#e4f2e9;
+
+  --orange:#c47a18;
+  --orange-light:#fff1d9;
+
+  --red:#c83b3b;
+  --red-light:#fde9e9;
+
+  --shadow:0 24px 70px rgba(20,40,28,.09);
+
+  --radius:28px;
+  --max:1180px;
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+  line-height:1.55;
+}
+
+button{
+  font:inherit;
+  cursor:pointer;
+}
+
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+.container{
+  width:min(var(--max),calc(100% - 40px));
+  margin:auto;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+header{
+  position:sticky;
+  top:0;
+  z-index:100;
+
+  background:rgba(244,247,243,.88);
+  backdrop-filter:blur(18px);
+
+  border-bottom:1px solid rgba(220,229,222,.7);
+}
+
+.nav{
+  min-height:76px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  font-size:17px;
+  font-weight:800;
+  letter-spacing:-.03em;
+}
 
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+.logo-icon{
+  width:40px;
+  height:40px;
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
+  display:grid;
+  place-items:center;
 
-      font-size: 16px;
-      font-weight: 750;
-      letter-spacing: -0.02em;
-    }
+  background:var(--green);
+  color:white;
 
-    .brand-mark {
-      width: 38px;
-      height: 38px;
+  border-radius:13px;
 
-      display: grid;
-      place-items: center;
+  font-size:20px;
+  font-weight:900;
+}
 
-      border-radius: 13px;
+.nav-links{
+  display:flex;
+  align-items:center;
+  gap:28px;
 
-      background: var(--green);
-      color: white;
+  color:#526058;
+  font-size:14px;
+  font-weight:600;
+}
 
-      font-size: 17px;
-      font-weight: 800;
+.nav-links a:hover{
+  color:var(--green);
+}
 
-      box-shadow:
-        0 8px 20px rgba(24, 121, 78, 0.2);
-    }
+/* =========================
+   BUTTONS
+========================= */
 
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+.btn{
+  border:none;
+  border-radius:14px;
 
-    .nav-button {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.7);
+  padding:15px 22px;
 
-      padding: 10px 15px;
+  font-weight:750;
+  font-size:14px;
 
-      border-radius: 999px;
+  transition:.2s ease;
+}
 
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 600;
-    }
+.btn-primary{
+  background:var(--green);
+  color:white;
 
-    /* =====================================================
-       HERO
-    ===================================================== */
+  box-shadow:
+    0 12px 25px rgba(23,122,77,.18);
+}
 
-    .hero {
-      max-width: var(--max-width);
-      margin: auto;
+.btn-primary:hover{
+  background:var(--green-dark);
+  transform:translateY(-2px);
+}
 
-      min-height: 620px;
+.btn-light{
+  background:white;
+  border:1px solid var(--line);
+  color:var(--ink);
+}
 
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
+/* =========================
+   HERO
+========================= */
 
-      align-items: center;
+.hero{
+  padding:90px 0 110px;
 
-      gap: 70px;
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
+  gap:80px;
 
-      padding: 60px 24px 90px;
-    }
+  align-items:center;
+}
 
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
 
-      padding: 8px 12px;
+  background:var(--green-light);
+  color:var(--green-dark);
 
-      background: var(--green-soft);
-      color: var(--green-dark);
+  padding:8px 13px;
+  border-radius:999px;
 
-      border-radius: 999px;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
 
-      font-size: 12px;
-      font-weight: 750;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
+.badge-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--green);
+}
 
-    .eyebrow-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-    }
+.hero h1{
+  margin-top:24px;
 
-    h1 {
-      margin-top: 22px;
+  font-size:
+    clamp(44px,6vw,78px);
 
-      max-width: 650px;
+  line-height:.98;
 
-      font-size:
-        clamp(42px, 6vw, 76px);
+  letter-spacing:-.065em;
+}
 
-      line-height: 0.98;
+.hero h1 span{
+  color:var(--green);
+}
 
-      letter-spacing: -0.055em;
+.hero-text{
+  max-width:610px;
 
-      font-weight: 780;
-    }
+  margin-top:25px;
 
-    .hero-description {
-      max-width: 560px;
+  color:var(--muted);
 
-      margin-top: 25px;
+  font-size:18px;
+  line-height:1.7;
+}
 
-      color: var(--muted);
+.hero-actions{
+  margin-top:34px;
 
-      font-size: 18px;
-      line-height: 1.65;
-    }
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+}
 
-    .hero-actions {
-      margin-top: 34px;
+.hero-note{
+  margin-top:17px;
 
-      display: flex;
-      flex-wrap: wrap;
+  color:#7b857e;
 
-      gap: 12px;
-    }
+  font-size:12px;
+}
 
-    .primary-button {
-      border: none;
+/* =========================
+   SCANNER
+========================= */
 
-      background: var(--green);
-      color: white;
+.scanner-wrap{
+  display:flex;
+  justify-content:center;
+}
 
-      padding: 16px 24px;
+.scanner{
+  position:relative;
 
-      border-radius: 14px;
+  width:min(410px,100%);
+  aspect-ratio:.82;
 
-      font-size: 15px;
-      font-weight: 750;
+  border-radius:38px;
 
-      box-shadow:
-        0 12px 25px rgba(24, 121, 78, 0.18);
+  overflow:hidden;
 
-      transition:
-        transform 0.2s ease,
-        background 0.2s ease;
-    }
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(60,190,125,.18),
+      transparent 30%
+    ),
+    linear-gradient(
+      145deg,
+      #101a15,
+      #1e3026
+    );
 
-    .primary-button:hover {
-      transform: translateY(-2px);
-      background: var(--green-dark);
-    }
+  box-shadow:var(--shadow);
+}
 
-    .secondary-button {
-      border: 1px solid var(--line);
+.scanner-top{
+  position:absolute;
+  top:27px;
+  left:28px;
+  right:28px;
 
-      background: white;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 
-      color: var(--text);
+  color:white;
+}
 
-      padding: 16px 21px;
+.scanner-name{
+  font-size:12px;
+  font-weight:750;
+  letter-spacing:.1em;
+}
 
-      border-radius: 14px;
+.live{
+  display:flex;
+  align-items:center;
+  gap:7px;
 
-      font-size: 15px;
-      font-weight: 650;
-    }
+  font-size:11px;
+  color:#a7e6c4;
+}
 
-    .manual-input {
-      display: none;
+.live-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#67d99f;
+  box-shadow:0 0 14px #67d99f;
+}
 
-      margin-top: 14px;
+.scan-area{
+  position:absolute;
 
-      max-width: 480px;
+  width:260px;
+  height:190px;
 
-      grid-template-columns: 1fr auto;
+  top:50%;
+  left:50%;
 
-      gap: 8px;
-    }
+  transform:translate(-50%,-50%);
 
-    .manual-input.visible {
-      display: grid;
-    }
+  border:1px solid rgba(255,255,255,.65);
 
-    .manual-input input {
-      width: 100%;
+  border-radius:22px;
+}
 
-      border: 1px solid var(--line);
+.corner{
+  position:absolute;
+  width:38px;
+  height:38px;
 
-      background: white;
+  border-color:#69dba2;
+  border-style:solid;
+}
 
-      padding: 15px 16px;
+.corner.tl{
+  top:-2px;
+  left:-2px;
+  border-width:3px 0 0 3px;
+  border-radius:20px 0 0 0;
+}
 
-      border-radius: 13px;
+.corner.tr{
+  top:-2px;
+  right:-2px;
+  border-width:3px 3px 0 0;
+  border-radius:0 20px 0 0;
+}
 
-      outline: none;
-    }
+.corner.bl{
+  bottom:-2px;
+  left:-2px;
+  border-width:0 0 3px 3px;
+  border-radius:0 0 0 20px;
+}
 
-    .manual-input input:focus {
-      border-color: var(--green);
-      box-shadow: 0 0 0 4px var(--green-soft);
-    }
+.corner.br{
+  bottom:-2px;
+  right:-2px;
+  border-width:0 3px 3px 0;
+  border-radius:0 0 20px 0;
+}
 
-    /* =====================================================
-       SCANNER VISUAL
-    ===================================================== */
+.scan-line{
+  position:absolute;
 
-    .scanner-stage {
-      position: relative;
+  left:12px;
+  right:12px;
 
-      min-height: 480px;
+  height:2px;
 
-      display: grid;
-      place-items: center;
-    }
+  background:#68dca1;
 
-    .scanner-card {
-      position: relative;
+  box-shadow:0 0 18px #68dca1;
 
-      width: min(390px, 100%);
-      aspect-ratio: 0.84;
+  animation:scan 2.7s ease-in-out infinite;
+}
 
-      border-radius: 34px;
+@keyframes scan{
+  0%,100%{
+    top:18px;
+    opacity:.4;
+  }
 
-      background:
-        linear-gradient(
-          145deg,
-          #17231c,
-          #293a30
-        );
+  50%{
+    top:168px;
+    opacity:1;
+  }
+}
 
-      overflow: hidden;
+.barcode{
+  position:absolute;
 
-      box-shadow: var(--shadow);
-    }
+  left:50%;
+  bottom:88px;
 
-    .scanner-card::before {
-      content: "";
+  transform:translateX(-50%);
 
-      position: absolute;
-      inset: 18px;
+  width:155px;
+  height:42px;
 
-      border: 1px solid rgba(255,255,255,0.1);
+  opacity:.35;
 
-      border-radius: 25px;
-    }
+  background:
+    repeating-linear-gradient(
+      90deg,
+      white 0 2px,
+      transparent 2px 5px
+    );
+}
 
-    .scanner-header {
-      position: absolute;
+.scanner-bottom{
+  position:absolute;
+  bottom:29px;
 
-      top: 30px;
-      left: 30px;
-      right: 30px;
+  width:100%;
 
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+  text-align:center;
 
-      color: white;
-    }
+  color:rgba(255,255,255,.62);
 
-    .scanner-title {
-      font-size: 13px;
-      font-weight: 700;
-      opacity: 0.85;
-    }
+  font-size:12px;
+}
 
-    .scanner-status {
-      width: 9px;
-      height: 9px;
+/* =========================
+   INTRO
+========================= */
 
-      border-radius: 50%;
+.section{
+  padding:100px 0;
+}
 
-      background: #63d69d;
+.section-white{
+  background:white;
+}
 
-      box-shadow:
-        0 0 0 5px rgba(99,214,157,0.12);
-    }
+.section-head{
+  max-width:680px;
+  margin-bottom:45px;
+}
 
-    .scan-frame {
-      position: absolute;
+.section-label{
+  color:var(--green);
 
-      width: 250px;
-      height: 180px;
+  font-size:12px;
+  font-weight:850;
 
-      left: 50%;
-      top: 50%;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
 
-      transform: translate(-50%, -50%);
+.section h2{
+  margin-top:10px;
 
-      border: 2px solid rgba(255,255,255,0.9);
+  font-size:
+    clamp(32px,4vw,52px);
 
-      border-radius: 20px;
-    }
+  line-height:1.05;
 
-    .scan-frame::before,
-    .scan-frame::after {
-      content: "";
+  letter-spacing:-.045em;
+}
 
-      position: absolute;
+.section-lead{
+  margin-top:15px;
 
-      width: 34px;
-      height: 34px;
+  color:var(--muted);
 
-      border-color: #63d69d;
-      border-style: solid;
-    }
+  font-size:17px;
+}
 
-    .scan-frame::before {
-      top: -2px;
-      left: -2px;
+/* =========================
+   HOW IT WORKS
+========================= */
 
-      border-width: 3px 0 0 3px;
+.steps{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:12px;
+}
 
-      border-radius: 18px 0 0 0;
-    }
+.step{
+  padding:23px;
 
-    .scan-frame::after {
-      bottom: -2px;
-      right: -2px;
+  min-height:190px;
 
-      border-width: 0 3px 3px 0;
+  border:1px solid var(--line);
+  border-radius:22px;
 
-      border-radius: 0 0 18px 0;
-    }
+  background:var(--white);
 
-    .scan-line {
-      position: absolute;
+  transition:.2s ease;
+}
 
-      left: 12px;
-      right: 12px;
+.step:hover{
+  transform:translateY(-4px);
+  box-shadow:0 15px 35px rgba(20,40,28,.06);
+}
 
-      top: 50%;
+.step-number{
+  color:var(--green);
 
-      height: 2px;
+  font-size:12px;
+  font-weight:850;
+}
 
-      background: #63d69d;
+.step-icon{
+  margin-top:20px;
 
-      box-shadow:
-        0 0 15px rgba(99,214,157,0.8);
+  width:40px;
+  height:40px;
 
-      animation: scan 2.5s ease-in-out infinite;
-    }
+  display:grid;
+  place-items:center;
 
-    @keyframes scan {
-      0%, 100% {
-        transform: translateY(-65px);
-        opacity: 0.5;
-      }
+  border-radius:12px;
 
-      50% {
-        transform: translateY(65px);
-        opacity: 1;
-      }
-    }
+  background:var(--green-light);
 
-    .barcode-placeholder {
-      position: absolute;
+  color:var(--green);
 
-      left: 50%;
-      bottom: 72px;
+  font-weight:900;
+}
 
-      transform: translateX(-50%);
+.step h3{
+  margin-top:15px;
 
-      width: 150px;
-      height: 45px;
+  font-size:16px;
+}
 
-      opacity: 0.4;
+.step p{
+  margin-top:5px;
 
-      background:
-        repeating-linear-gradient(
-          90deg,
-          white 0 2px,
-          transparent 2px 5px
-        );
-    }
+  color:var(--muted);
 
-    .scanner-caption {
-      position: absolute;
+  font-size:13px;
+}
 
-      bottom: 30px;
+/* =========================
+   WHY IMPORTANT
+========================= */
 
-      width: 100%;
+.why{
+  display:grid;
+  grid-template-columns:.9fr 1.1fr;
+  gap:80px;
 
-      text-align: center;
+  align-items:center;
+}
 
-      color: rgba(255,255,255,0.65);
+.why-visual{
+  min-height:420px;
 
-      font-size: 12px;
-    }
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-    /* =====================================================
-       PROCESS
-    ===================================================== */
+.protection-card{
+  position:relative;
 
-    .process-section {
-      max-width: var(--max-width);
+  width:330px;
+  height:330px;
 
-      margin: auto;
+  border-radius:50%;
 
-      padding: 0 24px 90px;
-    }
+  background:
+    radial-gradient(
+      circle,
+      var(--green-light),
+      #d8e9df
+    );
 
-    .section-heading {
-      max-width: 600px;
+  display:grid;
+  place-items:center;
+}
 
-      margin-bottom: 30px;
-    }
+.protection-card::before{
+  content:"";
 
-    .section-heading h2 {
-      font-size: clamp(30px, 4vw, 44px);
+  position:absolute;
+  inset:25px;
 
-      letter-spacing: -0.04em;
-      line-height: 1.05;
-    }
+  border:1px solid rgba(23,122,77,.18);
 
-    .section-heading p {
-      margin-top: 10px;
+  border-radius:50%;
+}
 
-      color: var(--muted);
-    }
+.protection-symbol{
+  width:110px;
+  height:125px;
 
-    .steps {
-      display: grid;
+  background:var(--green);
 
-      grid-template-columns:
-        repeat(6, 1fr);
+  clip-path:polygon(
+    50% 0,
+    90% 15%,
+    88% 60%,
+    70% 83%,
+    50% 100%,
+    30% 83%,
+    12% 60%,
+    10% 15%
+  );
 
-      gap: 10px;
-    }
+  display:grid;
+  place-items:center;
 
-    .step {
-      min-height: 145px;
+  color:white;
 
-      padding: 18px;
+  font-size:45px;
+  font-weight:900;
+}
 
-      background: var(--surface);
+.why-text{
+  color:var(--muted);
 
-      border: 1px solid var(--line);
+  font-size:16px;
+  line-height:1.8;
+}
 
-      border-radius: 20px;
+.why-text p+p{
+  margin-top:18px;
+}
 
-      transition:
-        transform 0.2s ease,
-        border-color 0.2s ease;
-    }
+.info-list{
+  margin-top:28px;
 
-    .step:hover {
-      transform: translateY(-3px);
-      border-color: rgba(24,121,78,0.35);
-    }
+  display:grid;
+  gap:13px;
+}
 
-    .step-number {
-      color: var(--green);
+.info-item{
+  display:flex;
+  gap:12px;
 
-      font-size: 12px;
-      font-weight: 800;
+  align-items:flex-start;
+}
 
-      letter-spacing: 0.08em;
-    }
+.info-check{
+  flex:0 0 auto;
 
-    .step h3 {
-      margin-top: 25px;
+  width:24px;
+  height:24px;
 
-      font-size: 16px;
-      letter-spacing: -0.02em;
-    }
+  display:grid;
+  place-items:center;
 
-    .step p {
-      margin-top: 6px;
+  border-radius:50%;
 
-      color: var(--muted);
+  background:var(--green-light);
+  color:var(--green);
 
-      font-size: 12px;
-    }
+  font-size:12px;
+  font-weight:900;
+}
 
-    /* =====================================================
-       PRODUCT / PAYMENT / RESULT
-    ===================================================== */
+/* =========================
+   WHAT WE CHECK
+========================= */
 
-    .demo-section {
-      max-width: var(--max-width);
+.check-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
 
-      margin: auto;
+.check-card{
+  padding:30px;
 
-      padding: 0 24px 100px;
-    }
+  background:#f8faf8;
 
-    .demo-card {
-      background: white;
+  border:1px solid var(--line);
+  border-radius:24px;
+}
 
-      border: 1px solid var(--line);
+.check-number{
+  font-size:12px;
+  color:var(--green);
+  font-weight:850;
+}
 
-      border-radius: var(--radius-lg);
+.check-card h3{
+  margin-top:20px;
+  font-size:20px;
+}
 
-      box-shadow: var(--shadow);
+.check-card p{
+  margin-top:9px;
 
-      padding: clamp(22px, 4vw, 42px);
-    }
+  color:var(--muted);
 
-    .demo-label {
-      color: var(--muted);
+  font-size:14px;
+  line-height:1.7;
+}
 
-      font-size: 11px;
-      font-weight: 800;
+/* =========================
+   PAYMENT
+========================= */
 
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
+.payment{
+  padding:90px 0;
+}
 
-    .product-layout {
-      display: grid;
+.payment-box{
+  background:
+    linear-gradient(
+      135deg,
+      #123b29,
+      #176f48
+    );
 
-      grid-template-columns: 1fr auto;
+  color:white;
 
-      gap: 35px;
+  border-radius:32px;
 
-      align-items: center;
-    }
+  padding:
+    clamp(30px,6vw,65px);
 
-    .product-name {
-      margin-top: 8px;
+  display:grid;
+  grid-template-columns:1fr auto;
 
-      font-size: clamp(25px, 4vw, 38px);
+  gap:50px;
 
-      letter-spacing: -0.04em;
-    }
+  align-items:center;
 
-    .product-brand {
-      margin-top: 5px;
+  box-shadow:var(--shadow);
+}
 
-      color: var(--muted);
-    }
+.payment-box .section-label{
+  color:#9de1bd;
+}
 
-    .product-meta {
-      margin-top: 25px;
+.payment-box h2{
+  margin-top:10px;
 
-      display: flex;
-      flex-wrap: wrap;
+  font-size:
+    clamp(32px,4vw,52px);
 
-      gap: 8px;
-    }
+  line-height:1.05;
 
-    .meta-pill {
-      padding: 8px 12px;
+  letter-spacing:-.045em;
+}
 
-      border-radius: 999px;
+.payment-box p{
+  margin-top:15px;
 
-      background: var(--surface-soft);
+  max-width:620px;
 
-      color: #4e5c53;
+  color:#c7dfd2;
+}
 
-      font-size: 12px;
-      font-weight: 650;
-    }
+.price{
+  text-align:center;
+}
 
-    .price-box {
-      min-width: 180px;
+.price strong{
+  display:block;
 
-      padding: 22px;
+  font-size:55px;
 
-      text-align: center;
+  line-height:1;
 
-      border-radius: 20px;
+  letter-spacing:-.06em;
+}
 
-      background: var(--surface-soft);
-    }
+.price span{
+  color:#b9d9c8;
+  font-size:13px;
+}
 
-    .price {
-      font-size: 34px;
+.paypal{
+  display:block;
 
-      font-weight: 800;
+  margin-top:17px;
 
-      letter-spacing: -0.05em;
-    }
+  min-width:190px;
 
-    .price small {
-      font-size: 13px;
-      font-weight: 650;
-    }
+  padding:14px 20px;
 
-    .paypal-button {
-      width: 100%;
+  border:none;
+  border-radius:12px;
 
-      margin-top: 12px;
+  background:#ffc439;
 
-      border: none;
+  color:#111;
 
-      background: #ffc439;
+  font-weight:850;
+}
 
-      color: #111;
+/* =========================
+   RESULT
+========================= */
 
-      padding: 13px;
+.result-demo{
+  max-width:800px;
+  margin:auto;
 
-      border-radius: 12px;
+  background:white;
 
-      font-weight: 800;
+  border:1px solid var(--line);
 
-      font-size: 14px;
-    }
+  border-radius:30px;
 
-    /* =====================================================
-       RESULT
-    ===================================================== */
+  overflow:hidden;
 
-    .result {
-      margin-top: 22px;
+  box-shadow:var(--shadow);
+}
 
-      display: none;
+.result-header{
+  padding:32px;
 
-      border-radius: 22px;
+  background:var(--red-light);
 
-      overflow: hidden;
+  border-bottom:1px solid #f3cccc;
+}
 
-      border: 1px solid #f2c6c6;
+.result-badge{
+  display:inline-flex;
 
-      background: var(--red-soft);
-    }
+  background:var(--red);
+  color:white;
 
-    .result.visible {
-      display: block;
-    }
+  padding:8px 12px;
 
-    .result-main {
-      padding: 25px;
-    }
+  border-radius:999px;
 
-    .result-status {
-      display: inline-flex;
+  font-size:11px;
+  font-weight:850;
+}
 
-      padding: 8px 12px;
+.result-header h3{
+  margin-top:14px;
 
-      border-radius: 999px;
+  font-size:32px;
 
-      background: var(--red);
+  letter-spacing:-.04em;
+}
 
-      color: white;
+.result-header p{
+  margin-top:8px;
 
-      font-size: 11px;
-      font-weight: 800;
+  color:#704343;
+}
 
-      letter-spacing: 0.08em;
-    }
+.result-data{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1px;
 
-    .result h3 {
-      margin-top: 15px;
+  background:var(--line);
+}
 
-      font-size: 29px;
+.data{
+  background:white;
 
-      letter-spacing: -0.04em;
-    }
+  padding:24px;
+}
 
-    .result-description {
-      margin-top: 8px;
+.data span{
+  display:block;
 
-      color: #6f3d3d;
+  color:var(--muted);
 
-      max-width: 700px;
-    }
+  font-size:12px;
+}
 
-    .result-grid {
-      display: grid;
+.data strong{
+  display:block;
 
-      grid-template-columns:
-        repeat(3, 1fr);
+  margin-top:6px;
 
-      gap: 10px;
+  font-size:21px;
+}
 
-      padding: 15px;
+/* =========================
+   FAQ
+========================= */
 
-      background: rgba(255,255,255,0.65);
-    }
+.faq{
+  max-width:850px;
+  margin:auto;
+}
 
-    .result-item {
-      padding: 15px;
+details{
+  border-bottom:1px solid var(--line);
+}
 
-      border-radius: 13px;
+summary{
+  list-style:none;
 
-      background: white;
-    }
+  cursor:pointer;
 
-    .result-item span {
-      display: block;
+  padding:23px 0;
 
-      color: var(--muted);
+  font-weight:750;
+  font-size:16px;
+}
 
-      font-size: 11px;
-    }
+summary::-webkit-details-marker{
+  display:none;
+}
 
-    .result-item strong {
-      display: block;
+details p{
+  padding:
+    0 0 23px;
 
-      margin-top: 4px;
+  color:var(--muted);
 
-      font-size: 18px;
-    }
+  font-size:14px;
+  line-height:1.7;
+}
 
-    /* =====================================================
-       FOOTER
-    ===================================================== */
+/* =========================
+   FINAL CTA
+========================= */
 
-    footer {
-      padding: 35px 24px 45px;
+.final{
+  padding:100px 0 120px;
 
-      border-top: 1px solid var(--line);
+  text-align:center;
+}
 
-      color: var(--muted);
+.final h2{
+  max-width:760px;
 
-      font-size: 12px;
-    }
+  margin:auto;
 
-    .footer-inner {
-      max-width: var(--max-width);
+  font-size:
+    clamp(35px,5vw,60px);
 
-      margin: auto;
+  line-height:1;
 
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-    }
+  letter-spacing:-.055em;
+}
 
-    /* =====================================================
-       RESPONSIVE
-    ===================================================== */
+.final p{
+  max-width:650px;
 
-    @media (max-width: 950px) {
+  margin:20px auto 30px;
 
-      .hero {
-        grid-template-columns: 1fr;
+  color:var(--muted);
+}
 
-        gap: 40px;
+/* =========================
+   FOOTER
+========================= */
 
-        padding-top: 35px;
-      }
+footer{
+  background:#111a15;
+  color:#aebbb3;
 
-      .scanner-stage {
-        min-height: 430px;
-      }
+  padding:40px 0;
+}
 
-      .steps {
-        grid-template-columns:
-          repeat(3, 1fr);
-      }
-    }
+.footer{
+  display:flex;
 
-    @media (max-width: 680px) {
+  justify-content:space-between;
+  gap:25px;
 
-      header {
-        padding: 16px;
-      }
+  font-size:12px;
+}
 
-      .nav-right {
-        display: none;
-      }
+.footer strong{
+  color:white;
+}
 
-      .hero {
-        padding:
-          35px 18px
-          65px;
-      }
+/* =========================
+   RESPONSIVE
+========================= */
 
-      h1 {
-        font-size: 48px;
-      }
+@media(max-width:1050px){
 
-      .hero-description {
-        font-size: 16px;
-      }
+  .hero{
+    grid-template-columns:1fr;
+    gap:50px;
+  }
 
-      .hero-actions {
-        display: grid;
-        grid-template-columns: 1fr;
-      }
+  .scanner-wrap{
+    order:2;
+  }
 
-      .primary-button,
-      .secondary-button {
-        width: 100%;
-      }
+  .steps{
+    grid-template-columns:repeat(3,1fr);
+  }
 
-      .scanner-card {
-        width: min(330px, 100%);
-      }
+  .why{
+    grid-template-columns:1fr;
+    gap:40px;
+  }
 
-      .process-section,
-      .demo-section {
-        padding-left: 18px;
-        padding-right: 18px;
-      }
+}
 
-      .steps {
-        grid-template-columns:
-          repeat(2, 1fr);
-      }
+@media(max-width:760px){
 
-      .product-layout {
-        grid-template-columns: 1fr;
-      }
+  .container{
+    width:min(100% - 30px,var(--max));
+  }
 
-      .price-box {
-        width: 100%;
-      }
+  .nav{
+    min-height:65px;
+  }
 
-      .result-grid {
-        grid-template-columns: 1fr;
-      }
+  .nav-links{
+    display:none;
+  }
 
-      .footer-inner {
-        flex-direction: column;
-      }
-    }
+  .hero{
+    padding:60px 0 80px;
+  }
 
-    @media (max-width: 420px) {
+  .hero h1{
+    font-size:47px;
+  }
 
-      h1 {
-        font-size: 42px;
-      }
+  .hero-text{
+    font-size:16px;
+  }
 
-      .steps {
-        grid-template-columns: 1fr;
-      }
+  .hero-actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
 
-      .scanner-stage {
-        min-height: 390px;
-      }
+  .hero-actions .btn{
+    width:100%;
+  }
 
-      .scan-frame {
-        width: 220px;
-        height: 160px;
-      }
-    }
-  </style>
+  .scanner{
+    width:min(350px,100%);
+  }
+
+  .section{
+    padding:75px 0;
+  }
+
+  .steps{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .check-grid{
+    grid-template-columns:1fr;
+  }
+
+  .payment-box{
+    grid-template-columns:1fr;
+    text-align:center;
+  }
+
+  .payment-box p{
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .paypal{
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .result-data{
+    grid-template-columns:1fr;
+  }
+
+  .footer{
+    flex-direction:column;
+  }
+
+}
+
+@media(max-width:470px){
+
+  .hero h1{
+    font-size:40px;
+  }
+
+  .steps{
+    grid-template-columns:1fr;
+  }
+
+  .scanner{
+    border-radius:28px;
+  }
+
+  .scan-area{
+    width:220px;
+    height:165px;
+  }
+
+  .payment-box{
+    border-radius:25px;
+  }
+
+  .protection-card{
+    width:280px;
+    height:280px;
+  }
+
+}
+</style>
 </head>
 
 <body>
 
-<div class="app">
+<!-- ================================================
+     HEADER
+================================================ -->
 
-  <!-- =====================================================
-       HEADER
-  ====================================================== -->
+<header>
 
-  <header>
+  <div class="container nav">
 
-    <nav class="nav">
+    <a href="#" class="logo">
 
-      <a href="#" class="brand">
+      <span class="logo-icon">✓</span>
 
-        <span class="brand-mark">✓</span>
+      <span>
+        Провери продукта
+      </span>
 
-        <span>
-          Product Safety Scanner
-        </span>
+    </a>
 
+    <nav class="nav-links">
+
+      <a href="#kak-raboti">
+        Как работи
       </a>
 
-      <div class="nav-right">
+      <a href="#zashto">
+        Защо е важно
+      </a>
 
-        <button class="nav-button">
-          Как работи
-        </button>
+      <a href="#proverka">
+        Какво проверяваме
+      </a>
 
-        <button class="nav-button">
-          Моите проверки
-        </button>
-
-      </div>
+      <a href="#vuprosi">
+        Въпроси
+      </a>
 
     </nav>
 
-  </header>
+  </div>
 
+</header>
 
-  <!-- =====================================================
-       HERO
-  ====================================================== -->
 
-  <main>
+<!-- ================================================
+     HERO
+================================================ -->
 
-    <section class="hero">
+<main>
 
-      <div>
+<section class="container hero">
 
-        <div class="eyebrow">
+  <div>
 
-          <span class="eyebrow-dot"></span>
+    <div class="badge">
 
-          Проверка на продукти
+      <span class="badge-dot"></span>
 
-        </div>
-
-        <h1>
-          Провери продукта.
-          <br>
-          Знай какво купуваш.
-        </h1>
-
-        <p class="hero-description">
-
-          Сканирай баркода и получи ясна информация
-          за състава и приложимите регулаторни ограничения.
-
-        </p>
-
-        <div class="hero-actions">
-
-          <button
-            class="primary-button"
-            id="scanButton"
-          >
-            Сканирай баркод
-          </button>
-
-          <button
-            class="secondary-button"
-            id="manualButton"
-          >
-            Въведи баркод
-          </button>
-
-        </div>
-
-        <div
-          class="manual-input"
-          id="manualInput"
-        >
-
-          <input
-            id="barcodeInput"
-            type="text"
-            inputmode="numeric"
-            placeholder="Например 3800000000001"
-          >
-
-          <button
-            class="primary-button"
-            id="checkBarcodeButton"
-          >
-            Провери
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- =================================================
-           SCANNER VISUAL
-      ================================================== -->
-
-      <div class="scanner-stage">
-
-        <div class="scanner-card">
-
-          <div class="scanner-header">
-
-            <span class="scanner-title">
-              BARCODE SCANNER
-            </span>
-
-            <span class="scanner-status"></span>
-
-          </div>
-
-          <div class="scan-frame">
-
-            <div class="scan-line"></div>
-
-          </div>
-
-          <div class="barcode-placeholder"></div>
-
-          <div class="scanner-caption">
-            Постави баркода в рамката
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ===================================================
-         PROCESS
-    ==================================================== -->
-
-    <section
-      class="process-section"
-      id="howItWorks"
-    >
-
-      <div class="section-heading">
-
-        <h2>
-          От сканирането до резултата.
-        </h2>
-
-        <p>
-          Процесът е кратък и ясен.
-        </p>
-
-      </div>
-
-      <div class="steps">
-
-        <div class="step">
-
-          <span class="step-number">01</span>
-
-          <h3>Сканиране</h3>
-
-          <p>
-            Разпознаваме баркода.
-          </p>
-
-        </div>
-
-        <div class="step">
-
-          <span class="step-number">02</span>
-
-          <h3>Продукт</h3>
-
-          <p>
-            Намираме продукта.
-          </p>
-
-        </div>
-
-        <div class="step">
-
-          <span class="step-number">03</span>
-
-          <h3>Проверка</h3>
-
-          <p>
-            Подготвяме анализа.
-          </p>
-
-        </div>
-
-        <div class="step">
-
-          <span class="step-number">04</span>
-
-          <h3>Плащане</h3>
-
-          <p>
-            Единичен анализ €0.99.
-          </p>
-
-        </div>
-
-        <div class="step">
-
-          <span class="step-number">05</span>
-
-          <h3>Анализ</h3>
-
-          <p>
-            Проверяваме състава.
-          </p>
-
-        </div>
-
-        <div class="step">
-
-          <span class="step-number">06</span>
-
-          <h3>Резултат</h3>
-
-          <p>
-            Получаваш ясен резултат.
-          </p>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ===================================================
-         PRODUCT DEMO
-    ==================================================== -->
-
-    <section
-      class="demo-section"
-      id="analysis"
-    >
-
-      <div class="demo-card">
-
-        <div class="demo-label">
-          Примерен анализ
-        </div>
-
-        <div class="product-layout">
-
-          <div>
-
-            <h2 class="product-name">
-              TEST EU E100 Supplement
-            </h2>
-
-            <p class="product-brand">
-              Product Safety Scanner Test
-            </p>
-
-            <div class="product-meta">
-
-              <span class="meta-pill">
-                EAN13
-              </span>
-
-              <span class="meta-pill">
-                3800000000001
-              </span>
-
-              <span class="meta-pill">
-                EU Food
-              </span>
-
-            </div>
-
-          </div>
-
-          <div class="price-box">
-
-            <div class="price">
-              €0.99
-            </div>
-
-            <small>
-              за един анализ
-            </small>
-
-            <button
-              class="paypal-button"
-              id="paypalButton"
-            >
-              PayPal
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <!-- RESULT -->
-
-        <div
-          class="result"
-          id="result"
-        >
-
-          <div class="result-main">
-
-            <span class="result-status">
-              LIMIT EXCEEDED
-            </span>
-
-            <h3>
-              Лимитът е превишен
-            </h3>
-
-            <p class="result-description">
-
-              Установено е превишаване на приложимия
-              количествен регулаторен лимит за хранителна добавка.
-
-            </p>
-
-          </div>
-
-          <div class="result-grid">
-
-            <div class="result-item">
-
-              <span>
-                Добавка
-              </span>
-
-              <strong>
-                E 100
-              </strong>
-
-            </div>
-
-            <div class="result-item">
-
-              <span>
-                Установено количество
-              </span>
-
-              <strong>
-                120 mg/kg
-              </strong>
-
-            </div>
-
-            <div class="result-item">
-
-              <span>
-                Максимално ниво
-              </span>
-
-              <strong>
-                100 mg/kg
-              </strong>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-  </main>
-
-
-  <!-- =====================================================
-       FOOTER
-  ====================================================== -->
-
-  <footer>
-
-    <div class="footer-inner">
-
-      <span>
-        Product Safety Scanner
-      </span>
-
-      <span>
-        Информацията е предназначена за ориентировъчна
-        регулаторна проверка.
-      </span>
+      Контрол на продукта
 
     </div>
 
-  </footer>
+    <h1>
+
+      Не купувай
+      <span>на сляпо.</span>
+
+    </h1>
+
+    <p class="hero-text">
+
+      Сканирай баркода на продукта и получи
+      разбираема информация за неговия състав,
+      откритите добавки и приложимите регулаторни
+      ограничения.
+
+    </p>
+
+    <div class="hero-actions">
+
+      <button
+        class="btn btn-primary"
+        onclick="startScan()"
+      >
+
+        СКАНИРАЙ ПРОДУКТ
+
+      </button>
+
+    </div>
+
+    <p class="hero-note">
+
+      Сканирането започва директно от камерата
+      на устройството.
+
+    </p>
+
+  </div>
+
+
+  <div class="scanner-wrap">
+
+    <div class="scanner">
+
+      <div class="scanner-top">
+
+        <span class="scanner-name">
+          СКЕНЕР
+        </span>
+
+        <span class="live">
+
+          <span class="live-dot"></span>
+
+          Готов
+
+        </span>
+
+      </div>
+
+      <div class="scan-area">
+
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+
+        <div class="scan-line"></div>
+
+      </div>
+
+      <div class="barcode"></div>
+
+      <div class="scanner-bottom">
+
+        Постави баркода в рамката
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================================================
+     HOW IT WORKS
+================================================ -->
+
+<section
+  class="section section-white"
+  id="kak-raboti"
+>
+
+<div class="container">
+
+  <div class="section-head">
+
+    <div class="section-label">
+      Как работи
+    </div>
+
+    <h2>
+      От баркод до ясен резултат.
+    </h2>
+
+    <p class="section-lead">
+
+      Създадохме процеса така, че потребителят
+      да не трябва да разбира от регулации,
+      химични обозначения или сложни таблици.
+
+    </p>
+
+  </div>
+
+
+  <div class="steps">
+
+    <div class="step">
+
+      <span class="step-number">01</span>
+
+      <div class="step-icon">⌁</div>
+
+      <h3>Сканиране</h3>
+
+      <p>
+        Насочваш камерата към баркода.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <span class="step-number">02</span>
+
+      <div class="step-icon">✓</div>
+
+      <h3>Разпознаване</h3>
+
+      <p>
+        Системата намира продукта.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <span class="step-number">03</span>
+
+      <div class="step-icon">i</div>
+
+      <h3>Продуктова информация</h3>
+
+      <p>
+        Показваме наличните данни за продукта.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <span class="step-number">04</span>
+
+      <div class="step-icon">€</div>
+
+      <h3>Анализ</h3>
+
+      <p>
+        Избираш платен подробен анализ за €0.99.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <span class="step-number">05</span>
+
+      <div class="step-icon">✓</div>
+
+      <h3>Проверка</h3>
+
+      <p>
+        Съставът се сравнява с приложимите правила.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <span class="step-number">06</span>
+
+      <div class="step-icon">!</div>
+
+      <h3>Резултат</h3>
+
+      <p>
+        Получаваш разбираемо обяснение.
+      </p>
+
+    </div>
+
+  </div>
 
 </div>
+
+</section>
+
+
+<!-- ================================================
+     WHY IMPORTANT
+================================================ -->
+
+<section
+  class="section"
+  id="zashto"
+>
+
+<div class="container why">
+
+  <div class="why-visual">
+
+    <div class="protection-card">
+
+      <div class="protection-symbol">
+        ✓
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div>
+
+    <div class="section-head">
+
+      <div class="section-label">
+        Защо е важно
+      </div>
+
+      <h2>
+        Контролът започва преди покупката.
+      </h2>
+
+    </div>
+
+    <div class="why-text">
+
+      <p>
+
+        Всеки ден купуваме храни, напитки,
+        хранителни добавки и други продукти,
+        без винаги да имаме време да разчетем
+        сложния състав на етикета.
+
+      </p>
+
+      <p>
+
+        На етикета могат да присъстват обозначения,
+        които са трудни за разбиране — например
+        Е-номера, различни наименования на вещества,
+        концентрации и специфични условия за употреба.
+
+      </p>
+
+      <p>
+
+        Затова целта на системата е да превърне
+        сложната информация в разбираем резултат,
+        който помага на потребителя да вземе
+        информирано решение.
+
+      </p>
+
+    </div>
+
+
+    <div class="info-list">
+
+      <div class="info-item">
+
+        <span class="info-check">✓</span>
+
+        <span>
+          Проверка на съставките и откритите добавки.
+        </span>
+
+      </div>
+
+      <div class="info-item">
+
+        <span class="info-check">✓</span>
+
+        <span>
+          Сравнение с приложими регулаторни ограничения.
+        </span>
+
+      </div>
+
+      <div class="info-item">
+
+        <span class="info-check">✓</span>
+
+        <span>
+          Откриване на случаи, които изискват внимание.
+        </span>
+
+      </div>
+
+      <div class="info-item">
+
+        <span class="info-check">✓</span>
+
+        <span>
+          Ясно обяснение на резултата.
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- ================================================
+     WHAT WE CHECK
+================================================ -->
+
+<section
+  class="section section-white"
+  id="proverka"
+>
+
+<div class="container">
+
+  <div class="section-head">
+
+    <div class="section-label">
+      Какво проверяваме
+    </div>
+
+    <h2>
+      Не просто четем етикета.
+    </h2>
+
+    <p class="section-lead">
+
+      Системата структурира наличната информация
+      и я поставя в контекста на приложимите правила.
+
+    </p>
+
+  </div>
+
+
+  <div class="check-grid">
+
+    <div class="check-card">
+
+      <span class="check-number">
+        01
+      </span>
+
+      <h3>
+        Състав
+      </h3>
+
+      <p>
+
+        Проверяваме наличните съставки,
+        техните наименования и информацията,
+        свързана с тях.
+
+      </p>
+
+    </div>
+
+
+    <div class="check-card">
+
+      <span class="check-number">
+        02
+      </span>
+
+      <h3>
+        Добавки
+      </h3>
+
+      <p>
+
+        Разпознаваме обозначени хранителни
+        добавки и свързаните с тях регулаторни
+        ограничения.
+
+      </p>
+
+    </div>
+
+
+    <div class="check-card">
+
+      <span class="check-number">
+        03
+      </span>
+
+      <h3>
+        Количества
+      </h3>
+
+      <p>
+
+        Когато има необходимите данни,
+        проверяваме посочената концентрация
+        спрямо приложимия лимит.
+
+      </p>
+
+    </div>
+
+
+    <div class="check-card">
+
+      <span class="check-number">
+        04
+      </span>
+
+      <h3>
+        Категория
+      </h3>
+
+      <p>
+
+        Регулаторната оценка зависи от вида
+        и категорията на продукта.
+
+      </p>
+
+    </div>
+
+
+    <div class="check-card">
+
+      <span class="check-number">
+        05
+      </span>
+
+      <h3>
+        Предупреждения
+      </h3>
+
+      <p>
+
+        Отбелязваме ситуации, при които са
+        необходими допълнителни данни или
+        човешка проверка.
+
+      </p>
+
+    </div>
+
+
+    <div class="check-card">
+
+      <span class="check-number">
+        06
+      </span>
+
+      <h3>
+        Краен резултат
+      </h3>
+
+      <p>
+
+        Представяме резултата с ясна оценка
+        и обяснение на причината за нея.
+
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- ================================================
+     PAYMENT
+================================================ -->
+
+<section class="payment">
+
+<div class="container">
+
+  <div class="payment-box">
+
+    <div>
+
+      <div class="section-label">
+        Подробен анализ
+      </div>
+
+      <h2>
+        Провери продукта
+        преди да го избереш.
+      </h2>
+
+      <p>
+
+        След откриване на продукта можеш да
+        направиш подробен анализ на състава
+        и приложимите регулаторни ограничения.
+
+        Единичният анализ струва €0.99.
+
+      </p>
+
+    </div>
+
+
+    <div class="price">
+
+      <strong>
+        €0.99
+      </strong>
+
+      <span>
+        за един анализ
+      </span>
+
+      <button
+        class="paypal"
+        onclick="startPayment()"
+      >
+        Плати с PayPal
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- ================================================
+     RESULT
+================================================ -->
+
+<section class="section">
+
+<div class="container">
+
+  <div class="section-head">
+
+    <div class="section-label">
+      Примерен резултат
+    </div>
+
+    <h2>
+      Резултатът трябва да бъде разбираем.
+    </h2>
+
+    <p class="section-lead">
+
+      Вместо сложна таблица получаваш информация
+      за това какво е установено и защо е важно.
+
+    </p>
+
+  </div>
+
+
+  <div class="result-demo">
+
+    <div class="result-header">
+
+      <span class="result-badge">
+        ЛИМИТЪТ Е ПРЕВИШЕН
+      </span>
+
+      <h3>
+        Установено е превишаване
+      </h3>
+
+      <p>
+
+        При проверката е установена хранителна
+        добавка, за която посоченото количество
+        е над приложимото максимално ниво.
+
+      </p>
+
+    </div>
+
+
+    <div class="result-data">
+
+      <div class="data">
+
+        <span>
+          Добавка
+        </span>
+
+        <strong>
+          E 100
+        </strong>
+
+      </div>
+
+
+      <div class="data">
+
+        <span>
+          Установено количество
+        </span>
+
+        <strong>
+          120 mg/kg
+        </strong>
+
+      </div>
+
+
+      <div class="data">
+
+        <span>
+          Максимално ниво
+        </span>
+
+        <strong>
+          100 mg/kg
+        </strong>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- ================================================
+     FAQ
+================================================ -->
+
+<section
+  class="section section-white"
+  id="vuprosi"
+>
+
+<div class="container">
+
+  <div class="section-head">
+
+    <div class="section-label">
+      Въпроси
+    </div>
+
+    <h2>
+      Най-важното накратко.
+    </h2>
+
+  </div>
+
+
+  <div class="faq">
+
+    <details>
+
+      <summary>
+        Какво трябва да направя?
+      </summary>
+
+      <p>
+
+        Насочи камерата към баркода на продукта.
+        Когато продуктът бъде разпознат,
+        ще получиш информация за наличните данни
+        и възможност да стартираш подробен анализ.
+
+      </p>
+
+    </details>
+
+
+    <details>
+
+      <summary>
+        Защо се заплаща подробният анализ?
+      </summary>
+
+      <p>
+
+        Подробният анализ включва обработка на
+        информацията за продукта и проверка на
+        състава спрямо приложимите регулаторни
+        правила. Цената на единичния анализ е €0.99.
+
+      </p>
+
+    </details>
+
+
+    <details>
+
+      <summary>
+        Какво означава „лимитът е превишен“?
+      </summary>
+
+      <p>
+
+        Това означава, че за конкретната проверка
+        е установено количество, което надвишава
+        наличното в системата приложимо максимално
+        ниво. Резултатът трябва да се разглежда
+        в контекста на конкретния продукт и
+        наличните данни.
+
+      </p>
+
+    </details>
+
+
+    <details>
+
+      <summary>
+        Винаги ли системата може да даде окончателен резултат?
+      </summary>
+
+      <p>
+
+        Не. При липсваща концентрация, непълни
+        данни или случаи, изискващи допълнителна
+        експертна оценка, системата може да маркира
+        проверката за човешки преглед.
+
+      </p>
+
+    </details>
+
+
+    <details>
+
+      <summary>
+        Заменя ли проверката официален контрол?
+      </summary>
+
+      <p>
+
+        Не. Системата е инструмент за информационна
+        и регулаторна ориентировъчна проверка.
+        Тя не заменя официалния контрол,
+        лабораторно изпитване или компетентен
+        регулаторен орган.
+
+      </p>
+
+    </details>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- ================================================
+     FINAL CTA
+================================================ -->
+
+<section class="final">
+
+<div class="container">
+
+  <h2>
+    Следващият продукт,
+    който купуваш, може да бъде проверен.
+  </h2>
+
+  <p>
+
+    Сканирай баркода и получи информация,
+    която ти помага да вземеш по-информирано решение.
+
+  </p>
+
+  <button
+    class="btn btn-primary"
+    onclick="startScan()"
+  >
+    СКАНИРАЙ ПРОДУКТ
+  </button>
+
+</div>
+
+</section>
+
+</main>
+
+
+<!-- ================================================
+     FOOTER
+================================================ -->
+
+<footer>
+
+<div class="container footer">
+
+  <div>
+    <strong>
+      Провери продукта
+    </strong>
+
+    <br>
+
+    Контрол. Информация. Информиран избор.
+  </div>
+
+  <div>
+
+    Инструментът предоставя информационна
+    регулаторна проверка и не замества
+    официален контрол или лабораторно изпитване.
+
+  </div>
+
+</div>
+
+</footer>
 
 
 <script>
 
-  /* =======================================================
-     ELEMENTS
-  ======================================================= */
+function startScan(){
 
-  const scanButton =
-    document.getElementById("scanButton");
+  /*
+    Тук по-късно ще бъде включена
+    реалната камера и barcode scanner.
 
-  const manualButton =
-    document.getElementById("manualButton");
+    След разпознаване:
+    1. barcode
+    2. Supabase scan request
+    3. PRODUCT_FOUND
+    4. €0.99
+    5. PayPal
+    6. анализ
+    7. резултат
+  */
 
-  const manualInput =
-    document.getElementById("manualInput");
-
-  const barcodeInput =
-    document.getElementById("barcodeInput");
-
-  const checkBarcodeButton =
-    document.getElementById("checkBarcodeButton");
-
-  const paypalButton =
-    document.getElementById("paypalButton");
-
-  const result =
-    document.getElementById("result");
-
-
-  /* =======================================================
-     MANUAL BARCODE
-  ======================================================= */
-
-  manualButton.addEventListener(
-    "click",
-    () => {
-
-      manualInput.classList.toggle(
-        "visible"
-      );
-
-      if (
-        manualInput.classList.contains(
-          "visible"
-        )
-      ) {
-
-        barcodeInput.focus();
-
-      }
-
-    }
+  alert(
+    "Скенерът ще бъде активиран тук. Следващата стъпка е свързването на камерата с базата."
   );
+}
 
 
-  /* =======================================================
-     DEMO SCAN
-  ======================================================= */
+function startPayment(){
 
-  scanButton.addEventListener(
-    "click",
-    () => {
+  /*
+    Тук ще бъде свързана реалната
+    PayPal Edge Function:
 
-      document
-        .getElementById("analysis")
-        .scrollIntoView({
-          behavior: "smooth"
-        });
+    paypal-create-order
 
-    }
+    След това:
+    PayPal Checkout
+    →
+    Capture
+    →
+    PAID
+    →
+    анализ
+  */
+
+  alert(
+    "PayPal ще бъде свързан към този бутон в следващия етап."
   );
-
-
-  /* =======================================================
-     DEMO BARCODE CHECK
-  ======================================================= */
-
-  checkBarcodeButton.addEventListener(
-    "click",
-    () => {
-
-      const barcode =
-        barcodeInput.value.trim();
-
-      if (!barcode) {
-
-        barcodeInput.focus();
-
-        return;
-
-      }
-
-      document
-        .getElementById("analysis")
-        .scrollIntoView({
-          behavior: "smooth"
-        });
-
-    }
-  );
-
-
-  /* =======================================================
-     DEMO PAYPAL
-  ======================================================= */
-
-  paypalButton.addEventListener(
-    "click",
-    () => {
-
-      paypalButton.textContent =
-        "Подготвяме плащането...";
-
-      paypalButton.disabled = true;
-
-      setTimeout(
-        () => {
-
-          paypalButton.style.display =
-            "none";
-
-          result.classList.add(
-            "visible"
-          );
-
-          result.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-          });
-
-        },
-        900
-      );
-
-    }
-  );
+}
 
 </script>
 
