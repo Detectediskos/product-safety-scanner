@@ -257,6 +257,38 @@ header{
   font-size:12px;
 }
 
+.quota-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  margin-top:14px;
+  padding:9px 13px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:white;
+  color:#526058;
+  font-size:12px;
+  font-weight:750;
+}
+
+.quota-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 4px var(--green-light);
+}
+
+.quota-pill.empty{
+  background:#fff8ee;
+  border-color:#f0dfc2;
+}
+
+.quota-pill.empty .quota-dot{
+  background:var(--orange);
+  box-shadow:0 0 0 4px var(--orange-light);
+}
+
 /* =====================================================
    SCANNER VISUAL
 ===================================================== */
@@ -1263,6 +1295,28 @@ footer{
   font-size:12px;
 }
 
+.camera-quota{
+  margin:4px 22px 12px;
+  background:#18221d;
+  border-color:#34423a;
+  color:#d9e4dd;
+}
+
+.camera-quota .quota-dot{
+  background:#68dca1;
+  box-shadow:0 0 0 4px rgba(104,220,161,.12);
+}
+
+.camera-quota.empty{
+  background:#2b2115;
+  border-color:#5a4526;
+}
+
+.camera-quota.empty .quota-dot{
+  background:#e6a94f;
+  box-shadow:0 0 0 4px rgba(230,169,79,.12);
+}
+
 .camera-error{
   display:none;
 
@@ -1771,18 +1825,21 @@ a:focus-visible{
       class="btn btn-primary"
       onclick="openScanner()"
     >
-
       СКАНИРАЙ ПРОДУКТ
-
     </button>
 
+  </div>
+
+  <div class="quota-pill" id="quotaPill">
+    <span class="quota-dot"></span>
+    <span id="quotaText">Зареждаме безплатните проверки...</span>
   </div>
 
 
   <p class="hero-note">
 
     Камерата ще се използва само за
-    разпознаване на баркода.
+    разпознаване на баркода. На едно устройство има 2 безплатни проверки.
 
   </p>
 
@@ -1950,7 +2007,7 @@ a:focus-visible{
   </h3>
 
   <p>
-    Избираш подробен анализ за €0.99.
+    Първите 2 проверки на устройство са безплатни. След това анализът е €0.99.
   </p>
 
 </div>
@@ -2313,7 +2370,7 @@ a:focus-visible{
     състава и приложимите регулаторни
     ограничения.
 
-    Един анализ струва €0.99.
+    Първите 2 проверки на устройство са безплатни. След това всеки подробен анализ струва €0.99.
 
   </p>
 
@@ -2703,6 +2760,11 @@ a:focus-visible{
 
 </div>
 
+<div class="quota-pill camera-quota" id="cameraQuotaPill">
+  <span class="quota-dot"></span>
+  <span id="cameraQuotaText">Проверяваме безплатните проверки...</span>
+</div>
+
 
 <div
   class="camera-error"
@@ -2820,11 +2882,251 @@ a:focus-visible{
 
 <script>
 
+const FREE_SCAN_ENDPOINT =
+  "https://dojepjbuhsyhrouenoxr.supabase.co/functions/v1/check-free-scan";
+
+const DEVICE_STORAGE_KEY =
+  "product_safety_scanner_device_id_v1";
+
+const DEVICE_VERSION =
+  "v1";
+
 let scanner = null;
-
 let scannerRunning = false;
-
 let detectedBarcode = null;
+let deviceId = null;
+let quotaState = {
+  free_scans_remaining: null,
+  free_scans_used: null,
+  access_type: null
+};
+
+
+/* =====================================================
+   DEVICE ID
+   ===================================================== */
+
+function getDeviceId(){
+
+  if(deviceId){
+    return deviceId;
+  }
+
+  try{
+
+    let saved =
+      localStorage.getItem(DEVICE_STORAGE_KEY);
+
+    if(saved && saved.length >= 16){
+
+      deviceId = saved;
+      return deviceId;
+
+    }
+
+    const generated =
+      (
+        crypto.randomUUID
+          ? crypto.randomUUID()
+          : (
+              Date.now().toString(36) +
+              Math.random().toString(36).slice(2) +
+              Math.random().toString(36).slice(2)
+            )
+      );
+
+    deviceId =
+      DEVICE_VERSION + "-" + generated;
+
+    localStorage.setItem(
+      DEVICE_STORAGE_KEY,
+      deviceId
+    );
+
+    return deviceId;
+
+  }
+  catch(error){
+
+    /*
+      Ако localStorage е блокиран, използваме
+      session-level идентификатор. Това е fallback,
+      не е идеалният вариант за дългосрочна квота.
+    */
+
+    if(!window.__fallbackDeviceId){
+
+      window.__fallbackDeviceId =
+        DEVICE_VERSION + "-" +
+        Date.now().toString(36) + "-" +
+        Math.random().toString(36).slice(2);
+
+    }
+
+    return window.__fallbackDeviceId;
+
+  }
+
+}
+
+
+/* =====================================================
+   QUOTA UI
+===================================================== */
+
+function setQuotaUI(remaining, used){
+
+  const heroPill =
+    document.getElementById("quotaPill");
+
+  const heroText =
+    document.getElementById("quotaText");
+
+  const cameraPill =
+    document.getElementById("cameraQuotaPill");
+
+  const cameraText =
+    document.getElementById("cameraQuotaText");
+
+  if(
+    typeof remaining !== "number" ||
+    typeof used !== "number"
+  ){
+
+    heroText.textContent =
+      "Безплатните проверки се зареждат...";
+
+    cameraText.textContent =
+      "Проверяваме безплатните проверки...";
+
+    return;
+
+  }
+
+  if(remaining > 0){
+
+    const text =
+      remaining === 1
+        ? "Остава 1 безплатна проверка"
+        : `Остават ${remaining} безплатни проверки`;
+
+    heroText.textContent = text;
+    cameraText.textContent = text;
+
+    heroPill.classList.remove("empty");
+    cameraPill.classList.remove("empty");
+
+  }
+  else{
+
+    const text =
+      "Безплатните проверки са изчерпани";
+
+    heroText.textContent = text;
+    cameraText.textContent =
+      text + " • Следващият анализ е €0.99";
+
+    heroPill.classList.add("empty");
+    cameraPill.classList.add("empty");
+
+  }
+
+  quotaState.free_scans_remaining = remaining;
+  quotaState.free_scans_used = used;
+
+}
+
+
+/* =====================================================
+   CHECK / CLAIM FREE SCAN
+===================================================== */
+
+async function claimFreeScan(){
+
+  const currentDeviceId =
+    getDeviceId();
+
+  const response =
+    await fetch(
+      FREE_SCAN_ENDPOINT,
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+          device_id:currentDeviceId
+        })
+      }
+    );
+
+  let data = null;
+
+  try{
+    data = await response.json();
+  }
+  catch(error){
+    throw new Error(
+      "Сървърът върна невалиден отговор."
+    );
+  }
+
+  if(!response.ok || !data.success){
+
+    throw new Error(
+      data?.message ||
+      "Не успяхме да проверим достъпа до анализа."
+    );
+
+  }
+
+  quotaState.access_type =
+    data.access_type;
+
+  if(
+    typeof data.free_scans_remaining === "number"
+  ){
+
+    setQuotaUI(
+      data.free_scans_remaining,
+      data.free_scans_used
+    );
+
+  }
+
+  return data;
+
+}
+
+
+/* =====================================================
+   INITIAL QUOTA DISPLAY
+===================================================== */
+
+async function initializeQuota(){
+
+  /*
+    Важно:
+    claim_free_scan() увеличава брояча.
+    Затова НЕ го извикваме при зареждане на сайта.
+    Броячът се консумира само когато потребителят
+    действително потвърди сканирания продукт.
+  */
+
+  getDeviceId();
+
+  const text =
+    "До 2 безплатни проверки на устройство";
+
+  document.getElementById("quotaText")
+    .textContent = text;
+
+  document.getElementById("cameraQuotaText")
+    .textContent = text;
+
+}
 
 
 /* =====================================================
@@ -2840,14 +3142,9 @@ async function openScanner(){
     document.getElementById("cameraError");
 
   error.classList.remove("active");
-
   error.textContent = "";
 
   modal.classList.add("active");
-
-  /*
-    Изчакваме DOM-а да се визуализира.
-  */
 
   await new Promise(resolve => {
     setTimeout(resolve, 250);
@@ -2872,15 +3169,12 @@ async function startCamera(){
     document.getElementById("cameraError");
 
   error.classList.remove("active");
-
   error.textContent = "";
 
-  /*
-    Проверка дали браузърът поддържа камера.
-  */
-
-  if(!navigator.mediaDevices ||
-     !navigator.mediaDevices.getUserMedia){
+  if(
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ){
 
     showCameraError(
       "Този браузър не позволява достъп до камерата. Моля, използвай актуална версия на Chrome, Safari или друг съвременен браузър."
@@ -2888,11 +3182,6 @@ async function startCamera(){
 
     return;
   }
-
-
-  /*
-    Проверяваме дали библиотеката е заредена.
-  */
 
   if(typeof Html5Qrcode === "undefined"){
 
@@ -2903,16 +3192,10 @@ async function startCamera(){
     return;
   }
 
-
   try{
 
     scanner =
       new Html5Qrcode("reader");
-
-
-    /*
-      Задна камера на телефона.
-    */
 
     const config = {
 
@@ -2934,7 +3217,6 @@ async function startCamera(){
 
     };
 
-
     await scanner.start(
 
       {
@@ -2948,7 +3230,6 @@ async function startCamera(){
       onScanError
 
     );
-
 
     scannerRunning = true;
 
@@ -2979,10 +3260,6 @@ async function onBarcodeDetected(decodedText){
     return;
   }
 
-  /*
-    Защита от многократно засичане.
-  */
-
   if(detectedBarcode){
     return;
   }
@@ -2990,15 +3267,12 @@ async function onBarcodeDetected(decodedText){
   detectedBarcode =
     decodedText.trim();
 
-
   await stopScanner();
-
 
   document
     .getElementById("detectedCode")
     .textContent =
       detectedBarcode;
-
 
   document
     .getElementById("successModal")
@@ -3014,11 +3288,8 @@ async function onBarcodeDetected(decodedText){
 function onScanError(errorMessage){
 
   /*
-    html5-qrcode извиква тази функция
-    постоянно, докато търси баркод.
-
-    Затова не показваме грешки на потребителя
-    при всяко неуспешно засичане.
+    Игнорираме нормалните неуспешни кадри,
+    докато скенерът търси баркод.
   */
 
 }
@@ -3037,9 +3308,7 @@ async function stopScanner(){
   try{
 
     if(scannerRunning){
-
       await scanner.stop();
-
     }
 
   }
@@ -3067,7 +3336,6 @@ async function stopScanner(){
   }
 
   scannerRunning = false;
-
   scanner = null;
 
 }
@@ -3115,46 +3383,187 @@ async function scanAgain(){
 
 async function continueWithProduct(){
 
+  if(!detectedBarcode){
+    return;
+  }
+
   document
     .getElementById("successModal")
     .classList.remove("active");
 
+  showLoading(
+    "Проверяваме достъпа",
+    "Проверяваме дали тази проверка е безплатна..."
+  );
+
+  try{
+
+    /*
+      Тук се консумира една от двете безплатни проверки.
+      Това се случва само след реално разпознат баркод
+      и натиснато „Продължи с проверката“.
+    */
+
+    const access =
+      await claimFreeScan();
+
+    hideLoading();
+
+    if(access.access_type === "FREE"){
+
+      showLoading(
+        "Проверяваме продукта",
+        "Търсим продукта и подготвяме резултата..."
+      );
+
+      /*
+        Следващата стъпка ще замени този блок с
+        реалния scan_request към съществуващата база.
+
+        Засега не показваме фалшив резултат.
+      */
+
+      await new Promise(resolve => {
+        setTimeout(resolve,900);
+      });
+
+      hideLoading();
+
+      alert(
+        access.free_scans_remaining === 0
+          ? "Безплатната проверка е използвана. Следващият анализ ще бъде платен."
+          : "Безплатната проверка е активирана. Следващият етап е свързването с анализа на продукта."
+      );
+
+      return;
+
+    }
+
+    if(
+      access.access_type ===
+      "PAYMENT_REQUIRED"
+    ){
+
+      showPaymentRequired();
+
+      return;
+
+    }
+
+  }
+  catch(error){
+
+    hideLoading();
+
+    console.error(
+      "Free scan check:",
+      error
+    );
+
+    showFriendlyError(
+      error?.message ||
+      "Не успяхме да проверим достъпа. Моля, опитай отново."
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   PAYMENT REQUIRED
+===================================================== */
+
+function showPaymentRequired(){
+
+  const modal =
+    document.getElementById("successModal");
+
+  const card =
+    modal.querySelector(".success-card");
+
+  card.innerHTML = `
+
+    <div class="success-icon"
+         style="background:#fff1d9;color:#c47a18;">
+      €
+    </div>
+
+    <h3>
+      Безплатните проверки са изчерпани
+    </h3>
+
+    <p>
+      Този продукт е готов за подробен анализ.
+      Цената на следващата проверка е €0.99.
+    </p>
+
+    <div class="detected-code">
+      ${escapeHtml(detectedBarcode || "Продукт")}
+    </div>
+
+    <div class="success-actions">
+
+      <button
+        class="success-primary"
+        onclick="startPaymentForProduct()"
+      >
+        ПЛАТИ €0.99 С PAYPAL
+      </button>
+
+      <button
+        class="success-secondary"
+        onclick="closeSuccessModal()"
+      >
+        Затвори
+      </button>
+
+    </div>
+  `;
+
+  modal.classList.add("active");
+
+}
+
+
+/* =====================================================
+   PAYPAL PLACEHOLDER
+===================================================== */
+
+function startPaymentForProduct(){
 
   /*
-    ТУК ЩЕ ВРЪЖЕМ SUPABASE.
+    Тук ще свържем реалния PayPal flow:
 
-    Следващата стъпка ще бъде:
+    1. paypal-create-order
+    2. получаване на order ID
+    3. PayPal checkout
+    4. capture
+    5. потвърждение
+    6. стартиране на анализа
 
-    detectedBarcode
-        ↓
-    scan request
-        ↓
-    lookup
-        ↓
-    PRODUCT_FOUND
-        ↓
-    продукт
-        ↓
-    €0.99
-        ↓
-    PayPal
-
-    Засега показваме красив loading екран,
-    за да не симулираме фалшив резултат.
+    НЕ поставяме PayPal Secret в HTML.
   */
 
-  showLoading();
+  alert(
+    "PayPal е следващата връзка. Плащането ще бъде стартирано през защитената Supabase Edge Function."
+  );
 
-  await new Promise(resolve => {
-    setTimeout(resolve,1200);
-  });
+}
 
-  hideLoading();
 
-  /*
-    Временно отиваме към секцията
-    за подробен анализ.
-  */
+/* =====================================================
+   PAYMENT SECTION BUTTON
+===================================================== */
+
+function startPayment(){
+
+  if(detectedBarcode){
+
+    showPaymentRequired();
+    return;
+
+  }
 
   document
     .querySelector(".payment")
@@ -3166,41 +3575,21 @@ async function continueWithProduct(){
 
 
 /* =====================================================
-   PAYMENT
-===================================================== */
-
-function startPayment(){
-
-  /*
-    PayPal ще бъде свързан тук
-    чрез Supabase Edge Function:
-
-    paypal-create-order
-
-    Няма да поставяме PayPal Secret
-    в този HTML файл.
-  */
-
-  showLoading();
-
-  setTimeout(() => {
-
-    hideLoading();
-
-    alert(
-      "PayPal ще бъде свързан към този бутон в следващата стъпка."
-    );
-
-  },800);
-
-}
-
-
-/* =====================================================
    LOADING
 ===================================================== */
 
-function showLoading(){
+function showLoading(
+  title = "Проверяваме продукта",
+  message = "Моля, изчакай няколко секунди..."
+){
+
+  document
+    .querySelector("#loading h3")
+    .textContent = title;
+
+  document
+    .querySelector("#loading p")
+    .textContent = message;
 
   document
     .getElementById("loading")
@@ -3214,6 +3603,84 @@ function hideLoading(){
   document
     .getElementById("loading")
     .classList.remove("active");
+
+}
+
+
+/* =====================================================
+   FRIENDLY ERROR
+===================================================== */
+
+function showFriendlyError(message){
+
+  const modal =
+    document.getElementById("successModal");
+
+  const card =
+    modal.querySelector(".success-card");
+
+  card.innerHTML = `
+
+    <div class="success-icon"
+         style="background:#fde9e9;color:#c83b3b;">
+      !
+    </div>
+
+    <h3>
+      Не успяхме да продължим
+    </h3>
+
+    <p>
+      ${escapeHtml(message)}
+    </p>
+
+    <div class="success-actions">
+
+      <button
+        class="success-primary"
+        onclick="closeSuccessModal()"
+      >
+        Разбрах
+      </button>
+
+      <button
+        class="success-secondary"
+        onclick="scanAgain()"
+      >
+        Сканирай отново
+      </button>
+
+    </div>
+  `;
+
+  modal.classList.add("active");
+
+}
+
+
+function closeSuccessModal(){
+
+  document
+    .getElementById("successModal")
+    .classList.remove("active");
+
+  detectedBarcode = null;
+
+}
+
+
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+
+function escapeHtml(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 
 }
 
@@ -3248,7 +3715,6 @@ function getCameraErrorMessage(error){
       error
     ).toLowerCase();
 
-
   if(
     text.includes("permission") ||
     text.includes("notallowed")
@@ -3256,11 +3722,10 @@ function getCameraErrorMessage(error){
 
     return(
       "Достъпът до камерата е отказан. " +
-      "Разреши използването на камерата от настройките на браузъра и опитай отново."
+      "Разреши камерата от настройките на браузъра и опитай отново."
     );
 
   }
-
 
   if(
     text.includes("notfound") ||
@@ -3272,7 +3737,6 @@ function getCameraErrorMessage(error){
     );
 
   }
-
 
   if(
     text.includes("notreadable") ||
@@ -3286,7 +3750,6 @@ function getCameraErrorMessage(error){
 
   }
 
-
   if(
     text.includes("secure") ||
     text.includes("https")
@@ -3298,7 +3761,6 @@ function getCameraErrorMessage(error){
     );
 
   }
-
 
   return(
     "Не успяхме да стартираме камерата. " +
@@ -3320,9 +3782,7 @@ document.addEventListener(
 
       closeScanner();
 
-      document
-        .getElementById("successModal")
-        .classList.remove("active");
+      closeSuccessModal();
 
     }
 
@@ -3345,14 +3805,19 @@ document
         "successModal"
       ){
 
-        document
-          .getElementById("successModal")
-          .classList.remove("active");
+        closeSuccessModal();
 
       }
 
     }
   );
+
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+
+initializeQuota();
 
 </script>
 
