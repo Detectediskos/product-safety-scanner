@@ -4,24 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Провери продукта | Интелигентен скенер за храни и напитки</title>
+<title>Провери продукта</title>
 
 <meta
   name="description"
-  content="Сканирай баркод на храна или напитка и получи ясна информация за състава, добавките, алергените и хранителния профил. 2 безплатни проверки, след това анализ от €0.99."
+  content="Сканирай продукта и разбери повече за неговия състав и приложимите регулаторни ограничения."
 >
-<meta name="robots" content="index,follow,max-image-preview:large">
-<meta name="author" content="Провери продукта">
-<meta name="theme-color" content="#f4f7f3">
-
-<meta property="og:type" content="website">
-<meta property="og:title" content="Провери продукта | Интелигентен скенер за храни и напитки">
-<meta property="og:description" content="Сканирай баркода и разбери какво има в продукта — състав, добавки, алергени и хранителен профил.">
-<meta property="og:locale" content="bg_BG">
-
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Провери продукта | Интелигентен скенер за храни и напитки">
-<meta name="twitter:description" content="Ясна информация за продукта след сканиране на баркода. 2 безплатни проверки, след това анализ от €0.99.">
 
 <!-- Реален barcode scanner -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8" defer crossorigin="anonymous"></script>
@@ -807,226 +795,100 @@ header{
 }
 
 /* =====================================================
-   PRICING
+   PAYMENT
 ===================================================== */
-.pricing{
-  padding:96px 0 105px;
+
+.payment{
+  padding:90px 0;
 }
 
-.pricing-head{
-  max-width:760px;
-  margin:0 auto 44px;
+.payment-box{
+  background:
+    linear-gradient(
+      135deg,
+      #123b29,
+      #176f48
+    );
+
+  color:white;
+
+  border-radius:32px;
+
+  padding:clamp(30px,6vw,65px);
+
+  display:grid;
+
+  grid-template-columns:1fr auto;
+
+  gap:50px;
+
+  align-items:center;
+
+  box-shadow:var(--shadow);
+}
+
+.payment-box .section-label{
+  color:#9de1bd;
+}
+
+.payment-box h2{
+  margin-top:10px;
+
+  font-size:clamp(32px,4vw,52px);
+
+  line-height:1.05;
+
+  letter-spacing:-.045em;
+}
+
+.payment-box p{
+  margin-top:15px;
+
+  max-width:620px;
+
+  color:#c7dfd2;
+}
+
+.price{
   text-align:center;
 }
 
-.pricing-head .section-lead{
-  max-width:650px;
-  margin-left:auto;
-  margin-right:auto;
-}
+.price strong{
+  display:block;
 
-.pricing-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:18px;
-  align-items:stretch;
-}
+  font-size:55px;
 
-.plan-card{
-  position:relative;
-  padding:34px 30px 30px;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:26px;
-  box-shadow:0 14px 42px rgba(20,40,28,.06);
-  display:flex;
-  flex-direction:column;
-  min-height:520px;
-  overflow:visible;
-}
-
-.plan-card:hover{
-  transform:translateY(-3px);
-  box-shadow:0 22px 52px rgba(20,40,28,.09);
-}
-
-.plan-card.recommended{
-  border:2px solid var(--green);
-  background:linear-gradient(180deg,#f1faf5 0%,#ffffff 32%);
-  box-shadow:0 20px 55px rgba(23,122,77,.12);
-  transform:translateY(-4px);
-}
-
-.plan-card.recommended:hover{
-  transform:translateY(-7px);
-}
-
-/* Badge is physically integrated into the top border. */
-.plan-card.recommended::before{
-  content:"ПРЕПОРЪЧАН";
-  position:absolute;
-  top:-18px;
-  right:24px;
-  z-index:6;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:36px;
-  padding:0 17px;
-  border:2px solid var(--green);
-  border-radius:999px;
-  background:#e7f5ec;
-  color:var(--green-dark);
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:.025em;
   line-height:1;
-  white-space:nowrap;
-  box-shadow:0 4px 14px rgba(23,122,77,.10);
-}
 
-.plan-card.recommended::after{
-  content:"";
-  position:absolute;
-  top:-2px;
-  right:23px;
-  width:150px;
-  height:5px;
-  z-index:5;
-  background:#f1faf5;
-}
-
-.plan-card h3{
-  font-size:26px;
-  letter-spacing:-.04em;
-}
-
-.plan-description{
-  margin-top:9px;
-  min-height:50px;
-  color:var(--muted);
-  font-size:14px;
-  line-height:1.65;
-}
-
-.plan-price{
-  display:flex;
-  align-items:baseline;
-  gap:8px;
-  margin-top:25px;
-}
-
-.plan-price strong{
-  font-size:48px;
-  line-height:1;
   letter-spacing:-.06em;
 }
 
-.plan-price span{
-  color:var(--muted);
-  font-size:12px;
-  font-weight:800;
+.price span{
+  color:#b9d9c8;
+
+  font-size:13px;
 }
 
-.plan-total{
-  margin-top:9px;
-  color:var(--green-dark);
-  font-size:14px;
-  font-weight:900;
+.paypal{
+  display:block;
+
+  margin-top:17px;
+
+  min-width:190px;
+
+  padding:14px 20px;
+
+  border:none;
+
+  border-radius:12px;
+
+  background:#ffc439;
+
+  color:#111;
+
+  font-weight:850;
 }
 
-.plan-list{
-  display:grid;
-  gap:12px;
-  margin:25px 0 28px;
-  list-style:none;
-}
-
-.plan-list li{
-  position:relative;
-  padding-left:26px;
-  color:#526058;
-  font-size:14px;
-  line-height:1.45;
-}
-
-.plan-list li::before{
-  content:"✓";
-  position:absolute;
-  left:0;
-  top:0;
-  color:var(--green);
-  font-weight:900;
-}
-
-.plan-button{
-  width:100%;
-  margin-top:auto;
-  min-height:52px;
-}
-
-.plan-saving{
-  display:inline-flex;
-  align-self:flex-start;
-  margin-top:16px;
-  padding:7px 10px;
-  border-radius:999px;
-  background:var(--green-light);
-  color:var(--green-dark);
-  font-size:11px;
-  font-weight:900;
-}
-
-.pricing-note{
-  margin:28px auto 0;
-  max-width:760px;
-  text-align:center;
-  color:#718078;
-  font-size:12px;
-  line-height:1.6;
-}
-
-.payment{
-  padding:0;
-}
-
-@media(max-width:900px){
-  .pricing-grid{
-    grid-template-columns:1fr;
-    max-width:560px;
-    margin:auto;
-  }
-  .plan-card{
-    min-height:0;
-  }
-  .plan-card.recommended{
-    order:-1;
-  }
-}
-
-@media(max-width:470px){
-  .pricing{
-    padding:72px 0 80px;
-  }
-  .pricing-head{
-    text-align:left;
-  }
-  .plan-card{
-    padding:30px 22px 24px;
-    border-radius:23px;
-  }
-  .plan-card.recommended::before{
-    right:18px;
-    top:-17px;
-    min-height:34px;
-    padding:0 14px;
-    font-size:11px;
-  }
-  .plan-card.recommended::after{
-    right:17px;
-    width:137px;
-  }
-}
 /* =====================================================
    RESULT
 ===================================================== */
@@ -2386,20 +2248,6 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 }
 </style>
 
-
-
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"WebApplication",
-  "name":"Провери продукта",
-  "applicationCategory":"FoodAndDrinkApplication",
-  "operatingSystem":"Web",
-  "inLanguage":"bg",
-  "description":"Интелигентен скенер за храни и напитки, който показва информация за състав, добавки, алергени и хранителен профил."
-}
-</script>
-
 </head>
 
 <body>
@@ -2436,10 +2284,6 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 
     <a href="#proverka">
       Какво проверяваме
-    </a>
-
-    <a href="#ceni">
-      Цени
     </a>
 
     <a href="#vuprosi">
@@ -2487,10 +2331,10 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 
   <p class="hero-text">
 
-    Сканирай баркода на храна или напитка и получи
-    ясна информация за състава, добавките,
-    алергените и хранителния профил — преди да
-    решиш какво да купиш.
+    Сканирай баркода на продукта и получи
+    разбираема информация за неговия състав,
+    откритите добавки и приложимите
+    регулаторни ограничения.
 
   </p>
 
@@ -2514,9 +2358,9 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 
   <p class="hero-note">
 
-    2 безплатни проверки на стандартно устройство.
-    След това избираш единичен анализ за €0.99 или пакет.
-    Без абонамент.
+    Камерата ще се използва само за
+    разпознаване на баркода. Стандартният лимит е 2 безплатни проверки на устройство.
+    OWNER устройството се управлява от Supabase и има отделен достъп.
 
   </p>
 
@@ -2684,7 +2528,7 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
   </h3>
 
   <p>
-    Първите 2 проверки на стандартно устройство са безплатни. След това анализът е €0.99. OWNER устройството не се таксува.
+    Първите 2 проверки на стандартно устройство са безплатни. След това анализът е €0.99. OWNER устройството не се таксува.''
 
   </p>
 
@@ -3021,129 +2865,61 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 
 
 <!-- =====================================================
-     PRICING
+     PAYMENT
 ===================================================== -->
 
-<section class="pricing section-white" id="ceni">
+<section class="payment">
 
 <div class="container">
 
-<div class="pricing-head">
+<div class="payment-box">
+
+<div>
 
   <div class="section-label">
-    Ясни цени
+    Подробен анализ
   </div>
 
   <h2>
-    Плащаш само когато имаш нужда.
+    Провери продукта
+    преди да го избереш.
   </h2>
 
-  <p class="section-lead">
-    Няма месечен абонамент. Можеш да направиш само една проверка
-    за €0.99 или да избереш пакет с бонус проверки на по-ниска цена.
+  <p>
+
+    След откриване на продукта можеш
+    да направиш подробен анализ на
+    състава и приложимите регулаторни
+    ограничения.
+
+    Първите 2 проверки на стандартно устройство са безплатни. След това всеки подробен анализ струва €0.99. OWNER устройството има отделен достъп.''
+
+
   </p>
 
 </div>
 
-<div class="pricing-grid">
 
-  <article class="plan-card">
+<div class="price">
 
-    <h3>Единична проверка</h3>
+  <strong>
+    €0.99
+  </strong>
 
-    <p class="plan-description">
-      За еднократна нужда — плащаш само за един баркод и един анализ.
-    </p>
+  <span>
+    за един анализ
+  </span>
 
-    <div class="plan-price">
-      <strong>€0.99</strong>
-      <span>еднократно</span>
-    </div>
-
-    <div class="plan-total">1 сканиране + анализ</div>
-
-    <ul class="plan-list">
-      <li>1 проверка на един баркод</li>
-      <li>Състав и налични добавки</li>
-      <li>Алергени, когато са налични</li>
-      <li>Хранителна оценка според наличните данни</li>
-      <li>Без абонамент и без автоматично подновяване</li>
-    </ul>
-
-    <button class="btn btn-primary plan-button" onclick="startPayment('single')">
-      ИЗБЕРИ €0.99
-    </button>
-
-  </article>
-
-
-  <article class="plan-card">
-
-    <h3>Старт</h3>
-
-    <p class="plan-description">
-      За няколко продукта — получаваш бонус проверки и по-ниска цена на анализ.
-    </p>
-
-    <div class="plan-price">
-      <strong>€10</strong>
-      <span>еднократно</span>
-    </div>
-
-    <div class="plan-total">17 проверки общо</div>
-
-    <ul class="plan-list">
-      <li>15 платени проверки</li>
-      <li>+ 2 бонус проверки</li>
-      <li>Цена ≈ €0.59 на проверка</li>
-      <li>Подходящ за периодично използване</li>
-      <li>Без абонамент</li>
-    </ul>
-
-    <button class="btn btn-primary plan-button" onclick="startPayment('starter')">
-      ИЗБЕРИ СТАРТ
-    </button>
-
-  </article>
-
-
-  <article class="plan-card recommended">
-
-    <h3>Плюс</h3>
-
-    <p class="plan-description">
-      За по-активно използване — най-ниска цена на една проверка.
-    </p>
-
-    <div class="plan-price">
-      <strong>€17</strong>
-      <span>еднократно</span>
-    </div>
-
-    <div class="plan-total">35 проверки общо</div>
-
-    <ul class="plan-list">
-      <li>30 платени проверки</li>
-      <li>+ 5 бонус проверки</li>
-      <li>Цена ≈ €0.49 на проверка</li>
-      <li>Най-добра стойност при редовно използване</li>
-      <li>Без абонамент</li>
-    </ul>
-
-    <button class="btn btn-primary plan-button" onclick="startPayment('plus')">
-      ИЗБЕРИ ПЛЮС
-    </button>
-
-    <span class="plan-saving">НАЙ-ДОБРА СТОЙНОСТ</span>
-
-  </article>
+  <button
+    class="paypal"
+    onclick="startPayment()"
+  >
+    Плати с PayPal
+  </button>
 
 </div>
 
-<p class="pricing-note">
-  Пакетите се закупуват еднократно. Бонус проверките са включени в общия брой.
-  OWNER достъпът се управлява отделно от Supabase и не се таксува.
-</p>
+</div>
 
 </div>
 
@@ -3171,8 +2947,8 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
   <p class="section-lead">
 
     Вместо сложна таблица получаваш
-    ясен резултат, причините за него
-    и наличните данни за продукта.
+    информация за това какво е установено
+    и защо е важно.
 
   </p>
 
@@ -3299,27 +3075,16 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 <details>
 
 <summary>
-  Колко струва една проверка?
+  Защо се заплаща подробният анализ?
 </summary>
 
 <p>
-  Една единична проверка струва €0.99 и се плаща еднократно.
-  Няма месечен абонамент. За по-често използване има два пакета:
-  Старт — €10 за 17 проверки общо, и Плюс — €17 за 35 проверки общо.
-</p>
 
-</details>
+Подробният анализ включва обработка
+на информацията за продукта и проверка
+спрямо приложимите регулаторни правила.
+Цената на единичния анализ е €0.99.
 
-<details>
-
-<summary>
-  Какво получавам с пакет?
-</summary>
-
-<p>
-  При Старт получаваш 15 платени + 2 бонус проверки.
-  При Плюс получаваш 30 платени + 5 бонус проверки.
-  Така цената на една проверка е по-ниска от единичната цена €0.99.
 </p>
 
 </details>
@@ -5104,8 +4869,6 @@ function showPaymentRequired(result=currentBarcodeResult){
     return;
   }
 
-  selectedPlan = PRICING_PLANS.single;
-
   showStatusModal({
     type:"warning",
     kicker:"ПЛАЩАНЕ",
@@ -5113,8 +4876,8 @@ function showPaymentRequired(result=currentBarcodeResult){
     title:"Безплатните проверки са изчерпани",
     message:"Продуктът е намерен. Следващият подробен анализ е €0.99.",
     detail:`${result?.product_name || "Продукт"} • ${result?.brand || ""}`,
-    primaryText:"Продължи към €0.99",
-    primaryAction:"startPayment('single')"
+    primaryText:"Плати €0.99 с PayPal",
+    primaryAction:"startPaymentForProduct()"
   });
 }
 
@@ -5154,34 +4917,7 @@ function startPaymentForProduct(){
   });
 }
 
-const PRICING_PLANS = {
-  single: {
-    name:"Единична проверка",
-    price:"€0.99",
-    scans:1,
-    description:"1 сканиране + подробен анализ"
-  },
-  starter: {
-    name:"Старт",
-    price:"€10",
-    scans:17,
-    paid:15,
-    bonus:2,
-    description:"15 платени + 2 бонус проверки"
-  },
-  plus: {
-    name:"Плюс",
-    price:"€17",
-    scans:35,
-    paid:30,
-    bonus:5,
-    description:"30 платени + 5 бонус проверки"
-  }
-};
-
-let selectedPlan = null;
-
-function startPayment(planId = null){
+function startPayment(){
   /*
    * OWNER не се изпраща към платежен поток.
    */
@@ -5199,35 +4935,12 @@ function startPayment(planId = null){
     return;
   }
 
-  if(currentBarcodeResult && !planId){
+  if(currentBarcodeResult){
     showPaymentRequired(currentBarcodeResult);
     return;
   }
 
-  if(planId){
-    selectedPlan = PRICING_PLANS[planId] || null;
-  }
-
-  if(!selectedPlan){
-    document.getElementById("ceni")?.scrollIntoView({behavior:"smooth"});
-    return;
-  }
-
-  /*
-   * PayPal Secret никога не се поставя във frontend.
-   * Тук е готова точката за бъдещия защитен Supabase
-   * create-order/capture поток.
-   */
-  showStatusModal({
-    type:"warning",
-    kicker:"ПЛАЩАНЕ",
-    icon:"€",
-    title:`${selectedPlan.name} • ${selectedPlan.price}`,
-    message:"Избраният план е готов за плащане.",
-    detail:`${selectedPlan.description}. Плащането е еднократно.`,
-    primaryText:"Затвори",
-    primaryAction:"closeStatusModal()"
-  });
+  document.querySelector(".payment").scrollIntoView({behavior:"smooth"});
 }
 
 /* =====================================================
@@ -5404,7 +5117,7 @@ initializeQuota();
 <nav class="app-bottom-nav" aria-label="Основна навигация">
   <button class="active" onclick="scrollToTop()"><span class="nav-icon">⌂</span>Начало</button>
   <button onclick="openScanner()"><span class="nav-icon">▣</span>Сканирай</button>
-  <button onclick="document.getElementById('ceni').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">€</span>Цени</button>
+  <button onclick="startPayment()"><span class="nav-icon">€</span>Плати</button>
   <button onclick="document.getElementById('vuprosi').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">?</span>Помощ</button>
 </nav>
 
