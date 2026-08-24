@@ -3278,7 +3278,7 @@ const BARCODE_RPC_ENDPOINT =
 const DEVICE_STORAGE_KEY =
   "product_safety_scanner_device_id_v2";
 
-const DEVICE_VERSION = "v2";
+const DEVICE_VERSION = "v1";
 
 let scanner = null;
 let scannerRunning = false;
@@ -3345,52 +3345,65 @@ function setQuotaUI(remaining, used, accessType = quotaState.access_type){
   const cameraPill = document.getElementById("cameraQuotaPill");
   const cameraText = document.getElementById("cameraQuotaText");
 
-  /*
-   * OWNER DEVICE:
-   * Безлимитът е само за устройството, което Supabase
-   * е маркирал с access_type = OWNER / is_owner = true.
-   * Не се променя лимитът за останалите устройства.
-   */
-  if(String(accessType || "").toUpperCase() === "OWNER"){
-    const ownerText = "OWNER • неограничени проверки на това устройство";
+  const isOwner =
+    String(accessType || "").toUpperCase() === "OWNER";
 
-    heroText.textContent = ownerText;
-    cameraText.textContent = ownerText;
+  if(isOwner){
+    const text = "OWNER • неограничени проверки";
 
-    heroPill.classList.remove("empty");
-    cameraPill.classList.remove("empty");
-    heroPill.classList.add("owner");
-    cameraPill.classList.add("owner");
+    if(heroText) heroText.textContent = text;
+    if(cameraText) cameraText.textContent = text;
+
+    if(heroPill){
+      heroPill.classList.remove("empty");
+      heroPill.classList.add("owner");
+    }
+
+    if(cameraPill){
+      cameraPill.classList.remove("empty");
+      cameraPill.classList.add("owner");
+    }
 
     quotaState.access_type = "OWNER";
     quotaState.free_scans_remaining = 999999;
     quotaState.free_scans_used =
-      typeof used === "number" ? used : quotaState.free_scans_used;
+      typeof used === "number" ? used : 0;
 
     return;
   }
+
+  if(heroPill) heroPill.classList.remove("owner");
+  if(cameraPill) cameraPill.classList.remove("owner");
 
   if(typeof remaining !== "number"){
-    heroText.textContent = "До 2 безплатни проверки на устройство";
-    cameraText.textContent = "До 2 безплатни проверки на устройство";
+    if(heroText) heroText.textContent =
+      "До 2 безплатни проверки на устройство";
+    if(cameraText) cameraText.textContent =
+      "До 2 безплатни проверки на устройство";
     return;
   }
 
-  const text = remaining === 1
-    ? "Остава 1 безплатна проверка"
-    : remaining > 1
-      ? `Остават ${remaining} безплатни проверки`
-      : "Безплатните проверки са изчерпани";
+  const text =
+    remaining === 1
+      ? "Остава 1 безплатна проверка"
+      : remaining > 1
+        ? `Остават ${remaining} безплатни проверки`
+        : "Безплатните проверки са изчерпани";
 
-  heroText.textContent = text;
-  cameraText.textContent = remaining > 0
-    ? text
-    : text + " • Следващият анализ е €0.99";
+  if(heroText) heroText.textContent = text;
 
-  heroPill.classList.remove("owner");
-  cameraPill.classList.remove("owner");
-  heroPill.classList.toggle("empty", remaining <= 0);
-  cameraPill.classList.toggle("empty", remaining <= 0);
+  if(cameraText){
+    cameraText.textContent =
+      remaining > 0
+        ? text
+        : "Безплатните проверки са изчерпани • Следващият анализ е €0.99";
+  }
+
+  if(heroPill)
+    heroPill.classList.toggle("empty", remaining <= 0);
+
+  if(cameraPill)
+    cameraPill.classList.toggle("empty", remaining <= 0);
 
   quotaState.free_scans_remaining = remaining;
   quotaState.free_scans_used = used;
@@ -3400,49 +3413,116 @@ function setQuotaUI(remaining, used, accessType = quotaState.access_type){
    FREE SCAN ACCESS
 ===================================================== */
 async function claimFreeScan(){
-  const response = await fetch(FREE_SCAN_ENDPOINT,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Accept":"application/json"
-    },
-    body:JSON.stringify({
-      device_id:getDeviceId()
-    })
-  });
+  const deviceId = await getDeviceId();
+
+  if(!hasSupabaseClientConfig()){
+    throw new Error(
+      "Supabase ANON/PUBLISHABLE KEY не е настроен във frontend-а."
+    );
+  }
+
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/rpc/claim_free_scan`,
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Accept":"application/json",
+        "apikey":SUPABASE_ANON_KEY,
+        "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
+      },
+      body:JSON.stringify({
+        p_device_id:deviceId
+      })
+    }
+  );
 
   const raw = await response.text();
-  let data = {};
-  try{ data = raw ? JSON.parse(raw) : {}; }catch{}
+  let data = null;
 
-  if(!response.ok || !data.success){
+  try{
+    data = raw ? JSON.parse(raw) : null;
+  }catch{}
+
+  if(!response.ok){
     throw new Error(
       data?.message ||
+      data?.detail ||
+      raw ||
       `Грешка при проверката на достъпа (${response.status}).`
     );
   }
 
-  quotaState.access_type = data.access_type;
-
   /*
-   * OWNER се определя от backend/Supabase.
-   * Frontend-ът не може сам да си даде OWNER права.
+   * PostgreSQL RETURNS TABLE връща масив с един ред.
    */
-  if(String(data.access_type || "").toUpperCase() === "OWNER"){
-    setQuotaUI(
-      999999,
-      typeof data.free_scans_used === "number" ? data.free_scans_used : 0,
-      "OWNER"
-    );
-  }else if(typeof data.free_scans_remaining === "number"){
-    setQuotaUI(
-      data.free_scans_remaining,
-      data.free_scans_used,
-      data.access_type
+  const row =
+    Array.isArray(data)
+      ? data[0]
+      : data;
+
+  if(!row){
+    throw new Error(
+      "claim_free_scan не върна резултат."
     );
   }
 
-  return data;
+  quotaState.access_type =
+    row.access_type || null;
+
+  if(
+    String(row.access_type || "").toUpperCase() === "OWNER"
+  ){
+    setQuotaUI(
+      999999,
+      typeof row.free_scans_used === "number"
+        ? row.free_scans_used
+        : 0,
+      "OWNER"
+    );
+
+    return {
+      success:true,
+      access_type:"OWNER",
+      free_scans_remaining:999999,
+      free_scans_used:
+        typeof row.free_scans_used === "number"
+          ? row.free_scans_used
+          : 0
+    };
+  }
+
+  const remaining =
+    typeof row.free_scans_remaining === "number"
+      ? row.free_scans_remaining
+      : 0;
+
+  const used =
+    typeof row.free_scans_used === "number"
+      ? row.free_scans_used
+      : 0;
+
+  setQuotaUI(
+    remaining,
+    used,
+    row.access_type
+  );
+
+  if(row.allowed !== true){
+    return {
+      success:false,
+      access_type:"PAYMENT_REQUIRED",
+      free_scans_remaining:0,
+      free_scans_used:used
+    };
+  }
+
+  return {
+    success:true,
+    access_type:row.access_type || "FREE",
+    free_scans_remaining:remaining,
+    free_scans_used:used
+  };
 }
 
 /* =====================================================
@@ -3794,38 +3874,35 @@ async function continueWithProduct(){
   );
 
   try{
-    /*
-     * ПЪРВА СТЪПКА:
-     * Universal Barcode Resolver.
-     *
-     * Това НЕ консумира безплатен анализ.
-     */
     const resolved =
       await resolveBarcode(detectedBarcode);
 
-    /*
-     * Ако продуктът вече е в нашата база,
-     * продължаваме към съществуващия EU regulatory engine.
-     */
     if(
       resolved.lookup_status ===
       "PRODUCT_FOUND_LOCAL"
     ){
       /*
-       * Първо проверяваме достъпа на устройството.
-       * OWNER се разпознава само от backend/Supabase.
+       * Backend определя дали устройството е OWNER.
+       * Само OWNER получава неограничен достъп.
        */
-      const access = await claimFreeScan();
+      const access =
+        await claimFreeScan();
 
       if(access.access_type === "PAYMENT_REQUIRED"){
         hideLoading();
 
         /*
-         * Нужен е резултат за продукта, за да покажем
-         * към кой продукт се отнася плащането.
-         * Самото безплатно право не се консумира повторно.
+         * Показваме плащане само за стандартно устройство.
          */
-        showPaymentRequired(null);
+        showPaymentRequired({
+          product_name:
+            resolved?.product?.name ||
+            "Продукт",
+          brand:
+            resolved?.product?.brand ||
+            ""
+        });
+
         return;
       }
 
@@ -3846,11 +3923,6 @@ async function continueWithProduct(){
       return;
     }
 
-    /*
-     * Ако продуктът е намерен във външен източник,
-     * засега НЕ харчим free scan и НЕ го считаме
-     * за EU verified.
-     */
     if(
       resolved.lookup_status ===
       "PRODUCT_FOUND_EXTERNAL" ||
@@ -3871,11 +3943,8 @@ async function continueWithProduct(){
       return;
     }
 
-    /*
-     * За неизвестен/невалиден резултат
-     * не продължаваме към regulatory engine.
-     */
     hideLoading();
+
     showFriendlyError(
       resolved.message ||
       "Не успяхме да намерим продукта."
@@ -3883,6 +3952,7 @@ async function continueWithProduct(){
 
   }catch(error){
     hideLoading();
+
     console.error(
       "Product resolver/check error:",
       error
