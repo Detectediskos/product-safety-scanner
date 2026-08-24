@@ -2422,6 +2422,21 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 }
 </script>
 
+
+<style>
+.regulatory-report{margin:18px 0 0;padding:18px;border-radius:20px;text-align:left;background:#f7faf8;border:1px solid #dfe8e2}
+.regulatory-report .regulatory-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.regulatory-report .regulatory-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:50%;font-size:21px;font-weight:900;background:#fff0d8;color:#b87400}
+.regulatory-report.good .regulatory-icon{background:#dff4e8;color:#16804f}
+.regulatory-report.bad .regulatory-icon{background:#fde2e0;color:#c0392b}
+.regulatory-report .regulatory-title{font-size:18px;line-height:1.15;font-weight:950;color:#17211c}
+.regulatory-report .regulatory-subtitle{margin-top:4px;font-size:12px;line-height:1.45;color:#68756e}
+.regulatory-report .regulatory-section{margin-top:14px;padding-top:13px;border-top:1px solid #e0e8e3}
+.regulatory-report .regulatory-section strong{display:block;margin-bottom:7px;color:#17211c;font-size:14px}
+.regulatory-report ul{margin:8px 0 0 18px;padding:0;color:#47554d;line-height:1.65}
+.regulatory-report .regulatory-chip{display:inline-block;padding:7px 10px;margin:3px 4px 3px 0;border-radius:999px;background:#e9f4ee;color:#176f49;font-size:12px;font-weight:850}
+.regulatory-report .regulatory-warning{padding:12px 13px;border-radius:13px;background:#fff8ea;border:1px solid #f0dfb9;color:#72551d;font-size:13px;line-height:1.5}
+</style>
 </head>
 
 <body>
@@ -4712,6 +4727,481 @@ function buildFullProductReport(result,product){
     ${buildResultDetails(result)}
   `;
 }
+
+function humanComparisonStatus(status){
+  switch(String(status || "")){
+    case "AUTHORISED_NO_NUMERIC_LIMIT":
+      return "разрешена — без числов лимит";
+    case "COMPLIANT_WITH_LIMIT":
+      return "в рамките на лимита";
+    case "LIMIT_EXCEEDED":
+      return "превишен лимит";
+    case "CONCENTRATION_MISSING":
+      return "липсва концентрация";
+    case "LIMIT_CHECK_REQUIRED":
+      return "трябва проверка на количеството";
+    case "REVIEW_REQUIRED":
+      return "нужна е допълнителна проверка";
+    case "QUANTUM_SATIS":
+      return "quantum satis";
+    default:
+      return status || "няма данни";
+  }
+}
+
+function parseNutritionData(product){
+  let n = product?.nutrition_data;
+
+  if(typeof n === "string"){
+    try{ n = JSON.parse(n); }catch(_){}
+  }
+
+  return n && typeof n === "object" ? n : {};
+}
+
+function numericNutrition(n, keys){
+  for(const key of keys){
+    const value = Number(n?.[key]);
+    if(Number.isFinite(value)) return value;
+  }
+  return null;
+}
+
+function formatNutritionValue(value, unit=""){
+  if(value === null || value === undefined || !Number.isFinite(Number(value))){
+    return "—";
+  }
+
+  const n = Number(value);
+  const formatted =
+    Math.abs(n) >= 100
+      ? Math.round(n).toString()
+      : n.toFixed(1).replace(/\.0$/,"").replace(".", ",");
+
+  return `${formatted}${unit ? " " + unit : ""}`;
+}
+
+/*
+ * Оценката е хранителен профил, а не медицинска диагноза.
+ * Използваме стойности за 100 g / 100 ml, когато са налични.
+ * По-високи захари, наситени мазнини, сол/натрий и енергия
+ * увеличават риска; фибри и протеин леко подобряват профила.
+ */
+function calculateProductAssessment(product){
+  const n = parseNutritionData(product);
+
+  const energy =
+    numericNutrition(n, [
+      "energy-kcal_100g",
+      "energy-kcal",
+      "energy_100g"
+    ]);
+
+  const sugars =
+    numericNutrition(n, [
+      "sugars_100g",
+      "sugars"
+    ]);
+
+  const satFat =
+    numericNutrition(n, [
+      "saturated-fat_100g",
+      "saturated-fat"
+    ]);
+
+  let salt =
+    numericNutrition(n, [
+      "salt_100g",
+      "salt"
+    ]);
+
+  const sodium =
+    numericNutrition(n, [
+      "sodium_100g",
+      "sodium"
+    ]);
+
+  if(salt === null && sodium !== null){
+    salt = sodium * 2.5;
+  }
+
+  const fiber =
+    numericNutrition(n, [
+      "fiber_100g",
+      "fiber"
+    ]);
+
+  const protein =
+    numericNutrition(n, [
+      "proteins_100g",
+      "proteins",
+      "protein_100g",
+      "protein"
+    ]);
+
+  const name = String(
+    product?.name ||
+    product?.product_name ||
+    ""
+  ).toLowerCase();
+
+  const categories = String(
+    product?.categories_raw ||
+    ""
+  ).toLowerCase();
+
+  const ingredients = String(
+    product?.ingredients_text_raw ||
+    ""
+  ).toLowerCase();
+
+  const combined = `${name} ${categories} ${ingredients}`;
+
+  /* Алкохолните напитки получават отделен предупредителен профил. */
+  const alcoholWords = [
+    "beer","bier","pivo","бира","пиво",
+    "wine","vino","вино","vodka","whisky",
+    "whiskey","rum","gin","alcohol","алкохол"
+  ];
+
+  const isAlcohol = alcoholWords.some(word => combined.includes(word));
+
+  if(isAlcohol){
+    return {
+      level:"bad",
+      icon:"!",
+      title:"ОГРАНИЧИ КОНСУМАЦИЯТА",
+      subtitle:"Алкохолна напитка",
+      reasons:[
+        "Съдържа алкохол — не е подходящ избор за деца и бременност.",
+        "Алкохолът е причина продуктът да получи предупредителна оценка."
+      ],
+      confidence:"high",
+      nutrition:{energy,sugars,satFat,salt,protein,fiber}
+    };
+  }
+
+  /*
+   * Опростена, обяснима оценка на хранителния профил.
+   * Праговете са консервативни и служат за потребителска ориентация.
+   */
+  let negative = 0;
+  let measured = 0;
+  const reasons = [];
+
+  if(energy !== null){
+    measured++;
+    if(energy > 3350) negative += 10;
+    else if(energy > 3015) negative += 9;
+    else if(energy > 2680) negative += 8;
+    else if(energy > 2345) negative += 7;
+    else if(energy > 2010) negative += 6;
+    else if(energy > 1675) negative += 5;
+    else if(energy > 1340) negative += 4;
+    else if(energy > 1005) negative += 3;
+    else if(energy > 670) negative += 2;
+    else if(energy > 335) negative += 1;
+
+    if(energy > 2000) reasons.push(`висока енергийна стойност (${formatNutritionValue(energy,"kcal/100 g")})`);
+  }
+
+  if(sugars !== null){
+    measured++;
+    if(sugars > 45) negative += 10;
+    else if(sugars > 40) negative += 9;
+    else if(sugars > 36) negative += 8;
+    else if(sugars > 31) negative += 7;
+    else if(sugars > 27) negative += 6;
+    else if(sugars > 22.5) negative += 5;
+    else if(sugars > 18) negative += 4;
+    else if(sugars > 13.5) negative += 3;
+    else if(sugars > 9) negative += 2;
+    else if(sugars > 4.5) negative += 1;
+
+    if(sugars > 22.5) reasons.push(`високо съдържание на захари (${formatNutritionValue(sugars,"g/100 g")})`);
+  }
+
+  if(satFat !== null){
+    measured++;
+    if(satFat > 10) negative += 10;
+    else if(satFat > 9) negative += 9;
+    else if(satFat > 8) negative += 8;
+    else if(satFat > 7) negative += 7;
+    else if(satFat > 6) negative += 6;
+    else if(satFat > 5) negative += 5;
+    else if(satFat > 4) negative += 4;
+    else if(satFat > 3) negative += 3;
+    else if(satFat > 2) negative += 2;
+    else if(satFat > 1) negative += 1;
+
+    if(satFat > 5) reasons.push(`високо съдържание на наситени мазнини (${formatNutritionValue(satFat,"g/100 g")})`);
+  }
+
+  if(salt !== null){
+    measured++;
+    if(salt > 9) negative += 10;
+    else if(salt > 8.1) negative += 9;
+    else if(salt > 7.2) negative += 8;
+    else if(salt > 6.3) negative += 7;
+    else if(salt > 5.4) negative += 6;
+    else if(salt > 4.5) negative += 5;
+    else if(salt > 3.6) negative += 4;
+    else if(salt > 2.7) negative += 3;
+    else if(salt > 1.8) negative += 2;
+    else if(salt > 0.9) negative += 1;
+
+    if(salt > 1.8) reasons.push(`високо съдържание на сол (${formatNutritionValue(salt,"g/100 g")})`);
+  }
+
+  let bonus = 0;
+
+  if(fiber !== null && fiber >= 3) bonus += 1;
+  if(fiber !== null && fiber >= 6) bonus += 1;
+  if(protein !== null && protein >= 8) bonus += 1;
+  if(protein !== null && protein >= 16) bonus += 1;
+
+  const score = Math.max(0, negative - bonus);
+
+  if(measured === 0){
+    return {
+      level:"unknown",
+      icon:"i",
+      title:"НЕДОСТАТЪЧНО ДАННИ",
+      subtitle:"Не можем надеждно да оценим хранителния профил",
+      reasons:[
+        "Продуктът е намерен, но липсват достатъчно хранителни стойности за сравнение."
+      ],
+      confidence:"low",
+      nutrition:{energy,sugars,satFat,salt,protein,fiber}
+    };
+  }
+
+  if(reasons.length === 0){
+    reasons.push(
+      score <= 4
+        ? "Няма открит силно неблагоприятен показател в наличните хранителни данни."
+        : "Наличните показатели изискват умерен прием."
+    );
+  }
+
+  let level = "good";
+  let title = "ДОБЪР ИЗБОР";
+  let subtitle = "Хранителният профил изглежда благоприятен";
+  let conclusion = "Може да бъде част от разнообразното хранене.";
+
+  if(score >= 10){
+    level = "bad";
+    title = "ПО-НЕБЛАГОПРИЯТЕН ИЗБОР";
+    subtitle = "По-подходящ е за рядка, а не за ежедневна консумация";
+    conclusion = "Подходящ е по-скоро като рядко лакомство, а не като ежедневен продукт.";
+  }else if(score >= 5){
+    level = "moderate";
+    title = "УМЕРЕН ИЗБОР";
+    subtitle = "Има показатели, които заслужават внимание";
+    conclusion = "Може да се консумира, но е по-добре да бъде умерен избор.";
+  }
+
+  return {
+    level,
+    icon: level === "good" ? "✓" : "!",
+    title,
+    subtitle,
+    conclusion,
+    reasons:reasons.slice(0,4),
+    confidence: measured >= 3 ? "high" : "medium",
+    score,
+    nutrition:{energy,sugars,satFat,salt,protein,fiber}
+  };
+}
+
+function buildNutritionGrid(nutrition){
+  const items = [
+    ["Енергия", nutrition.energy !== null ? formatNutritionValue(nutrition.energy,"kcal/100 g") : "—"],
+    ["Захари", nutrition.sugars !== null ? formatNutritionValue(nutrition.sugars,"g/100 g") : "—"],
+    ["Наситени мазнини", nutrition.satFat !== null ? formatNutritionValue(nutrition.satFat,"g/100 g") : "—"],
+    ["Сол", nutrition.salt !== null ? formatNutritionValue(nutrition.salt,"g/100 g") : "—"],
+    ["Протеини", nutrition.protein !== null ? formatNutritionValue(nutrition.protein,"g/100 g") : "—"],
+    ["Фибри", nutrition.fiber !== null ? formatNutritionValue(nutrition.fiber,"g/100 g") : "—"]
+  ];
+
+  return `
+    <div class="nutrition-grid">
+      ${items.map(([label,value]) => `
+        <div class="nutrition-item">
+          <strong>${escapeHtml(value)}</strong>
+          <span>${escapeHtml(label)}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function humanizeAllergen(value){
+  const key = String(value || "")
+    .toLowerCase()
+    .replace(/^en:/,"")
+    .trim();
+
+  const map = {
+    milk:"Мляко",
+    nuts:"Ядки",
+    peanuts:"Фъстъци",
+    soybeans:"Соя",
+    gluten:"Глутен",
+    eggs:"Яйца",
+    fish:"Риба",
+    crustaceans:"Ракообразни",
+    molluscs:"Мекотели",
+    celery:"Целина",
+    mustard:"Синап",
+    sesame:"Сусам",
+    lupin:"Лупина",
+    sulphur_dioxide_and_sulphites:"Сулфити"
+  };
+
+  return map[key] || String(value || "")
+    .replace(/^en:/i,"")
+    .replace(/_/g," ");
+}
+
+function buildProductAssessment(product){
+  const assessment = calculateProductAssessment(product);
+
+  const reasons = assessment.reasons
+    .map(reason => `<li>${escapeHtml(reason)}</li>`)
+    .join("");
+
+  const confidenceText =
+    assessment.confidence === "high"
+      ? "Оценката е базирана на достатъчно налични хранителни данни."
+      : assessment.confidence === "medium"
+        ? "Оценката е ориентировъчна — налични са само част от показателите."
+        : "Оценката е ограничена поради липсващи хранителни данни.";
+
+  return `
+    <div class="product-assessment ${assessment.level}">
+      <div class="assessment-badge">
+        <div class="assessment-dot">${assessment.icon}</div>
+        <div>
+          <div class="assessment-title">${escapeHtml(assessment.title)}</div>
+          <div class="assessment-subtitle">${escapeHtml(assessment.subtitle)}</div>
+        </div>
+      </div>
+
+      <strong>Защо?</strong>
+      <ul class="assessment-reasons">${reasons}</ul>
+
+      ${buildNutritionGrid(assessment.nutrition)}
+
+      <div class="assessment-conclusion">
+        <strong>Извод:</strong>
+        <span>${escapeHtml(assessment.conclusion || "Оценката е ориентировъчна според наличните данни.")}</span>
+      </div>
+
+      <div class="assessment-note">
+        ${escapeHtml(confidenceText)}
+        Това е потребителска оценка на хранителния профил, а не медицинска диагноза.
+      </div>
+    </div>
+  `;
+}
+
+function normalizeAllergenLabel(value){
+  const raw=String(value||"").trim().toLowerCase().replace(/^en:/,"");
+  const map={milk:"мляко",nuts:"ядки",soybeans:"соя",peanuts:"фъстъци",gluten:"глутен",wheat:"пшеница",eggs:"яйца",fish:"риба",crustaceans:"ракообразни",molluscs:"мекотели",mustard:"синап",sesame:"сусам",celery:"целина",lupin:"лупина",sulphur_dioxide_and_sulphites:"сулфити"};
+  return map[raw]||raw.replace(/_/g," ");
+}
+function cleanProductText(value){
+  return String(value||"").replace(/&quot;/g,'"').replace(/\s+/g," ").trim();
+}
+function clearStatusResult(){
+  const old=document.getElementById("statusResultContent");
+  if(old) old.remove();
+}
+
+function showResolvedExternalProduct(resolved){
+  const product=resolved?.product||{};
+  const status=resolved?.lookup_status||"";
+  const name=product.name||product.product_name||"Намерен продукт";
+  const brand=product.brand||"";
+
+  let title="Продуктът е намерен";
+  let message="Получихме продуктови данни и можем да направим хранителна оценка.";
+  let kicker="ПРОДУКТЪТ Е НАМЕРЕН";
+
+  if(status==="PRODUCT_NOT_FOUND"){
+    kicker="БАРКОДЪТ НЕ Е НАМЕРЕН";
+    title="Продуктът не е намерен";
+    message="Не открихме продуктови данни за този баркод.";
+  }
+
+  showStatusModal({
+    type:status==="PRODUCT_NOT_FOUND"?"warning":"success",
+    kicker,
+    icon:status==="PRODUCT_NOT_FOUND"?"i":"✓",
+    title,
+    message,
+    detail:`${escapeHtml(name)}${brand?` • ${escapeHtml(brand)}`:""}`,
+    primaryText:"Затвори",
+    primaryAction:"closeStatusModal()"
+  });
+
+  /* Критично: всеки нов скан заменя предишния резултат. */
+  clearStatusResult();
+
+  if(status==="PRODUCT_FOUND_EXTERNAL"||status==="PRODUCT_FOUND_STAGING"){
+    const card=document.querySelector("#statusModal .status-card");
+    const actions=document.getElementById("statusActions");
+    if(!card||!actions)return;
+
+    const ingredients=cleanProductText(product.ingredients_text_bg||product.ingredients_text_raw||"няма данни");
+    const categories=cleanProductText(product.categories_raw||"няма данни");
+    const additives=Array.isArray(product.additives_tags)?product.additives_tags:[];
+    const allergens=Array.isArray(product.allergens_tags)?product.allergens_tags:[];
+
+    const wrapper=document.createElement("div");
+    wrapper.id="statusResultContent";
+    wrapper.className="status-result-content";
+
+    const additiveText=additives.map(x=>String(x).replace(/^en:/i,"")).join(", ");
+    const allergenText=allergens.map(normalizeAllergenLabel).filter(Boolean).join(", ");
+
+    wrapper.innerHTML=`
+      ${buildProductAssessment(product)}
+      <div class="scan-result-card">
+        <div class="result-product-line">
+          <strong>${escapeHtml(name)}</strong>
+          ${brand?` <span>• ${escapeHtml(brand)}</span>`:""}
+        </div>
+        <div class="result-category-line">${escapeHtml(categories)}</div>
+
+        <strong>Състав</strong>
+        <ul><li>${escapeHtml(ingredients)}</li></ul>
+
+        ${additiveText?`
+          <strong>Добавки</strong>
+          <ul><li>${escapeHtml(additiveText)}</li></ul>
+        `:""}
+
+        ${allergenText?`
+          <strong>Алергени</strong>
+          <ul><li>${escapeHtml(allergenText)}</li></ul>
+        `:""}
+      </div>
+    `;
+
+    /* Един резултат, едно съдържание, без смесване на стари сканирания. */
+    card.insertBefore(wrapper,actions);
+  }
+}
+
+function showResolverNotFound(resolved){
+  showResolvedExternalProduct({
+    ...resolved,
+    lookup_status:"PRODUCT_NOT_FOUND"
+  });
+}
+
 
 function showProductResult(result,access=null,product=null){
   const p=getResultPresentation(result);
