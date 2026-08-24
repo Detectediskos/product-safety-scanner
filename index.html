@@ -1508,36 +1508,11 @@ footer{
   inset:0;
   z-index:1250;
   display:none;
-  align-items:flex-start;
+  align-items:center;
   justify-content:center;
-  padding:14px 10px;
+  padding:20px;
   background:rgba(8,15,11,.72);
   backdrop-filter:blur(14px);
-
-  /* Критично за дълги продуктови справки на телефон */
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:thin;
-  scrollbar-color:#8aa99a rgba(255,255,255,.18);
-}
-
-.status-modal::-webkit-scrollbar{
-  width:7px;
-}
-
-.status-modal::-webkit-scrollbar-track{
-  background:rgba(255,255,255,.18);
-  border-radius:20px;
-}
-
-.status-modal::-webkit-scrollbar-thumb{
-  background:#8aa99a;
-  border-radius:20px;
-}
-
-.status-modal::-webkit-scrollbar-thumb:hover{
-  background:#5f806f;
 }
 
 .status-modal.active{
@@ -1547,12 +1522,7 @@ footer{
 .status-card{
   position:relative;
   width:min(460px,100%);
-  max-height:calc(100vh - 28px);
-  max-height:calc(100dvh - 28px);
-  overflow-y:auto;
-  overflow-x:hidden;
   padding:34px 28px 28px;
-  margin:auto 0;
   background:#fff;
   color:var(--ink);
   border:1px solid rgba(220,229,222,.95);
@@ -1560,28 +1530,6 @@ footer{
   text-align:center;
   box-shadow:0 30px 100px rgba(0,0,0,.28);
   animation:statusIn .22s ease-out;
-
-  /* Видим scrollbar и на Android/Chrome */
-  scrollbar-width:thin;
-  scrollbar-color:#8aa99a #edf3ef;
-}
-
-.status-card::-webkit-scrollbar{
-  width:7px;
-}
-
-.status-card::-webkit-scrollbar-track{
-  background:#edf3ef;
-  border-radius:20px;
-}
-
-.status-card::-webkit-scrollbar-thumb{
-  background:#8aa99a;
-  border-radius:20px;
-}
-
-.status-card::-webkit-scrollbar-thumb:hover{
-  background:#5f806f;
 }
 
 @keyframes statusIn{
@@ -1704,9 +1652,6 @@ footer{
   }
 
   .status-card{
-    width:100%;
-    max-height:calc(100vh - 24px);
-    max-height:calc(100dvh - 24px);
     border-radius:25px;
     padding:30px 20px 22px;
   }
@@ -2012,263 +1957,6 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 .result-product-line span{font-weight:600;color:var(--muted);}
 .result-category-line{font-size:12px;color:var(--muted);margin-bottom:13px;}
 .result-action-grid{display:grid;gap:10px;margin-top:16px;}
-
-/* =====================================================
-   PRODUCT HEALTH ASSESSMENT
-===================================================== */
-.product-assessment{
-  margin:18px 0 0;
-  padding:18px;
-  border-radius:20px;
-  text-align:left;
-  border:1px solid #dfe8e2;
-  background:#f7faf8;
-}
-
-.product-assessment .assessment-badge{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-bottom:12px;
-}
-
-.product-assessment .assessment-dot{
-  width:42px;
-  height:42px;
-  flex:0 0 42px;
-  display:grid;
-  place-items:center;
-  border-radius:50%;
-  font-size:22px;
-  font-weight:900;
-}
-
-.product-assessment.good .assessment-dot{
-  background:#dff4e8;
-  color:#16804f;
-}
-
-.product-assessment.moderate .assessment-dot{
-  background:#fff0d8;
-  color:#b87400;
-}
-
-.product-assessment.bad .assessment-dot{
-  background:#fde2e0;
-  color:#c0392b;
-}
-
-.product-assessment.unknown .assessment-dot{
-  background:#e9eeeb;
-  color:#65736b;
-}
-
-.product-assessment .assessment-title{
-  font-size:18px;
-  line-height:1.15;
-  font-weight:950;
-  color:#17211c;
-}
-
-.product-assessment .assessment-subtitle{
-  margin-top:3px;
-  font-size:11px;
-  color:#6c7972;
-  font-weight:700;
-}
-
-.assessment-reasons{
-  margin:12px 0 0 !important;
-  padding-left:18px !important;
-}
-
-.assessment-reasons li{
-  margin:5px 0 !important;
-  color:#47554d !important;
-}
-
-.assessment-conclusion{
-  margin-top:14px;
-  padding:13px 14px;
-  border-radius:14px;
-  background:#ffffff;
-  border:1px solid #e0e8e3;
-  font-size:13px;
-  line-height:1.5;
-  color:#344139;
-}
-
-.assessment-conclusion strong{
-  display:block;
-  margin-bottom:3px;
-  color:#17211c;
-  font-size:14px;
-}
-
-.assessment-note{
-  margin-top:12px;
-  padding-top:10px;
-  border-top:1px solid #e0e8e3;
-  font-size:11px;
-  line-height:1.55;
-  color:#7a857f;
-}
-
-.nutrition-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:8px;
-  margin-top:14px;
-}
-
-.nutrition-item{
-  padding:10px 11px;
-  border-radius:13px;
-  background:#fff;
-  border:1px solid #e4ebe6;
-}
-
-.nutrition-item strong{
-  display:block;
-  font-size:14px;
-  color:#1b2821;
-}
-
-.nutrition-item span{
-  display:block;
-  margin-top:2px;
-  font-size:10px;
-  color:#77837c;
-}
-
-.external-meta{
-  margin-top:10px;
-  font-size:11px;
-  color:#7a857f;
-}
-.status-result-content{margin-top:16px;}
-.status-result-content>.product-assessment{margin-top:0;}
-
-
-@media (max-width:720px){
-  .nutrition-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-}
-
-
-/* =====================================================
-   FULL CONSUMER PRODUCT REPORT
-===================================================== */
-.consumer-report{
-  margin:18px 0 0;
-  padding:18px;
-  border-radius:20px;
-  text-align:left;
-  background:#f7faf8;
-  border:1px solid #dfe8e2;
-}
-.consumer-report .consumer-block{
-  margin-top:14px;
-  padding-top:13px;
-  border-top:1px solid #e0e8e3;
-}
-.consumer-report .consumer-block:first-child{
-  margin-top:0;
-  padding-top:0;
-  border-top:0;
-}
-.consumer-report .consumer-title{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size:18px;
-  line-height:1.2;
-  font-weight:950;
-  color:#17211c;
-}
-.consumer-report .consumer-icon{
-  width:40px;height:40px;flex:0 0 40px;
-  display:grid;place-items:center;border-radius:50%;
-  background:#e9eeeb;color:#65736b;font-weight:900;font-size:20px;
-}
-.consumer-report.good .consumer-icon{background:#dff4e8;color:#16804f;}
-.consumer-report.warning .consumer-icon{background:#fff0d8;color:#b87400;}
-.consumer-report.bad .consumer-icon{background:#fde2e0;color:#c0392b;}
-.consumer-report .consumer-subtitle{
-  margin:3px 0 0 50px;
-  color:#68756e;font-size:12px;line-height:1.5;
-}
-.consumer-report .consumer-block strong{
-  display:block;
-  margin-bottom:7px;
-  color:#17211c;
-  font-size:14px;
-}
-.consumer-report .consumer-text{
-  color:#47554d;
-  font-size:13px;
-  line-height:1.7;
-  word-break:break-word;
-}
-.consumer-report .consumer-chips{
-  display:flex;flex-wrap:wrap;gap:6px;
-}
-.consumer-report .consumer-chip{
-  display:inline-flex;align-items:center;
-  padding:7px 10px;border-radius:999px;
-  background:#e9f4ee;color:#176f49;
-  font-size:12px;font-weight:850;
-}
-.consumer-report .consumer-chip.warning{
-  background:#fff0d8;color:#a96800;
-}
-.consumer-report .consumer-chip.danger{
-  background:#fde2e0;color:#b5332d;
-}
-.consumer-report .consumer-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:8px;
-}
-.consumer-report .consumer-value{
-  padding:11px;border-radius:13px;background:#fff;border:1px solid #e4ebe6;
-}
-.consumer-report .consumer-value strong{
-  margin:0;font-size:14px;
-}
-.consumer-report .consumer-value span{
-  display:block;margin-top:2px;color:#77837c;font-size:10px;
-}
-.consumer-report .consumer-conclusion{
-  margin-top:14px;padding:13px 14px;border-radius:14px;
-  background:#fff;border:1px solid #e0e8e3;
-  color:#344139;font-size:13px;line-height:1.6;
-}
-.consumer-report .consumer-conclusion strong{
-  margin-bottom:3px;
-}
-.consumer-report ul{
-  margin:8px 0 0 18px;
-  padding:0;
-  color:#47554d;
-  font-size:13px;
-  line-height:1.7;
-}
-.consumer-report .status-box{
-  padding:12px 13px;border-radius:13px;
-  background:#fff8ea;border:1px solid #f0dfb9;
-  color:#72551d;font-size:13px;line-height:1.55;
-}
-.consumer-report .status-box.good{
-  background:#edf8f2;border-color:#cbe7d7;color:#17613f;
-}
-.consumer-report .status-box.bad{
-  background:#fff0ef;border-color:#f1c8c5;color:#9d302b;
-}
-@media(max-width:470px){
-  .consumer-report{padding:16px;}
-}
 
 </style>
 
@@ -4228,24 +3916,23 @@ async function continueWithProduct(){
 
   showLoading(
     "Намираме продукта",
-    "Проверяваме баркода и наличната продуктова информация..."
+    "Проверяваме баркода в нашата база..."
   );
 
   try{
     const resolved =
       await resolveBarcode(detectedBarcode, detectedSymbology);
 
-    const localFound =
-      resolved.lookup_status === "PRODUCT_FOUND_LOCAL" ||
-      resolved.lookup_status === "PRODUCT_FOUND";
-
-    if(localFound){
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_LOCAL"
+    ){
       /*
-       * Проверяваме достъпа само след като продуктът е намерен.
-       * Това запазва правилото: 2 безплатни проверки, след това €0.99,
-       * а OWNER се управлява от Supabase.
+       * Backend определя дали устройството е OWNER.
+       * Само OWNER получава неограничен достъп.
        */
-      const access = await claimFreeScan();
+      const access =
+        await claimFreeScan();
 
       if(
         access.access_type === "PAYMENT_REQUIRED" &&
@@ -4253,39 +3940,37 @@ async function continueWithProduct(){
       ){
         hideLoading();
 
+        /*
+         * Плащане се показва само за стандартно устройство.
+         * OWNER никога не влиза в този поток.
+         */
         showPaymentRequired({
           product_name:
             resolved?.product?.name ||
-            resolved?.product?.product_name ||
             "Продукт",
           brand:
             resolved?.product?.brand ||
             ""
         });
+
         return;
       }
 
       showLoading(
         "Продуктът е открит",
         access.access_type === "OWNER"
-          ? "OWNER достъп • извършваме пълната проверка..."
-          : "Извършваме пълната проверка на състава и данните..."
+          ? "OWNER достъп • извършваме EU регулаторната проверка..."
+          : "Извършваме EU регулаторната проверка..."
       );
 
-      const result = await evaluateBarcode(detectedBarcode);
+      const result =
+        await evaluateBarcode(detectedBarcode);
+
+      currentBarcodeResult = result;
 
       /*
-       * КРИТИЧНА КОРЕКЦИЯ:
-       * Не изхвърляме product от resolver-а.
-       * Преди това показвахме само RPC регулаторния резултат.
-       * Сега обединяваме RPC + product, за да могат да се покажат:
-       * състав, хранителни стойности, E-та, алергени, ГМО/BIO и др.
+       * Не позволяваме резултатният UI да загуби OWNER състоянието.
        */
-      currentBarcodeResult = {
-        ...(result || {}),
-        product_data: resolved?.product || null
-      };
-
       if(String(access?.access_type || "").toUpperCase() === "OWNER"){
         quotaState.access_type = "OWNER";
         setQuotaUI(
@@ -4298,26 +3983,32 @@ async function continueWithProduct(){
       }
 
       hideLoading();
-      showProductResult(result,access,resolved?.product||null);
+      showProductResult(result,access);
       return;
     }
 
     if(
-      resolved.lookup_status === "PRODUCT_FOUND_EXTERNAL" ||
-      resolved.lookup_status === "PRODUCT_FOUND_STAGING"
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_EXTERNAL" ||
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_STAGING"
     ){
       hideLoading();
       showResolvedExternalProduct(resolved);
       return;
     }
 
-    if(resolved.lookup_status === "PRODUCT_NOT_FOUND"){
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_NOT_FOUND"
+    ){
       hideLoading();
       showResolverNotFound(resolved);
       return;
     }
 
     hideLoading();
+
     showFriendlyError(
       resolved.message ||
       "Не успяхме да намерим продукта."
@@ -4451,453 +4142,86 @@ function humanComparisonStatus(status){
     case "QUANTUM_SATIS":
       return "quantum satis";
     default:
-      return translateRegulatoryStatus(status);
+      return status || "няма данни";
   }
-}
-
-function parseNutritionData(product){
-  let n = product?.nutrition_data;
-
-  if(typeof n === "string"){
-    try{ n = JSON.parse(n); }catch(_){}
-  }
-
-  return n && typeof n === "object" ? n : {};
-}
-
-function numericNutrition(n, keys){
-  for(const key of keys){
-    const value = Number(n?.[key]);
-    if(Number.isFinite(value)) return value;
-  }
-  return null;
-}
-
-function formatNutritionValue(value, unit=""){
-  if(value === null || value === undefined || !Number.isFinite(Number(value))){
-    return "—";
-  }
-
-  const n = Number(value);
-  const formatted =
-    Math.abs(n) >= 100
-      ? Math.round(n).toString()
-      : n.toFixed(1).replace(/\.0$/,"").replace(".", ",");
-
-  return `${formatted}${unit ? " " + unit : ""}`;
-}
-
-/*
- * Оценката е хранителен профил, а не медицинска диагноза.
- * Използваме стойности за 100 g / 100 ml, когато са налични.
- * По-високи захари, наситени мазнини, сол/натрий и енергия
- * увеличават риска; фибри и протеин леко подобряват профила.
- */
-function calculateProductAssessment(product){
-  const n = parseNutritionData(product);
-
-  const energy =
-    numericNutrition(n, [
-      "energy-kcal_100g",
-      "energy-kcal",
-      "energy_100g"
-    ]);
-
-  const sugars =
-    numericNutrition(n, [
-      "sugars_100g",
-      "sugars"
-    ]);
-
-  const satFat =
-    numericNutrition(n, [
-      "saturated-fat_100g",
-      "saturated-fat"
-    ]);
-
-  let salt =
-    numericNutrition(n, [
-      "salt_100g",
-      "salt"
-    ]);
-
-  const sodium =
-    numericNutrition(n, [
-      "sodium_100g",
-      "sodium"
-    ]);
-
-  if(salt === null && sodium !== null){
-    salt = sodium * 2.5;
-  }
-
-  const fiber =
-    numericNutrition(n, [
-      "fiber_100g",
-      "fiber"
-    ]);
-
-  const protein =
-    numericNutrition(n, [
-      "proteins_100g",
-      "proteins",
-      "protein_100g",
-      "protein"
-    ]);
-
-  const name = String(
-    product?.name ||
-    product?.product_name ||
-    ""
-  ).toLowerCase();
-
-  const categories = String(
-    product?.categories_raw ||
-    ""
-  ).toLowerCase();
-
-  const ingredients = String(
-    product?.ingredients_text_raw ||
-    ""
-  ).toLowerCase();
-
-  const combined = `${name} ${categories} ${ingredients}`;
-
-  /* Алкохолните напитки получават отделен предупредителен профил. */
-  const alcoholWords = [
-    "beer","bier","pivo","бира","пиво",
-    "wine","vino","вино","vodka","whisky",
-    "whiskey","rum","gin","alcohol","алкохол"
-  ];
-
-  const isAlcohol = alcoholWords.some(word => combined.includes(word));
-
-  if(isAlcohol){
-    return {
-      level:"bad",
-      icon:"!",
-      title:"ОГРАНИЧИ КОНСУМАЦИЯТА",
-      subtitle:"Алкохолна напитка",
-      reasons:[
-        "Съдържа алкохол — не е подходящ избор за деца и бременност.",
-        "Алкохолът е причина продуктът да получи предупредителна оценка."
-      ],
-      confidence:"high",
-      nutrition:{energy,sugars,satFat,salt,protein,fiber}
-    };
-  }
-
-  /*
-   * Опростена, обяснима оценка на хранителния профил.
-   * Праговете са консервативни и служат за потребителска ориентация.
-   */
-  let negative = 0;
-  let measured = 0;
-  const reasons = [];
-
-  if(energy !== null){
-    measured++;
-    if(energy > 3350) negative += 10;
-    else if(energy > 3015) negative += 9;
-    else if(energy > 2680) negative += 8;
-    else if(energy > 2345) negative += 7;
-    else if(energy > 2010) negative += 6;
-    else if(energy > 1675) negative += 5;
-    else if(energy > 1340) negative += 4;
-    else if(energy > 1005) negative += 3;
-    else if(energy > 670) negative += 2;
-    else if(energy > 335) negative += 1;
-
-    if(energy > 2000) reasons.push(`висока енергийна стойност (${formatNutritionValue(energy,"kcal/100 g")})`);
-  }
-
-  if(sugars !== null){
-    measured++;
-    if(sugars > 45) negative += 10;
-    else if(sugars > 40) negative += 9;
-    else if(sugars > 36) negative += 8;
-    else if(sugars > 31) negative += 7;
-    else if(sugars > 27) negative += 6;
-    else if(sugars > 22.5) negative += 5;
-    else if(sugars > 18) negative += 4;
-    else if(sugars > 13.5) negative += 3;
-    else if(sugars > 9) negative += 2;
-    else if(sugars > 4.5) negative += 1;
-
-    if(sugars > 22.5) reasons.push(`високо съдържание на захари (${formatNutritionValue(sugars,"g/100 g")})`);
-  }
-
-  if(satFat !== null){
-    measured++;
-    if(satFat > 10) negative += 10;
-    else if(satFat > 9) negative += 9;
-    else if(satFat > 8) negative += 8;
-    else if(satFat > 7) negative += 7;
-    else if(satFat > 6) negative += 6;
-    else if(satFat > 5) negative += 5;
-    else if(satFat > 4) negative += 4;
-    else if(satFat > 3) negative += 3;
-    else if(satFat > 2) negative += 2;
-    else if(satFat > 1) negative += 1;
-
-    if(satFat > 5) reasons.push(`високо съдържание на наситени мазнини (${formatNutritionValue(satFat,"g/100 g")})`);
-  }
-
-  if(salt !== null){
-    measured++;
-    if(salt > 9) negative += 10;
-    else if(salt > 8.1) negative += 9;
-    else if(salt > 7.2) negative += 8;
-    else if(salt > 6.3) negative += 7;
-    else if(salt > 5.4) negative += 6;
-    else if(salt > 4.5) negative += 5;
-    else if(salt > 3.6) negative += 4;
-    else if(salt > 2.7) negative += 3;
-    else if(salt > 1.8) negative += 2;
-    else if(salt > 0.9) negative += 1;
-
-    if(salt > 1.8) reasons.push(`високо съдържание на сол (${formatNutritionValue(salt,"g/100 g")})`);
-  }
-
-  let bonus = 0;
-
-  if(fiber !== null && fiber >= 3) bonus += 1;
-  if(fiber !== null && fiber >= 6) bonus += 1;
-  if(protein !== null && protein >= 8) bonus += 1;
-  if(protein !== null && protein >= 16) bonus += 1;
-
-  const score = Math.max(0, negative - bonus);
-
-  if(measured === 0){
-    return {
-      level:"unknown",
-      icon:"i",
-      title:"НЕДОСТАТЪЧНО ДАННИ",
-      subtitle:"Не можем надеждно да оценим хранителния профил",
-      reasons:[
-        "Продуктът е намерен, но липсват достатъчно хранителни стойности за сравнение."
-      ],
-      confidence:"low",
-      nutrition:{energy,sugars,satFat,salt,protein,fiber}
-    };
-  }
-
-  if(reasons.length === 0){
-    reasons.push(
-      score <= 4
-        ? "Няма открит силно неблагоприятен показател в наличните хранителни данни."
-        : "Наличните показатели изискват умерен прием."
-    );
-  }
-
-  let level = "good";
-  let title = "ДОБЪР ИЗБОР";
-  let subtitle = "Хранителният профил изглежда благоприятен";
-  let conclusion = "Може да бъде част от разнообразното хранене.";
-
-  if(score >= 10){
-    level = "bad";
-    title = "ПО-НЕБЛАГОПРИЯТЕН ИЗБОР";
-    subtitle = "По-подходящ е за рядка, а не за ежедневна консумация";
-    conclusion = "Подходящ е по-скоро като рядко лакомство, а не като ежедневен продукт.";
-  }else if(score >= 5){
-    level = "moderate";
-    title = "УМЕРЕН ИЗБОР";
-    subtitle = "Има показатели, които заслужават внимание";
-    conclusion = "Може да се консумира, но е по-добре да бъде умерен избор.";
-  }
-
-  return {
-    level,
-    icon: level === "good" ? "✓" : "!",
-    title,
-    subtitle,
-    conclusion,
-    reasons:reasons.slice(0,4),
-    confidence: measured >= 3 ? "high" : "medium",
-    score,
-    nutrition:{energy,sugars,satFat,salt,protein,fiber}
-  };
-}
-
-function buildNutritionGrid(nutrition){
-  const items = [
-    ["Енергия", nutrition.energy !== null ? formatNutritionValue(nutrition.energy,"kcal/100 g") : "—"],
-    ["Захари", nutrition.sugars !== null ? formatNutritionValue(nutrition.sugars,"g/100 g") : "—"],
-    ["Наситени мазнини", nutrition.satFat !== null ? formatNutritionValue(nutrition.satFat,"g/100 g") : "—"],
-    ["Сол", nutrition.salt !== null ? formatNutritionValue(nutrition.salt,"g/100 g") : "—"],
-    ["Протеини", nutrition.protein !== null ? formatNutritionValue(nutrition.protein,"g/100 g") : "—"],
-    ["Фибри", nutrition.fiber !== null ? formatNutritionValue(nutrition.fiber,"g/100 g") : "—"]
-  ];
-
-  return `
-    <div class="nutrition-grid">
-      ${items.map(([label,value]) => `
-        <div class="nutrition-item">
-          <strong>${escapeHtml(value)}</strong>
-          <span>${escapeHtml(label)}</span>
-        </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-function humanizeAllergen(value){
-  const key = String(value || "")
-    .toLowerCase()
-    .replace(/^en:/,"")
-    .trim();
-
-  const map = {
-    milk:"Мляко",
-    nuts:"Ядки",
-    peanuts:"Фъстъци",
-    soybeans:"Соя",
-    gluten:"Глутен",
-    eggs:"Яйца",
-    fish:"Риба",
-    crustaceans:"Ракообразни",
-    molluscs:"Мекотели",
-    celery:"Целина",
-    mustard:"Синап",
-    sesame:"Сусам",
-    lupin:"Лупина",
-    sulphur_dioxide_and_sulphites:"Сулфити"
-  };
-
-  return map[key] || String(value || "")
-    .replace(/^en:/i,"")
-    .replace(/_/g," ");
-}
-
-function buildProductAssessment(product){
-  const assessment = calculateProductAssessment(product);
-
-  const reasons = assessment.reasons
-    .map(reason => `<li>${escapeHtml(reason)}</li>`)
-    .join("");
-
-  const confidenceText =
-    assessment.confidence === "high"
-      ? "Оценката е базирана на достатъчно налични хранителни данни."
-      : assessment.confidence === "medium"
-        ? "Оценката е ориентировъчна — налични са само част от показателите."
-        : "Оценката е ограничена поради липсващи хранителни данни.";
-
-  return `
-    <div class="product-assessment ${assessment.level}">
-      <div class="assessment-badge">
-        <div class="assessment-dot">${assessment.icon}</div>
-        <div>
-          <div class="assessment-title">${escapeHtml(assessment.title)}</div>
-          <div class="assessment-subtitle">${escapeHtml(assessment.subtitle)}</div>
-        </div>
-      </div>
-
-      <strong>Защо?</strong>
-      <ul class="assessment-reasons">${reasons}</ul>
-
-      ${buildNutritionGrid(assessment.nutrition)}
-
-      <div class="assessment-conclusion">
-        <strong>Извод:</strong>
-        <span>${escapeHtml(assessment.conclusion || "Оценката е ориентировъчна според наличните данни.")}</span>
-      </div>
-
-      <div class="assessment-note">
-        ${escapeHtml(confidenceText)}
-        Това е потребителска оценка на хранителния профил, а не медицинска диагноза.
-      </div>
-    </div>
-  `;
-}
-
-function normalizeAllergenLabel(value){
-  const raw=String(value||"").trim().toLowerCase().replace(/^en:/,"");
-  const map={milk:"мляко",nuts:"ядки",soybeans:"соя",peanuts:"фъстъци",gluten:"глутен",wheat:"пшеница",eggs:"яйца",fish:"риба",crustaceans:"ракообразни",molluscs:"мекотели",mustard:"синап",sesame:"сусам",celery:"целина",lupin:"лупина",sulphur_dioxide_and_sulphites:"сулфити"};
-  return map[raw]||raw.replace(/_/g," ");
-}
-function cleanProductText(value){
-  return String(value||"").replace(/&quot;/g,'"').replace(/\s+/g," ").trim();
-}
-function clearStatusResult(){
-  const old=document.getElementById("statusResultContent");
-  if(old) old.remove();
 }
 
 function showResolvedExternalProduct(resolved){
-  const product=resolved?.product||{};
-  const status=resolved?.lookup_status||"";
-  const name=product.name||product.product_name||"Намерен продукт";
-  const brand=product.brand||"";
+  const product = resolved?.product || {};
+  const status = resolved?.lookup_status || "";
 
-  let title="Продуктът е намерен";
-  let message="Получихме продуктови данни и можем да направим хранителна оценка.";
-  let kicker="ПРОДУКТЪТ Е НАМЕРЕН";
+  const name =
+    product.name ||
+    product.product_name ||
+    "Намерен продукт";
 
-  if(status==="PRODUCT_NOT_FOUND"){
-    kicker="БАРКОДЪТ НЕ Е НАМЕРЕН";
-    title="Продуктът не е намерен";
-    message="Не открихме продуктови данни за този баркод.";
+  const brand =
+    product.brand ||
+    "";
+
+  let title = "Продуктът е намерен";
+  let message =
+    "Продуктовите данни са получени, но EU регулаторната класификация все още не е потвърдена.";
+
+  let kicker = "ВЪНШЕН ПРОДУКТОВ ИЗТОЧНИК";
+
+  if(status === "PRODUCT_FOUND_STAGING"){
+    kicker = "ПРОДУКТЪТ Е В STAGING";
+    message =
+      "Продуктът вече е получен от външен източник и чака регулаторна валидация.";
+  }
+
+  if(status === "PRODUCT_NOT_FOUND"){
+    kicker = "БАРКОДЪТ НЕ Е НАМЕРЕН";
+    title = "Продуктът не е намерен";
+    message =
+      "Не открихме данни за този баркод във вътрешната база или външния продуктов източник.";
   }
 
   showStatusModal({
-    type:status==="PRODUCT_NOT_FOUND"?"warning":"success",
+    type:"warning",
     kicker,
-    icon:status==="PRODUCT_NOT_FOUND"?"i":"✓",
+    icon:"i",
     title,
     message,
-    detail:`${escapeHtml(name)}${brand?` • ${escapeHtml(brand)}`:""}`,
+    detail:`${escapeHtml(name)}${brand ? ` • ${escapeHtml(brand)}` : ""}`,
     primaryText:"Затвори",
     primaryAction:"closeStatusModal()"
   });
 
-  /* Критично: всеки нов скан заменя предишния резултат. */
-  clearStatusResult();
+  if(status === "PRODUCT_FOUND_EXTERNAL" || status === "PRODUCT_FOUND_STAGING"){
+    const card = document.querySelector("#statusModal .status-card");
+    const actions = document.getElementById("statusActions");
 
-  if(status==="PRODUCT_FOUND_EXTERNAL"||status==="PRODUCT_FOUND_STAGING"){
-    const card=document.querySelector("#statusModal .status-card");
-    const actions=document.getElementById("statusActions");
-    if(!card||!actions)return;
+    if(card && actions){
+      const ingredients =
+        product.ingredients_text_raw ||
+        "няма данни";
 
-    const ingredients=cleanProductText(product.ingredients_text_bg||product.ingredients_text_raw||"няма данни");
-    const categories=cleanProductText(product.categories_raw||"няма данни");
-    const additives=Array.isArray(product.additives_tags)?product.additives_tags:[];
-    const allergens=Array.isArray(product.allergens_tags)?product.allergens_tags:[];
+      const categories =
+        product.categories_raw ||
+        "няма данни";
 
-    const wrapper=document.createElement("div");
-    wrapper.id="statusResultContent";
-    wrapper.className="status-result-content";
-
-    const additiveText=additives.map(x=>String(x).replace(/^en:/i,"")).join(", ");
-    const allergenText=allergens.map(normalizeAllergenLabel).filter(Boolean).join(", ");
-
-    wrapper.innerHTML=`
-      ${buildProductAssessment(product)}
-      <div class="scan-result-card">
-        <div class="result-product-line">
-          <strong>${escapeHtml(name)}</strong>
-          ${brand?` <span>• ${escapeHtml(brand)}</span>`:""}
+      const html = `
+        <div class="scan-result-card">
+          <div class="result-product-line">
+            <strong>${escapeHtml(name)}</strong>
+            ${brand ? ` <span>• ${escapeHtml(brand)}</span>` : ""}
+          </div>
+          <div class="result-category-line">
+            Източник: Open Food Facts • EU статус: НЕПОТВЪРДЕН
+          </div>
+          <strong>Данни за състава</strong>
+          <ul>
+            <li><strong>Категории:</strong> ${escapeHtml(categories)}</li>
+            <li><strong>Състав:</strong> ${escapeHtml(ingredients)}</li>
+            <li><strong>Staging ID:</strong> ${escapeHtml(resolved?.staging_id || "—")}</li>
+          </ul>
         </div>
-        <div class="result-category-line">${escapeHtml(categories)}</div>
+      `;
 
-        <strong>Състав</strong>
-        <ul><li>${escapeHtml(ingredients)}</li></ul>
-
-        ${additiveText?`
-          <strong>Добавки</strong>
-          <ul><li>${escapeHtml(additiveText)}</li></ul>
-        `:""}
-
-        ${allergenText?`
-          <strong>Алергени</strong>
-          <ul><li>${escapeHtml(allergenText)}</li></ul>
-        `:""}
-      </div>
-    `;
-
-    /* Един резултат, едно съдържание, без смесване на стари сканирания. */
-    card.insertBefore(wrapper,actions);
+      actions.insertAdjacentHTML("beforebegin",html);
+    }
   }
 }
 
@@ -4908,429 +4232,23 @@ function showResolverNotFound(resolved){
   });
 }
 
-
-function firstDefined(...values){
-  for(const value of values){
-    if(value !== undefined && value !== null && value !== ""){
-      return value;
-    }
-  }
-  return null;
-}
-
-function parseArrayValue(value){
-  if(Array.isArray(value)) return value;
-  if(typeof value === "string"){
-    const text=value.trim();
-    if(!text) return [];
-    try{
-      const parsed=JSON.parse(text);
-      if(Array.isArray(parsed)) return parsed;
-    }catch(_){}
-    return text.split(/[,;|]/).map(x=>x.trim()).filter(Boolean);
-  }
-  return [];
-}
-
-function normalizeProductForReport(result,product){
-  const p=product||{};
-  const r=result||{};
-
-  let nutrition = firstDefined(
-    p.nutrition_data,
-    p.nutrition,
-    r.nutrition_data,
-    r.nutrition
-  );
-
-  if(typeof nutrition==="string"){
-    try{ nutrition=JSON.parse(nutrition); }catch(_){}
-  }
-
-  if(!nutrition || typeof nutrition!=="object"){
-    nutrition={};
-  }
-
-  /*
-   * Поддържаме и вариант, при който RPC/product връща
-   * хранителните стойности като отделни полета.
-   */
-  const nutritionKeys=[
-    "energy-kcal_100g","energy-kcal","energy_100g",
-    "sugars_100g","sugars",
-    "saturated-fat_100g","saturated-fat",
-    "salt_100g","salt",
-    "sodium_100g","sodium",
-    "fiber_100g","fiber",
-    "proteins_100g","proteins","protein_100g","protein"
-  ];
-
-  for(const key of nutritionKeys){
-    if(nutrition[key]===undefined && r[key]!==undefined){
-      nutrition[key]=r[key];
-    }
-    if(nutrition[key]===undefined && p[key]!==undefined){
-      nutrition[key]=p[key];
-    }
-  }
-
-  return {
-    ...p,
-    ...r,
-    name:firstDefined(p.name,p.product_name,r.product_name,r.name,"Продукт"),
-    product_name:firstDefined(r.product_name,p.name,p.product_name,r.name,"Продукт"),
-    brand:firstDefined(p.brand,r.brand,""),
-    barcode:firstDefined(p.barcode,p.gtin,p.ean,detectedBarcode,""),
-    ingredients_text_bg:firstDefined(
-      p.ingredients_text_bg,
-      p.ingredients_text_raw,
-      p.ingredients_text,
-      r.ingredients_text_bg,
-      r.ingredients_text_raw,
-      ""
-    ),
-    categories_raw:firstDefined(
-      p.categories_raw,
-      p.categories,
-      r.categories_raw,
-      r.categories,
-      ""
-    ),
-    additives_tags:parseArrayValue(
-      firstDefined(
-        p.additives_tags,
-        r.additives_tags,
-        r.detected_e_numbers,
-        r.e_numbers,
-        []
-      )
-    ),
-    allergens_tags:parseArrayValue(
-      firstDefined(
-        p.allergens_tags,
-        r.allergens_tags,
-        []
-      )
-    ),
-    nutrition_data:nutrition
-  };
-}
-
-function translateRegulatoryStatus(status){
-  const key=String(status||"").toUpperCase();
-
-  const map={
-    COMPLIANT_WITH_LIMITS:"В СЪОТВЕТСТВИЕ С НАЛИЧНИТЕ ЛИМИТИ",
-    COMPLIANT_WITH_LIMIT:"В РАМКИТЕ НА ЛИМИТА",
-    LIMIT_EXCEEDED:"ПРЕВИШЕН ЛИМИТ",
-    CONCENTRATION_REQUIRED:"ЛИПСВА НЕОБХОДИМАТА КОНЦЕНТРАЦИЯ",
-    CONCENTRATION_MISSING:"ЛИПСВА КОНЦЕНТРАЦИЯ",
-    REVIEW_REQUIRED:"НУЖНА Е ДОПЪЛНИТЕЛНА ПРОВЕРКА",
-    CLASSIFICATION_REVIEW_REQUIRED:"НУЖНА Е ПРОВЕРКА НА КЛАСИФИКАЦИЯТА",
-    AUTHORISED:"РАЗРЕШЕНО СПОРЕД НАЛИЧНИТЕ ДАННИ",
-    AUTHORISED_NO_LIMIT:"РАЗРЕШЕНО — БЕЗ ПОСОЧЕН ЧИСЛОВ ЛИМИТ",
-    AUTHORISED_NO_NUMERIC_LIMIT:"РАЗРЕШЕНО — БЕЗ ЧИСЛОВ ЛИМИТ",
-    QUANTUM_SATIS:"QUANTUM SATIS — ДОСТАТЪЧНО КОЛИЧЕСТВО",
-    UNKNOWN:"НЯМА ДОСТАТЪЧНО ДАННИ"
-  };
-
-  return map[key] || key.replaceAll("_"," ");
-}
-
-function getGmoAssessment(product){
-  const p=product||{};
-
-  const explicitTrue =
-    p.contains_gmo===true ||
-    p.gmo===true ||
-    p.genetically_modified===true ||
-    String(p.gmo_status||"").toUpperCase()==="YES" ||
-    String(p.gmo_status||"").toUpperCase()==="TRUE";
-
-  const explicitFalse =
-    p.contains_gmo===false ||
-    p.gmo===false ||
-    p.genetically_modified===false ||
-    ["NO","FALSE","NONE","NOT_DETECTED"].includes(
-      String(p.gmo_status||"").toUpperCase()
-    );
-
-  const tags=[
-    ...parseArrayValue(p.gmo_tags),
-    ...parseArrayValue(p.genetically_modified_ingredients),
-    ...parseArrayValue(p.ingredients_analysis_tags)
-  ].map(x=>String(x).toLowerCase());
-
-  if(explicitTrue || tags.some(x=>x.includes("gmo") || x.includes("genetically"))){
-    return {
-      type:"warning",
-      title:"Има данни за ГМО",
-      text:"Открити са данни, които сочат наличие или използване на генетично модифицирана съставка."
-    };
-  }
-
-  if(explicitFalse || tags.some(x=>x.includes("non-gmo") || x.includes("no-gmo") || x.includes("without-gmo"))){
-    return {
-      type:"good",
-      title:"Няма отбелязано ГМО",
-      text:"В наличните продуктови данни няма отбелязано наличие на ГМО."
-    };
-  }
-
-  return {
-    type:"unknown",
-    title:"Няма достатъчно данни за ГМО",
-    text:"Липсата на отбелязване не е доказателство, че продуктът е без ГМО."
-  };
-}
-
-function getOrganicAssessment(product){
-  const p=product||{};
-  const labels=[
-    ...parseArrayValue(p.labels_tags),
-    ...parseArrayValue(p.labels),
-    ...parseArrayValue(p.certifications),
-    ...parseArrayValue(p.ingredients_analysis_tags)
-  ].map(x=>String(x).toLowerCase());
-
-  const organic =
-    p.organic===true ||
-    p.bio===true ||
-    p.is_organic===true ||
-    labels.some(x=>x.includes("organic") || x.includes("bio") || x.includes("био") || x.includes("органич"));
-
-  return organic
-    ? "Открити са данни за BIO/органичен продукт или сертификация."
-    : "Няма достатъчно данни за BIO/органичен статут.";
-}
-
-function buildConsumerVerdict(result,product){
-  const status=String(
-    result?.final_status ||
-    result?.evaluation_status ||
-    result?.regulatory_status ||
-    "UNKNOWN"
-  ).toUpperCase();
-
-  const assessment=calculateProductAssessment(product);
-  const regulatoryBad=status==="LIMIT_EXCEEDED";
-  const regulatoryReview=
-    status==="REVIEW_REQUIRED" ||
-    status==="CLASSIFICATION_REVIEW_REQUIRED" ||
-    status==="CONCENTRATION_REQUIRED" ||
-    status==="CONCENTRATION_MISSING";
-
-  if(regulatoryBad){
-    return {
-      type:"bad",icon:"!",
-      title:"НЕ ПРЕПОРЪЧВАМЕ ДОПЪЛНИТЕЛНА ПРОВЕРКА",
-      subtitle:"Установен е проблем при регулаторната проверка.",
-      conclusion:"Има установено превишаване или несъответствие. Не приемай продукта за автоматично безопасен."
-    };
-  }
-
-  if(regulatoryReview){
-    return {
-      type:"warning",icon:"!",
-      title:"НЕ МОЖЕ ДА СЕ ОПРЕДЕЛИ ОКОНЧАТЕЛНО",
-      subtitle:"Липсват данни или е нужна допълнителна проверка.",
-      conclusion:"Не даваме категорично „безопасен“ или „опасен“ резултат, докато липсващото условие не бъде изяснено."
-    };
-  }
-
-  if(assessment.level==="bad"){
-    return {
-      type:"warning",icon:"!",
-      title:"МОЖЕ ДА СЕ КОНСУМИРА, НО С УМЕРЕНОСТ",
-      subtitle:"Регулаторно няма установено превишение, но хранителният профил е неблагоприятен.",
-      conclusion:"Това не означава, че продуктът е опасен или забранен. Означава, че хранителните показатели заслужават внимание."
-    };
-  }
-
-  if(assessment.level==="moderate"){
-    return {
-      type:"warning",icon:"!",
-      title:"МОЖЕ ДА СЕ КОНСУМИРА С УМЕРЕНОСТ",
-      subtitle:"Няма установено регулаторно превишение според наличните данни.",
-      conclusion:"Хранителният профил има показатели, които е добре да се следят."
-    };
-  }
-
-  if(assessment.level==="good"){
-    return {
-      type:"good",icon:"✓",
-      title:"НЯМА УСТАНОВЕНО РЕГУЛАТОРНО НАРУШЕНИЕ",
-      subtitle:"Наличните данни не показват превишен регулаторен лимит.",
-      conclusion:"По наличните данни няма установено регулаторно несъответствие. Това не е медицинска гаранция за безопасност."
-    };
-  }
-
-  return {
-    type:"warning",icon:"i",
-    title:"РЕЗУЛТАТЪТ Е ОГРАНИЧЕН",
-    subtitle:"Има продуктови данни, но не са достатъчни за пълна оценка.",
-    conclusion:"Виж подробностите по-долу и липсващите данни."
-  };
-}
-
-function buildFullProductReport(result,product){
-  const p=normalizeProductForReport(result,product);
-
-  const verdict=buildConsumerVerdict(result,p);
-  const ingredients=cleanProductText(p.ingredients_text_bg||"");
-  const categories=cleanProductText(p.categories_raw||"");
-  const additives=parseArrayValue(p.additives_tags);
-  const allergens=parseArrayValue(p.allergens_tags);
-
-  let eNumbers=parseArrayValue(
-    firstDefined(result?.e_numbers,result?.detected_e_numbers,[])
-  );
-
-  /*
-   * Ако RPC връща E-number-ите, показваме тях. Ако не — вземаме
-   * добавките от product resolver-а.
-   */
-  const eSet=[...new Set(
-    [...eNumbers,...additives]
-      .map(x=>String(x).replace(/^en:/i,"").trim())
-      .filter(x=>/^E\s?\d+[a-z]?$/i.test(x) || /^e\d+[a-z]?$/i.test(x))
-      .map(x=>x.replace(/\s+/g,"").toUpperCase().replace(/^E/,"E"))
-  )];
-
-  const regulatoryStatus=translateRegulatoryStatus(
-    result?.final_status ||
-    result?.evaluation_status ||
-    result?.regulatory_status ||
-    "UNKNOWN"
-  );
-
-  const category=firstDefined(
-    result?.eu_food_category_code,
-    result?.eu_category_code,
-    p.eu_food_category_code,
-    "—"
-  );
-
-  const gmo=getGmoAssessment(p);
-  const organic=getOrganicAssessment(p);
-
-  const reasons=[];
-  if(result?.decision_reason) reasons.push(result.decision_reason);
-  if(result?.regulatory_message_bg &&
-     result.regulatory_message_bg!==result.decision_reason){
-    reasons.push(result.regulatory_message_bg);
-  }
-
-  let missing=parseArrayValue(result?.missing_data);
-  if(!missing.length && verdict.type==="warning" &&
-     (String(result?.final_status||"").toUpperCase().includes("REVIEW") ||
-      String(result?.final_status||"").toUpperCase().includes("CONCENTRATION"))){
-    missing=["Необходима е допълнителна информация за окончателна оценка."];
-  }
-
-  const nutrition=parseNutritionData(p);
-
-  return `
-    <div class="consumer-report ${verdict.type}">
-
-      <div class="consumer-block">
-        <div class="consumer-title">
-          <div class="consumer-icon">${escapeHtml(verdict.icon)}</div>
-          <div>${escapeHtml(verdict.title)}</div>
-        </div>
-        <div class="consumer-subtitle">${escapeHtml(verdict.subtitle)}</div>
-
-        <div class="consumer-conclusion">
-          <strong>Какво означава?</strong>
-          ${escapeHtml(verdict.conclusion)}
-        </div>
-      </div>
-
-      <div class="consumer-block">
-        <strong>Регулаторна проверка</strong>
-        <div class="status-box ${verdict.type==="good"?"good":verdict.type==="bad"?"bad":""}">
-          ${escapeHtml(regulatoryStatus)}
-        </div>
-        ${category!=="—"
-          ?`<div class="consumer-text" style="margin-top:8px;">Категория на продукта: <b>${escapeHtml(category)}</b></div>`
-          :""}
-        ${reasons.length
-          ?`<ul>${reasons.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul>`
-          :""}
-        ${missing.length
-          ?`<div class="consumer-text" style="margin-top:8px;"><b>Липсващи данни:</b><ul>${missing.map(x=>`<li>${escapeHtml(x)}</li>`).join("")}</ul></div>`
-          :""}
-      </div>
-
-      <div class="consumer-block">
-        <strong>Състав</strong>
-        <div class="consumer-text">
-          ${ingredients
-            ?escapeHtml(ingredients)
-            :"Няма налични данни за състава."}
-        </div>
-      </div>
-
-      <div class="consumer-block">
-        <strong>E-та / хранителни добавки</strong>
-        ${eSet.length
-          ?`<div class="consumer-chips">${eSet.map(e=>`<span class="consumer-chip">${escapeHtml(e)}</span>`).join("")}</div>`
-          :`<div class="consumer-text">Няма открити E-number добавки в наличните данни.</div>`}
-        <div class="consumer-text" style="margin-top:8px;">
-          Наличието на E-номер само по себе си не означава, че веществото е опасно. Важна е конкретната добавка, категорията и приложимият лимит.
-        </div>
-      </div>
-
-      <div class="consumer-block">
-        <strong>ГМО</strong>
-        <div class="status-box ${gmo.type==="good"?"good":gmo.type==="warning"?"":"warning"}">
-          <b>${escapeHtml(gmo.title)}</b><br>
-          ${escapeHtml(gmo.text)}
-        </div>
-      </div>
-
-      <div class="consumer-block">
-        <strong>Алергени</strong>
-        <div class="consumer-text">
-          ${allergens.length
-            ?`<ul>${allergens.map(x=>`<li>${escapeHtml(normalizeAllergenLabel(x))}</li>`).join("")}</ul>`
-            :"Няма налични данни за алергени."}
-        </div>
-      </div>
-
-      <div class="consumer-block">
-        <strong>Хранителни стойности</strong>
-        ${buildNutritionGrid({
-          energy:numericNutrition(nutrition,["energy-kcal_100g","energy-kcal","energy_100g"]),
-          sugars:numericNutrition(nutrition,["sugars_100g","sugars"]),
-          satFat:numericNutrition(nutrition,["saturated-fat_100g","saturated-fat"]),
-          salt:numericNutrition(nutrition,["salt_100g","salt"]),
-          protein:numericNutrition(nutrition,["proteins_100g","proteins","protein_100g","protein"]),
-          fiber:numericNutrition(nutrition,["fiber_100g","fiber"])
-        })}
-      </div>
-
-      <div class="consumer-block">
-        <strong>BIO / органичен статут</strong>
-        <div class="consumer-text">${escapeHtml(organic)}</div>
-      </div>
-
-      ${categories
-        ?`<div class="consumer-block"><strong>Категория</strong><div class="consumer-text">${escapeHtml(categories)}</div></div>`
-        :""}
-
-      <div class="consumer-block">
-        <strong>Хранителна оценка</strong>
-        ${buildProductAssessment(p)}
-      </div>
-
-    </div>
-  `;
-}
-
-function showProductResult(result,access=null,product=null){
+function showProductResult(result,access=null){
   const p = getResultPresentation(result);
-  const merged = normalizeProductForReport(result,product);
+  const detail =
+    result.lookup_status === "BARCODE_NOT_FOUND"
+      ? "Баркодът не е намерен в базата."
+      : result.lookup_status === "PRODUCT_NOT_FOUND_OR_INACTIVE"
+        ? "Продуктът не е наличен или не е активен."
+        : `${result.product_name || "Продукт"} • ${result.brand || ""}`;
+
+  const extra = result.lookup_status === "PRODUCT_FOUND"
+    ? buildResultDetails(result)
+    : "";
+
+  const remaining =
+    access && typeof access.free_scans_remaining === "number"
+      ? access.free_scans_remaining
+      : quotaState.free_scans_remaining;
 
   showStatusModal({
     type:p.type,
@@ -5338,34 +4256,27 @@ function showProductResult(result,access=null,product=null){
     icon:p.icon,
     title:p.title,
     message:p.message,
-    detail:`${escapeHtml(
-      merged?.name ||
-      result?.product_name ||
-      "Продукт"
-    )}${merged?.brand?` • ${escapeHtml(merged.brand)}`:""}`,
+    detail:detail,
     primaryText:"Затвори",
     primaryAction:"closeStatusModal()"
   });
 
-  const card=document.querySelector("#statusModal .status-card");
-  const actions=document.getElementById("statusActions");
-  if(!card||!actions)return;
+  /*
+   * Добавяме детайлен блок към status card след създаването.
+   */
+  const card = document.querySelector("#statusModal .status-card");
+  const old = card.querySelector(".scan-result-card");
+  if(old) old.remove();
 
-  const old=card.querySelector("#statusResultContent");
-  if(old)old.remove();
+  if(extra){
+    const actions = document.getElementById("statusActions");
+    actions.insertAdjacentHTML("beforebegin",extra);
+  }
 
-  const wrapper=document.createElement("div");
-  wrapper.id="statusResultContent";
-  wrapper.className="status-result-content";
-  wrapper.innerHTML=buildFullProductReport(result,merged);
-
-  actions.parentNode.insertBefore(wrapper,actions);
-
-  if(access && typeof access.free_scans_remaining==="number"){
+  if(typeof remaining === "number"){
     setQuotaUI(
-      access.free_scans_remaining,
-      access.free_scans_used ?? quotaState.free_scans_used ?? 0,
-      access.access_type || quotaState.access_type
+      remaining,
+      access?.free_scans_used ?? quotaState.free_scans_used ?? 0
     );
   }
 }
