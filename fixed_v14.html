@@ -1,0 +1,5459 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Провери продукта</title>
+
+<meta
+  name="description"
+  content="Сканирай продукта и разбери повече за неговия състав и приложимите регулаторни ограничения."
+>
+
+<!-- Реален barcode scanner -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8" defer crossorigin="anonymous"></script>
+
+<style>
+
+:root{
+  --bg:#f4f7f3;
+  --white:#ffffff;
+  --ink:#17201b;
+  --muted:#68756d;
+  --line:#dce5de;
+
+  --green:#177a4d;
+  --green-dark:#0d5b38;
+  --green-light:#e4f2e9;
+
+  --red:#c83b3b;
+  --red-light:#fde9e9;
+
+  --orange:#c47a18;
+  --orange-light:#fff1d9;
+
+  --shadow:0 24px 70px rgba(20,40,28,.10);
+
+  --radius:28px;
+  --max:1180px;
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+
+  line-height:1.55;
+}
+
+button{
+  font:inherit;
+  cursor:pointer;
+}
+
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+/* =====================================================
+   GENERAL
+===================================================== */
+
+.container{
+  width:min(var(--max),calc(100% - 40px));
+  margin:auto;
+}
+
+.btn{
+  border:none;
+  border-radius:14px;
+
+  padding:16px 24px;
+
+  font-size:14px;
+  font-weight:800;
+
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    box-shadow .2s ease;
+}
+
+.btn-primary{
+  background:var(--green);
+  color:white;
+
+  box-shadow:
+    0 12px 28px rgba(23,122,77,.20);
+}
+
+.btn-primary:hover{
+  background:var(--green-dark);
+  transform:translateY(-2px);
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+header{
+  position:sticky;
+  top:0;
+  z-index:100;
+
+  background:rgba(244,247,243,.90);
+  backdrop-filter:blur(18px);
+
+  border-bottom:1px solid rgba(220,229,222,.75);
+}
+
+.nav{
+  min-height:76px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  font-size:17px;
+  font-weight:800;
+
+  letter-spacing:-.03em;
+}
+
+.logo-icon{
+  width:40px;
+  height:40px;
+
+  display:grid;
+  place-items:center;
+
+  background:var(--green);
+  color:white;
+
+  border-radius:13px;
+
+  font-size:21px;
+  font-weight:900;
+}
+
+.nav-links{
+  display:flex;
+  gap:28px;
+
+  color:#526058;
+
+  font-size:14px;
+  font-weight:600;
+}
+
+.nav-links a:hover{
+  color:var(--green);
+}
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.hero{
+  padding:90px 0 110px;
+
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
+
+  gap:80px;
+
+  align-items:center;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+
+  background:var(--green-light);
+  color:var(--green-dark);
+
+  padding:8px 13px;
+
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:850;
+
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+
+.badge-dot{
+  width:7px;
+  height:7px;
+
+  border-radius:50%;
+
+  background:var(--green);
+}
+
+.hero h1{
+  margin-top:24px;
+
+  font-size:clamp(44px,6vw,78px);
+
+  line-height:.98;
+
+  letter-spacing:-.065em;
+}
+
+.hero h1 span{
+  color:var(--green);
+}
+
+.hero-text{
+  max-width:610px;
+
+  margin-top:25px;
+
+  color:var(--muted);
+
+  font-size:18px;
+
+  line-height:1.7;
+}
+
+.hero-actions{
+  margin-top:34px;
+}
+
+.hero-note{
+  margin-top:16px;
+
+  color:#7b857e;
+
+  font-size:12px;
+}
+
+.quota-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  margin-top:14px;
+  padding:9px 13px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:white;
+  color:#526058;
+  font-size:12px;
+  font-weight:750;
+}
+
+.quota-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 4px var(--green-light);
+}
+
+.quota-pill.empty{
+  background:#fff8ee;
+  border-color:#f0dfc2;
+}
+
+.quota-pill.empty .quota-dot{
+  background:var(--orange);
+  box-shadow:0 0 0 4px var(--orange-light);
+}
+
+.quota-pill.owner{
+  background:var(--green-light);
+  border-color:#b9dec9;
+  color:var(--green-dark);
+}
+
+.quota-pill.owner .quota-dot{
+  background:var(--green);
+  box-shadow:0 0 0 4px rgba(23,122,77,.12);
+}
+
+/* =====================================================
+   SCANNER VISUAL
+===================================================== */
+
+.scanner-wrap{
+  display:flex;
+  justify-content:center;
+}
+
+.scanner{
+  position:relative;
+
+  width:min(410px,100%);
+  aspect-ratio:.82;
+
+  border-radius:38px;
+
+  overflow:hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(60,190,125,.18),
+      transparent 30%
+    ),
+    linear-gradient(
+      145deg,
+      #101a15,
+      #1e3026
+    );
+
+  box-shadow:var(--shadow);
+}
+
+.scanner-top{
+  position:absolute;
+
+  top:27px;
+  left:28px;
+  right:28px;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  color:white;
+}
+
+.scanner-name{
+  font-size:12px;
+  font-weight:750;
+  letter-spacing:.1em;
+}
+
+.live{
+  display:flex;
+  align-items:center;
+  gap:7px;
+
+  font-size:11px;
+
+  color:#a7e6c4;
+}
+
+.live-dot{
+  width:7px;
+  height:7px;
+
+  border-radius:50%;
+
+  background:#67d99f;
+
+  box-shadow:0 0 14px #67d99f;
+}
+
+.scan-area{
+  position:absolute;
+
+  width:260px;
+  height:190px;
+
+  top:50%;
+  left:50%;
+
+  transform:translate(-50%,-50%);
+
+  border:1px solid rgba(255,255,255,.65);
+
+  border-radius:22px;
+}
+
+.corner{
+  position:absolute;
+
+  width:38px;
+  height:38px;
+
+  border-color:#69dba2;
+  border-style:solid;
+}
+
+.corner.tl{
+  top:-2px;
+  left:-2px;
+
+  border-width:3px 0 0 3px;
+
+  border-radius:20px 0 0 0;
+}
+
+.corner.tr{
+  top:-2px;
+  right:-2px;
+
+  border-width:3px 3px 0 0;
+
+  border-radius:0 20px 0 0;
+}
+
+.corner.bl{
+  bottom:-2px;
+  left:-2px;
+
+  border-width:0 0 3px 3px;
+
+  border-radius:0 0 0 20px;
+}
+
+.corner.br{
+  bottom:-2px;
+  right:-2px;
+
+  border-width:0 3px 3px 0;
+
+  border-radius:0 0 20px 0;
+}
+
+.scan-line{
+  position:absolute;
+
+  left:12px;
+  right:12px;
+
+  height:2px;
+
+  background:#68dca1;
+
+  box-shadow:0 0 18px #68dca1;
+
+  animation:scan 2.7s ease-in-out infinite;
+}
+
+@keyframes scan{
+
+  0%,100%{
+    top:18px;
+    opacity:.4;
+  }
+
+  50%{
+    top:168px;
+    opacity:1;
+  }
+
+}
+
+.barcode{
+  position:absolute;
+
+  left:50%;
+  bottom:88px;
+
+  transform:translateX(-50%);
+
+  width:155px;
+  height:42px;
+
+  opacity:.35;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      white 0 2px,
+      transparent 2px 5px
+    );
+}
+
+.scanner-bottom{
+  position:absolute;
+
+  bottom:29px;
+
+  width:100%;
+
+  text-align:center;
+
+  color:rgba(255,255,255,.62);
+
+  font-size:12px;
+}
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+
+.section{
+  padding:100px 0;
+}
+
+.section-white{
+  background:white;
+}
+
+.section-head{
+  max-width:680px;
+
+  margin-bottom:45px;
+}
+
+.section-label{
+  color:var(--green);
+
+  font-size:12px;
+  font-weight:850;
+
+  letter-spacing:.12em;
+
+  text-transform:uppercase;
+}
+
+.section h2{
+  margin-top:10px;
+
+  font-size:clamp(32px,4vw,52px);
+
+  line-height:1.05;
+
+  letter-spacing:-.045em;
+}
+
+.section-lead{
+  margin-top:15px;
+
+  color:var(--muted);
+
+  font-size:17px;
+}
+
+/* =====================================================
+   STEPS
+===================================================== */
+
+.steps{
+  display:grid;
+
+  grid-template-columns:
+    repeat(6,1fr);
+
+  gap:12px;
+}
+
+.step{
+  padding:23px;
+
+  min-height:190px;
+
+  border:1px solid var(--line);
+
+  border-radius:22px;
+
+  background:white;
+
+  transition:.2s ease;
+}
+
+.step:hover{
+  transform:translateY(-4px);
+
+  box-shadow:
+    0 15px 35px rgba(20,40,28,.06);
+}
+
+.step-number{
+  color:var(--green);
+
+  font-size:12px;
+  font-weight:850;
+}
+
+.step-icon{
+  margin-top:20px;
+
+  width:40px;
+  height:40px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:12px;
+
+  background:var(--green-light);
+
+  color:var(--green);
+
+  font-weight:900;
+}
+
+.step h3{
+  margin-top:15px;
+
+  font-size:16px;
+}
+
+.step p{
+  margin-top:5px;
+
+  color:var(--muted);
+
+  font-size:13px;
+}
+
+/* =====================================================
+   WHY
+===================================================== */
+
+.why{
+  display:grid;
+
+  grid-template-columns:.9fr 1.1fr;
+
+  gap:80px;
+
+  align-items:center;
+}
+
+.why-visual{
+  min-height:420px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.protection-card{
+  position:relative;
+
+  width:330px;
+  height:330px;
+
+  border-radius:50%;
+
+  background:
+    radial-gradient(
+      circle,
+      var(--green-light),
+      #d8e9df
+    );
+
+  display:grid;
+  place-items:center;
+}
+
+.protection-card::before{
+  content:"";
+
+  position:absolute;
+
+  inset:25px;
+
+  border:1px solid rgba(23,122,77,.18);
+
+  border-radius:50%;
+}
+
+.protection-symbol{
+  width:110px;
+  height:125px;
+
+  background:var(--green);
+
+  clip-path:polygon(
+    50% 0,
+    90% 15%,
+    88% 60%,
+    70% 83%,
+    50% 100%,
+    30% 83%,
+    12% 60%,
+    10% 15%
+  );
+
+  display:grid;
+  place-items:center;
+
+  color:white;
+
+  font-size:45px;
+  font-weight:900;
+}
+
+.why-text{
+  color:var(--muted);
+
+  font-size:16px;
+
+  line-height:1.8;
+}
+
+.why-text p+p{
+  margin-top:18px;
+}
+
+.info-list{
+  margin-top:28px;
+
+  display:grid;
+
+  gap:13px;
+}
+
+.info-item{
+  display:flex;
+
+  gap:12px;
+
+  align-items:flex-start;
+}
+
+.info-check{
+  flex:0 0 auto;
+
+  width:24px;
+  height:24px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:50%;
+
+  background:var(--green-light);
+
+  color:var(--green);
+
+  font-size:12px;
+  font-weight:900;
+}
+
+/* =====================================================
+   CHECK GRID
+===================================================== */
+
+.check-grid{
+  display:grid;
+
+  grid-template-columns:
+    repeat(3,1fr);
+
+  gap:16px;
+}
+
+.check-card{
+  padding:30px;
+
+  background:#f8faf8;
+
+  border:1px solid var(--line);
+
+  border-radius:24px;
+}
+
+.check-number{
+  font-size:12px;
+
+  color:var(--green);
+
+  font-weight:850;
+}
+
+.check-card h3{
+  margin-top:20px;
+
+  font-size:20px;
+}
+
+.check-card p{
+  margin-top:9px;
+
+  color:var(--muted);
+
+  font-size:14px;
+
+  line-height:1.7;
+}
+
+/* =====================================================
+   PAYMENT
+===================================================== */
+
+.payment{
+  padding:90px 0;
+}
+
+.payment-box{
+  background:
+    linear-gradient(
+      135deg,
+      #123b29,
+      #176f48
+    );
+
+  color:white;
+
+  border-radius:32px;
+
+  padding:clamp(30px,6vw,65px);
+
+  display:grid;
+
+  grid-template-columns:1fr auto;
+
+  gap:50px;
+
+  align-items:center;
+
+  box-shadow:var(--shadow);
+}
+
+.payment-box .section-label{
+  color:#9de1bd;
+}
+
+.payment-box h2{
+  margin-top:10px;
+
+  font-size:clamp(32px,4vw,52px);
+
+  line-height:1.05;
+
+  letter-spacing:-.045em;
+}
+
+.payment-box p{
+  margin-top:15px;
+
+  max-width:620px;
+
+  color:#c7dfd2;
+}
+
+.price{
+  text-align:center;
+}
+
+.price strong{
+  display:block;
+
+  font-size:55px;
+
+  line-height:1;
+
+  letter-spacing:-.06em;
+}
+
+.price span{
+  color:#b9d9c8;
+
+  font-size:13px;
+}
+
+.paypal{
+  display:block;
+
+  margin-top:17px;
+
+  min-width:190px;
+
+  padding:14px 20px;
+
+  border:none;
+
+  border-radius:12px;
+
+  background:#ffc439;
+
+  color:#111;
+
+  font-weight:850;
+}
+
+/* =====================================================
+   RESULT
+===================================================== */
+
+.result-demo{
+  max-width:800px;
+
+  margin:auto;
+
+  background:white;
+
+  border:1px solid var(--line);
+
+  border-radius:30px;
+
+  overflow:hidden;
+
+  box-shadow:var(--shadow);
+}
+
+.result-header{
+  padding:32px;
+
+  background:var(--red-light);
+
+  border-bottom:1px solid #f3cccc;
+}
+
+.result-badge{
+  display:inline-flex;
+
+  background:var(--red);
+
+  color:white;
+
+  padding:8px 12px;
+
+  border-radius:999px;
+
+  font-size:11px;
+
+  font-weight:850;
+}
+
+.result-header h3{
+  margin-top:14px;
+
+  font-size:32px;
+
+  letter-spacing:-.04em;
+}
+
+.result-header p{
+  margin-top:8px;
+
+  color:#704343;
+}
+
+.result-data{
+  display:grid;
+
+  grid-template-columns:
+    repeat(3,1fr);
+
+  gap:1px;
+
+  background:var(--line);
+}
+
+.data{
+  background:white;
+
+  padding:24px;
+}
+
+.data span{
+  display:block;
+
+  color:var(--muted);
+
+  font-size:12px;
+}
+
+.data strong{
+  display:block;
+
+  margin-top:6px;
+
+  font-size:21px;
+}
+
+/* =====================================================
+   FAQ
+===================================================== */
+
+.faq{
+  max-width:850px;
+
+  margin:auto;
+}
+
+details{
+  border-bottom:1px solid var(--line);
+}
+
+summary{
+  list-style:none;
+
+  cursor:pointer;
+
+  padding:23px 0;
+
+  font-weight:750;
+
+  font-size:16px;
+}
+
+summary::-webkit-details-marker{
+  display:none;
+}
+
+details p{
+  padding:
+    0 0 23px;
+
+  color:var(--muted);
+
+  font-size:14px;
+
+  line-height:1.7;
+}
+
+/* =====================================================
+   FINAL
+===================================================== */
+
+.final{
+  padding:100px 0 120px;
+
+  text-align:center;
+}
+
+.final h2{
+  max-width:760px;
+
+  margin:auto;
+
+  font-size:clamp(35px,5vw,60px);
+
+  line-height:1;
+
+  letter-spacing:-.055em;
+}
+
+.final p{
+  max-width:650px;
+
+  margin:20px auto 30px;
+
+  color:var(--muted);
+}
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+footer{
+  background:#111a15;
+
+  color:#aebbb3;
+
+  padding:40px 0;
+}
+
+.footer{
+  display:flex;
+
+  justify-content:space-between;
+
+  gap:25px;
+
+  font-size:12px;
+}
+
+.footer strong{
+  color:white;
+}
+
+/* =====================================================
+   CAMERA MODAL
+===================================================== */
+
+.camera-modal{
+  position:fixed;
+
+  inset:0;
+
+  z-index:1000;
+
+  display:none;
+
+  background:
+    rgba(7,13,10,.78);
+
+  backdrop-filter:blur(14px);
+
+  padding:20px;
+
+  overflow:auto;
+}
+
+.camera-modal.active{
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+}
+
+.camera-panel{
+  width:min(560px,100%);
+
+  background:#101713;
+
+  color:white;
+
+  border-radius:30px;
+
+  overflow:hidden;
+
+  box-shadow:
+    0 35px 100px rgba(0,0,0,.35);
+}
+
+.camera-header{
+  padding:22px 22px 18px;
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+}
+
+.camera-title{
+  font-size:19px;
+
+  font-weight:800;
+
+  letter-spacing:-.03em;
+}
+
+.camera-subtitle{
+  margin-top:3px;
+
+  color:#9eaba4;
+
+  font-size:12px;
+}
+
+.close-camera{
+  width:40px;
+  height:40px;
+
+  border:none;
+
+  border-radius:50%;
+
+  background:#243029;
+
+  color:white;
+
+  font-size:22px;
+}
+
+.camera-area{
+  position:relative;
+
+  margin:0 16px;
+
+  min-height:360px;
+
+  border-radius:22px;
+
+  overflow:hidden;
+
+  background:#050806;
+}
+
+/*
+  html5-qrcode поставя видеото вътре
+  в този контейнер.
+*/
+
+#reader{
+  width:100%;
+}
+
+#reader video{
+  width:100% !important;
+
+  min-height:360px;
+
+  object-fit:cover;
+
+  border-radius:22px;
+}
+
+#reader img{
+  display:none !important;
+}
+
+/* Нашата рамка върху камерата */
+
+.camera-frame{
+  position:absolute;
+
+  width:76%;
+  height:150px;
+
+  left:12%;
+  top:50%;
+
+  transform:translateY(-50%);
+
+  border:2px solid rgba(255,255,255,.9);
+
+  border-radius:22px;
+
+  pointer-events:none;
+
+  z-index:5;
+}
+
+.camera-frame::before,
+.camera-frame::after{
+  content:"";
+
+  position:absolute;
+
+  width:35px;
+  height:35px;
+
+  border-color:#68dca1;
+
+  border-style:solid;
+}
+
+.camera-frame::before{
+  left:-2px;
+  top:-2px;
+
+  border-width:4px 0 0 4px;
+
+  border-radius:20px 0 0 0;
+}
+
+.camera-frame::after{
+  right:-2px;
+  bottom:-2px;
+
+  border-width:0 4px 4px 0;
+
+  border-radius:0 0 20px 0;
+}
+
+.camera-line{
+  position:absolute;
+
+  left:15px;
+  right:15px;
+
+  top:50%;
+
+  height:2px;
+
+  background:#68dca1;
+
+  box-shadow:
+    0 0 18px #68dca1;
+
+  animation:cameraScan 2.2s ease-in-out infinite;
+}
+
+@keyframes cameraScan{
+
+  0%,100%{
+    transform:translateY(-58px);
+    opacity:.45;
+  }
+
+  50%{
+    transform:translateY(58px);
+    opacity:1;
+  }
+
+}
+
+.camera-instruction{
+  padding:18px 22px 10px;
+
+  text-align:center;
+
+  font-size:14px;
+
+  color:#d9e4dd;
+}
+
+.camera-help{
+  padding:0 22px 22px;
+
+  text-align:center;
+
+  color:#8f9e95;
+
+  font-size:12px;
+}
+
+.camera-quota{
+  margin:4px 22px 12px;
+  background:#18221d;
+  border-color:#34423a;
+  color:#d9e4dd;
+}
+
+.camera-quota .quota-dot{
+  background:#68dca1;
+  box-shadow:0 0 0 4px rgba(104,220,161,.12);
+}
+
+.camera-quota.empty{
+  background:#2b2115;
+  border-color:#5a4526;
+}
+
+.camera-quota.empty .quota-dot{
+  background:#e6a94f;
+  box-shadow:0 0 0 4px rgba(230,169,79,.12);
+}
+
+.camera-error{
+  display:none;
+
+  margin:0 20px 20px;
+
+  padding:16px;
+
+  border-radius:15px;
+
+  background:#3a1c1c;
+
+  border:1px solid #633333;
+
+  color:#ffd4d4;
+
+  font-size:13px;
+
+  line-height:1.5;
+}
+
+.camera-error.active{
+  display:block;
+}
+
+.camera-footer{
+  display:flex;
+
+  justify-content:center;
+
+  padding:0 20px 22px;
+}
+
+.camera-close-button{
+  border:1px solid #34423a;
+
+  background:#202b25;
+
+  color:white;
+
+  padding:13px 22px;
+
+  border-radius:13px;
+
+  font-weight:700;
+}
+
+/* =====================================================
+   SCAN SUCCESS MODAL
+===================================================== */
+
+.success-modal{
+  position:fixed;
+
+  inset:0;
+
+  z-index:1100;
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  background:rgba(8,15,11,.70);
+
+  backdrop-filter:blur(12px);
+}
+
+.success-modal.active{
+  display:flex;
+}
+
+.success-card{
+  width:min(440px,100%);
+
+  padding:35px 28px;
+
+  background:white;
+
+  border-radius:28px;
+
+  text-align:center;
+
+  box-shadow:var(--shadow);
+}
+
+.success-icon{
+  width:72px;
+  height:72px;
+
+  margin:auto;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:50%;
+
+  background:var(--green-light);
+
+  color:var(--green);
+
+  font-size:34px;
+
+  font-weight:900;
+}
+
+.success-card h3{
+  margin-top:20px;
+
+  font-size:27px;
+
+  letter-spacing:-.04em;
+}
+
+.success-card p{
+  margin-top:8px;
+
+  color:var(--muted);
+
+  font-size:14px;
+}
+
+.detected-code{
+  margin:22px 0;
+
+  padding:15px;
+
+  border-radius:14px;
+
+  background:#f2f6f3;
+
+  font-size:22px;
+
+  font-weight:800;
+
+  letter-spacing:.08em;
+}
+
+.success-actions{
+  display:grid;
+
+  gap:10px;
+}
+
+.success-primary{
+  border:none;
+
+  padding:15px;
+
+  border-radius:13px;
+
+  background:var(--green);
+
+  color:white;
+
+  font-weight:800;
+}
+
+.success-secondary{
+  border:1px solid var(--line);
+
+  padding:14px;
+
+  border-radius:13px;
+
+  background:white;
+
+  font-weight:700;
+}
+
+/* =====================================================
+   CUSTOM STATUS MODAL
+===================================================== */
+
+.status-modal{
+  position:fixed;
+  inset:0;
+  z-index:1250;
+  display:none;
+  align-items:flex-start;
+  justify-content:center;
+  padding:14px 10px;
+  background:rgba(8,15,11,.72);
+  backdrop-filter:blur(14px);
+
+  /* Критично за дълги продуктови справки на телефон */
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:#8aa99a rgba(255,255,255,.18);
+}
+
+.status-modal::-webkit-scrollbar{
+  width:7px;
+}
+
+.status-modal::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.18);
+  border-radius:20px;
+}
+
+.status-modal::-webkit-scrollbar-thumb{
+  background:#8aa99a;
+  border-radius:20px;
+}
+
+.status-modal::-webkit-scrollbar-thumb:hover{
+  background:#5f806f;
+}
+
+.status-modal.active{
+  display:flex;
+}
+
+.status-card{
+  position:relative;
+  width:min(460px,100%);
+  max-height:calc(100vh - 28px);
+  max-height:calc(100dvh - 28px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:34px 28px 28px;
+  margin:auto 0;
+  background:#fff;
+  color:var(--ink);
+  border:1px solid rgba(220,229,222,.95);
+  border-radius:30px;
+  text-align:center;
+  box-shadow:0 30px 100px rgba(0,0,0,.28);
+  animation:statusIn .22s ease-out;
+
+  /* Видим scrollbar и на Android/Chrome */
+  scrollbar-width:thin;
+  scrollbar-color:#8aa99a #edf3ef;
+}
+
+.status-card::-webkit-scrollbar{
+  width:7px;
+}
+
+.status-card::-webkit-scrollbar-track{
+  background:#edf3ef;
+  border-radius:20px;
+}
+
+.status-card::-webkit-scrollbar-thumb{
+  background:#8aa99a;
+  border-radius:20px;
+}
+
+.status-card::-webkit-scrollbar-thumb:hover{
+  background:#5f806f;
+}
+
+@keyframes statusIn{
+  from{
+    opacity:0;
+    transform:translateY(10px) scale(.98);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+.status-close{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:38px;
+  height:38px;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:#f5f8f6;
+  color:#526058;
+  font-size:22px;
+  line-height:1;
+}
+
+.status-icon{
+  width:72px;
+  height:72px;
+  margin:2px auto 16px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--green-light);
+  color:var(--green);
+  font-size:32px;
+  font-weight:900;
+}
+
+.status-icon.warning{
+  background:var(--orange-light);
+  color:var(--orange);
+}
+
+.status-icon.error{
+  background:var(--red-light);
+  color:var(--red);
+}
+
+.status-kicker{
+  color:var(--green);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+
+.status-kicker.warning{
+  color:var(--orange);
+}
+
+.status-kicker.error{
+  color:var(--red);
+}
+
+.status-card h3{
+  margin-top:9px;
+  font-size:28px;
+  line-height:1.1;
+  letter-spacing:-.04em;
+}
+
+.status-card p{
+  margin:10px auto 0;
+  max-width:370px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.7;
+}
+
+.status-detail{
+  margin:20px 0 0;
+  padding:13px 15px;
+  border-radius:15px;
+  background:#f3f7f4;
+  color:#34443b;
+  font-size:13px;
+  font-weight:750;
+}
+
+.status-actions{
+  display:grid;
+  gap:10px;
+  margin-top:20px;
+}
+
+.status-primary{
+  border:none;
+  padding:15px 18px;
+  border-radius:13px;
+  background:var(--green);
+  color:white;
+  font-weight:850;
+  box-shadow:0 10px 25px rgba(23,122,77,.18);
+}
+
+.status-secondary{
+  border:1px solid var(--line);
+  padding:14px 18px;
+  border-radius:13px;
+  background:white;
+  color:var(--ink);
+  font-weight:750;
+}
+
+@media(max-width:470px){
+  .status-modal{
+    padding:12px;
+  }
+
+  .status-card{
+    width:100%;
+    max-height:calc(100vh - 24px);
+    max-height:calc(100dvh - 24px);
+    border-radius:25px;
+    padding:30px 20px 22px;
+  }
+}
+
+
+/* =====================================================
+   LOADING OVERLAY
+===================================================== */
+
+.loading{
+  position:fixed;
+
+  inset:0;
+
+  z-index:1200;
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(8,15,11,.70);
+
+  backdrop-filter:blur(10px);
+}
+
+.loading.active{
+  display:flex;
+}
+
+.loading-card{
+  width:min(360px,calc(100% - 40px));
+
+  padding:32px;
+
+  background:white;
+
+  border-radius:25px;
+
+  text-align:center;
+
+  box-shadow:var(--shadow);
+}
+
+.spinner{
+  width:45px;
+  height:45px;
+
+  margin:auto;
+
+  border:4px solid #dce9e1;
+
+  border-top-color:var(--green);
+
+  border-radius:50%;
+
+  animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+.loading-card h3{
+  margin-top:18px;
+
+  font-size:20px;
+}
+
+.loading-card p{
+  margin-top:6px;
+
+  color:var(--muted);
+
+  font-size:13px;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:1050px){
+
+  .hero{
+    grid-template-columns:1fr;
+
+    gap:50px;
+  }
+
+  .scanner-wrap{
+    order:2;
+  }
+
+  .steps{
+    grid-template-columns:repeat(3,1fr);
+  }
+
+  .why{
+    grid-template-columns:1fr;
+
+    gap:40px;
+  }
+
+}
+
+@media(max-width:760px){
+
+  .container{
+    width:min(100% - 30px,var(--max));
+  }
+
+  .nav{
+    min-height:65px;
+  }
+
+  .nav-links{
+    display:none;
+  }
+
+  .hero{
+    padding:60px 0 80px;
+  }
+
+  .hero h1{
+    font-size:47px;
+  }
+
+  .hero-text{
+    font-size:16px;
+  }
+
+  .hero-actions{
+    display:grid;
+
+    grid-template-columns:1fr;
+  }
+
+  .hero-actions .btn{
+    width:100%;
+  }
+
+  .scanner{
+    width:min(350px,100%);
+  }
+
+  .section{
+    padding:75px 0;
+  }
+
+  .steps{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .check-grid{
+    grid-template-columns:1fr;
+  }
+
+  .payment-box{
+    grid-template-columns:1fr;
+
+    text-align:center;
+  }
+
+  .payment-box p{
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .paypal{
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .result-data{
+    grid-template-columns:1fr;
+  }
+
+  .footer{
+    flex-direction:column;
+  }
+
+}
+
+@media(max-width:470px){
+
+  .hero h1{
+    font-size:40px;
+  }
+
+  .steps{
+    grid-template-columns:1fr;
+  }
+
+  .scanner{
+    border-radius:28px;
+  }
+
+  .scan-area{
+    width:220px;
+    height:165px;
+  }
+
+  .payment-box{
+    border-radius:25px;
+  }
+
+  .protection-card{
+    width:280px;
+    height:280px;
+  }
+
+  .camera-modal{
+    padding:8px;
+  }
+
+  .camera-panel{
+    border-radius:22px;
+  }
+
+  .camera-area{
+    margin:0 8px;
+
+    min-height:330px;
+  }
+
+  #reader video{
+    min-height:330px;
+  }
+
+}
+
+/* =====================================================
+   ACCESSIBILITY
+===================================================== */
+
+button:focus-visible,
+a:focus-visible{
+  outline:3px solid rgba(23,122,77,.35);
+
+  outline-offset:3px;
+}
+
+
+/* =====================================================
+   APP SHELL / MOBILE-FIRST
+===================================================== */
+body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
+.app-bottom-nav{display:none;}
+.mobile-only{display:none;}
+@media(max-width:760px){
+  body{padding-bottom:76px;}
+  header{position:sticky;top:0;}
+  .nav{min-height:62px;}
+  .logo{font-size:15px;}
+  .logo-icon{width:36px;height:36px;border-radius:11px;}
+  .hero{min-height:calc(100svh - 62px);padding:34px 0 55px;}
+  .hero .badge{font-size:10px;}
+  .hero-actions{position:sticky;bottom:88px;z-index:20;}
+  .hero-actions .btn{min-height:54px;border-radius:16px;font-size:15px;}
+  .scanner-wrap{width:100%;}
+  .scanner{width:min(360px,100%);aspect-ratio:.78;border-radius:30px;}
+  .section{padding:62px 0;}
+  .section h2{font-size:34px;}
+  .payment{padding:60px 0;}
+  .payment-box{padding:28px 22px;}
+  .final{padding:70px 0 80px;}
+  .app-bottom-nav{
+    position:fixed;display:flex;left:10px;right:10px;bottom:10px;z-index:900;
+    height:62px;padding:7px;
+    background:rgba(17,26,21,.94);backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.10);border-radius:20px;
+    box-shadow:0 15px 40px rgba(0,0,0,.22);
+  }
+  .app-bottom-nav button{
+    flex:1;border:0;background:transparent;color:#b9c8bf;border-radius:14px;
+    font-size:11px;font-weight:800;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px;
+  }
+  .app-bottom-nav button.active{background:#1b6e48;color:white;}
+  .app-bottom-nav .nav-icon{font-size:18px;line-height:1;}
+  .mobile-only{display:block;}
+}
+@media(min-width:761px){
+  main{max-width:1440px;margin:auto;}
+}
+.scan-result-card{
+  margin:20px 0 0;padding:18px;border-radius:18px;text-align:left;
+  background:#f5f8f6;border:1px solid var(--line);
+}
+.scan-result-card .result-status{
+  display:inline-flex;padding:7px 10px;border-radius:999px;
+  font-size:11px;font-weight:900;margin-bottom:9px;
+}
+.scan-result-card .result-status.ok{background:var(--green-light);color:var(--green-dark);}
+.scan-result-card .result-status.warning{background:var(--orange-light);color:var(--orange);}
+.scan-result-card .result-status.error{background:var(--red-light);color:var(--red);}
+.scan-result-card ul{margin:10px 0 0 18px;color:#526058;font-size:13px;line-height:1.75;}
+.scan-result-card li{margin:4px 0;}
+.result-product-line{font-size:17px;color:var(--ink);margin-bottom:3px;}
+.result-product-line span{font-weight:600;color:var(--muted);}
+.result-category-line{font-size:12px;color:var(--muted);margin-bottom:13px;}
+.result-action-grid{display:grid;gap:10px;margin-top:16px;}
+
+/* =====================================================
+   PRODUCT HEALTH ASSESSMENT
+===================================================== */
+.product-assessment{
+  margin:18px 0 0;
+  padding:18px;
+  border-radius:20px;
+  text-align:left;
+  border:1px solid #dfe8e2;
+  background:#f7faf8;
+}
+
+.product-assessment .assessment-badge{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.product-assessment .assessment-dot{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  font-size:22px;
+  font-weight:900;
+}
+
+.product-assessment.good .assessment-dot{
+  background:#dff4e8;
+  color:#16804f;
+}
+
+.product-assessment.moderate .assessment-dot{
+  background:#fff0d8;
+  color:#b87400;
+}
+
+.product-assessment.bad .assessment-dot{
+  background:#fde2e0;
+  color:#c0392b;
+}
+
+.product-assessment.unknown .assessment-dot{
+  background:#e9eeeb;
+  color:#65736b;
+}
+
+.product-assessment .assessment-title{
+  font-size:18px;
+  line-height:1.15;
+  font-weight:950;
+  color:#17211c;
+}
+
+.product-assessment .assessment-subtitle{
+  margin-top:3px;
+  font-size:11px;
+  color:#6c7972;
+  font-weight:700;
+}
+
+.assessment-reasons{
+  margin:12px 0 0 !important;
+  padding-left:18px !important;
+}
+
+.assessment-reasons li{
+  margin:5px 0 !important;
+  color:#47554d !important;
+}
+
+.assessment-conclusion{
+  margin-top:14px;
+  padding:13px 14px;
+  border-radius:14px;
+  background:#ffffff;
+  border:1px solid #e0e8e3;
+  font-size:13px;
+  line-height:1.5;
+  color:#344139;
+}
+
+.assessment-conclusion strong{
+  display:block;
+  margin-bottom:3px;
+  color:#17211c;
+  font-size:14px;
+}
+
+.assessment-note{
+  margin-top:12px;
+  padding-top:10px;
+  border-top:1px solid #e0e8e3;
+  font-size:11px;
+  line-height:1.55;
+  color:#7a857f;
+}
+
+.nutrition-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:14px;
+}
+
+.nutrition-item{
+  padding:10px 11px;
+  border-radius:13px;
+  background:#fff;
+  border:1px solid #e4ebe6;
+}
+
+.nutrition-item strong{
+  display:block;
+  font-size:14px;
+  color:#1b2821;
+}
+
+.nutrition-item span{
+  display:block;
+  margin-top:2px;
+  font-size:10px;
+  color:#77837c;
+}
+
+.external-meta{
+  margin-top:10px;
+  font-size:11px;
+  color:#7a857f;
+}
+.status-result-content{margin-top:16px;}
+.status-result-content>.product-assessment{margin-top:0;}
+
+
+@media (max-width:720px){
+  .nutrition-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+</style>
+
+<style id="mobile-nav-beauty">
+@media (max-width: 720px){
+  .mobile-bottom-nav,
+  nav.mobile-bottom-nav,
+  .bottom-nav,
+  #mobileNav{
+    position:fixed !important;
+    left:12px !important;
+    right:12px !important;
+    bottom:12px !important;
+    width:auto !important;
+    max-width:none !important;
+    height:72px !important;
+    background:rgba(17,26,21,.94) !important;
+    border:1px solid rgba(255,255,255,.12) !important;
+    box-shadow:0 14px 40px rgba(0,0,0,.32),0 2px 10px rgba(0,0,0,.18) !important;
+    backdrop-filter:blur(18px) saturate(140%) !important;
+    -webkit-backdrop-filter:blur(18px) saturate(140%) !important;
+    z-index:99999 !important;
+  }
+
+  .mobile-bottom-nav button,
+  nav.mobile-bottom-nav button,
+  .bottom-nav button,
+  #mobileNav button{
+    min-width:0 !important;
+    min-height:58px !important;
+    padding:5px 3px !important;
+    border:0 !important;
+    border-radius:18px !important;
+    background:transparent !important;
+    color:rgba(255,255,255,.70) !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:3px !important;
+    font-size:10px !important;
+    font-weight:700 !important;
+    letter-spacing:.1px !important;
+    transition:transform .18s ease,background .18s ease,color .18s ease !important;
+    -webkit-tap-highlight-color:transparent !important;
+  }
+
+  .mobile-bottom-nav button:active,
+  nav.mobile-bottom-nav button:active,
+  .bottom-nav button:active,
+  #mobileNav button:active{
+    transform:scale(.94) !important;
+  }
+
+  .mobile-bottom-nav button .nav-icon,
+  nav.mobile-bottom-nav button .nav-icon,
+  .bottom-nav button .nav-icon,
+  #mobileNav button .nav-icon{
+    width:31px !important;
+    height:31px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    border-radius:11px !important;
+    background:rgba(255,255,255,.07) !important;
+    font-size:17px !important;
+    line-height:1 !important;
+  }
+
+  /* Make Плати visually prominent without making it aggressive. */
+  .mobile-bottom-nav button:last-child,
+  nav.mobile-bottom-nav button:last-child,
+  .bottom-nav button:last-child,
+  #mobileNav button:last-child{
+    color:#fff !important;
+    background:linear-gradient(145deg,rgba(255,184,77,.22),rgba(255,130,55,.12)) !important;
+    box-shadow:inset 0 0 0 1px rgba(255,190,90,.18) !important;
+  }
+
+  .mobile-bottom-nav button:last-child .nav-icon,
+  nav.mobile-bottom-nav button:last-child .nav-icon,
+  .bottom-nav button:last-child .nav-icon,
+  #mobileNav button:last-child .nav-icon{
+    background:rgba(255,180,70,.18) !important;
+  }
+
+  /* Give the page breathing room above the floating nav. */
+  body{
+    padding-bottom:98px !important;
+  }
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header>
+
+<div class="container nav">
+
+  <a href="#" class="logo">
+
+    <span class="logo-icon">
+      ✓
+    </span>
+
+    <span>
+      Провери продукта
+    </span>
+
+  </a>
+
+  <nav class="nav-links">
+
+    <a href="#kak-raboti">
+      Как работи
+    </a>
+
+    <a href="#zashto">
+      Защо е важно
+    </a>
+
+    <a href="#proverka">
+      Какво проверяваме
+    </a>
+
+    <a href="#vuprosi">
+      Въпроси
+    </a>
+
+  </nav>
+
+</div>
+
+</header>
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main>
+
+
+<!-- =====================================================
+     HERO
+===================================================== -->
+
+<section class="container hero">
+
+<div>
+
+  <div class="badge">
+
+    <span class="badge-dot"></span>
+
+    Контрол на продукта
+
+  </div>
+
+
+  <h1>
+
+    Не купувай
+    <span>на сляпо.</span>
+
+  </h1>
+
+
+  <p class="hero-text">
+
+    Сканирай баркода на продукта и получи
+    разбираема информация за неговия състав,
+    откритите добавки и приложимите
+    регулаторни ограничения.
+
+  </p>
+
+
+  <div class="hero-actions">
+
+    <button
+      class="btn btn-primary"
+      onclick="openScanner()"
+    >
+      СКАНИРАЙ ПРОДУКТ
+    </button>
+
+  </div>
+
+  <div class="quota-pill" id="quotaPill">
+    <span class="quota-dot"></span>
+    <span id="quotaText">Зареждаме безплатните проверки...</span>
+  </div>
+
+
+  <p class="hero-note">
+
+    Камерата ще се използва само за
+    разпознаване на баркода. Стандартният лимит е 2 безплатни проверки на устройство.
+    OWNER устройството се управлява от Supabase и има отделен достъп.
+
+  </p>
+
+</div>
+
+
+<div class="scanner-wrap">
+
+  <div class="scanner">
+
+    <div class="scanner-top">
+
+      <span class="scanner-name">
+        СКЕНЕР
+      </span>
+
+      <span class="live">
+
+        <span class="live-dot"></span>
+
+        Готов за сканиране
+
+      </span>
+
+    </div>
+
+
+    <div class="scan-area">
+
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+
+      <div class="scan-line"></div>
+
+    </div>
+
+
+    <div class="barcode"></div>
+
+
+    <div class="scanner-bottom">
+
+      Постави баркода в рамката
+
+    </div>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     HOW IT WORKS
+===================================================== -->
+
+<section
+  class="section section-white"
+  id="kak-raboti"
+>
+
+<div class="container">
+
+<div class="section-head">
+
+  <div class="section-label">
+    Как работи
+  </div>
+
+  <h2>
+    От баркод до ясен резултат.
+  </h2>
+
+  <p class="section-lead">
+
+    Процесът е създаден така, че да не
+    се налага да разбираш от сложни
+    регулации и технически обозначения.
+
+  </p>
+
+</div>
+
+
+<div class="steps">
+
+<div class="step">
+
+  <span class="step-number">
+    01
+  </span>
+
+  <div class="step-icon">
+    ⌁
+  </div>
+
+  <h3>
+    Сканиране
+  </h3>
+
+  <p>
+    Насочваш камерата към баркода.
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    02
+  </span>
+
+  <div class="step-icon">
+    ✓
+  </div>
+
+  <h3>
+    Разпознаване
+  </h3>
+
+  <p>
+    Системата разпознава продукта.
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    03
+  </span>
+
+  <div class="step-icon">
+    i
+  </div>
+
+  <h3>
+    Информация
+  </h3>
+
+  <p>
+    Показваме наличните данни.
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    04
+  </span>
+
+  <div class="step-icon">
+    €
+  </div>
+
+  <h3>
+    Анализ
+  </h3>
+
+  <p>
+    Първите 2 проверки на стандартно устройство са безплатни. След това анализът е €0.99. OWNER устройството не се таксува.
+
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    05
+  </span>
+
+  <div class="step-icon">
+    ✓
+  </div>
+
+  <h3>
+    Проверка
+  </h3>
+
+  <p>
+    Данните се сравняват с правилата.
+  </p>
+
+</div>
+
+
+<div class="step">
+
+  <span class="step-number">
+    06
+  </span>
+
+  <div class="step-icon">
+    !
+  </div>
+
+  <h3>
+    Резултат
+  </h3>
+
+  <p>
+    Получаваш разбираемо обяснение.
+  </p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     WHY
+===================================================== -->
+
+<section
+  class="section"
+  id="zashto"
+>
+
+<div class="container why">
+
+<div class="why-visual">
+
+  <div class="protection-card">
+
+    <div class="protection-symbol">
+      ✓
+    </div>
+
+  </div>
+
+</div>
+
+
+<div>
+
+<div class="section-head">
+
+  <div class="section-label">
+    Защо е важно
+  </div>
+
+  <h2>
+    Контролът започва преди покупката.
+  </h2>
+
+</div>
+
+
+<div class="why-text">
+
+<p>
+
+Всеки ден купуваме храни, напитки
+и хранителни добавки, без винаги
+да имаме време да разчетем сложната
+информация върху етикета.
+
+</p>
+
+<p>
+
+Е-номера, наименования на вещества,
+концентрации и различни условия за
+употреба често са трудни за разбиране
+от обикновения потребител.
+
+</p>
+
+<p>
+
+Целта на системата е да превърне
+сложната информация в разбираем
+резултат и да помогне за
+по-информиран избор.
+
+</p>
+
+</div>
+
+
+<div class="info-list">
+
+<div class="info-item">
+
+  <span class="info-check">
+    ✓
+  </span>
+
+  <span>
+    Проверка на съставките и добавките.
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <span class="info-check">
+    ✓
+  </span>
+
+  <span>
+    Сравнение с приложими ограничения.
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <span class="info-check">
+    ✓
+  </span>
+
+  <span>
+    Откриване на случаи, изискващи внимание.
+  </span>
+
+</div>
+
+
+<div class="info-item">
+
+  <span class="info-check">
+    ✓
+  </span>
+
+  <span>
+    Ясно обяснение на резултата.
+  </span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     WHAT WE CHECK
+===================================================== -->
+
+<section
+  class="section section-white"
+  id="proverka"
+>
+
+<div class="container">
+
+<div class="section-head">
+
+  <div class="section-label">
+    Какво проверяваме
+  </div>
+
+  <h2>
+    Не просто четем етикета.
+  </h2>
+
+  <p class="section-lead">
+
+    Системата структурира наличната
+    информация и я поставя в контекста
+    на приложимите правила.
+
+  </p>
+
+</div>
+
+
+<div class="check-grid">
+
+<div class="check-card">
+
+  <span class="check-number">
+    01
+  </span>
+
+  <h3>
+    Състав
+  </h3>
+
+  <p>
+    Проверяваме наличните съставки
+    и свързаната с тях информация.
+  </p>
+
+</div>
+
+
+<div class="check-card">
+
+  <span class="check-number">
+    02
+  </span>
+
+  <h3>
+    Добавки
+  </h3>
+
+  <p>
+    Разпознаваме хранителни добавки
+    и приложимите ограничения.
+  </p>
+
+</div>
+
+
+<div class="check-card">
+
+  <span class="check-number">
+    03
+  </span>
+
+  <h3>
+    Количества
+  </h3>
+
+  <p>
+    Когато има необходимите данни,
+    проверяваме концентрацията.
+  </p>
+
+</div>
+
+
+<div class="check-card">
+
+  <span class="check-number">
+    04
+  </span>
+
+  <h3>
+    Категория
+  </h3>
+
+  <p>
+    Оценката зависи от категорията
+    и предназначението на продукта.
+  </p>
+
+</div>
+
+
+<div class="check-card">
+
+  <span class="check-number">
+    05
+  </span>
+
+  <h3>
+    Предупреждения
+  </h3>
+
+  <p>
+    Отбелязваме ситуации, при които
+    са необходими допълнителни данни.
+  </p>
+
+</div>
+
+
+<div class="check-card">
+
+  <span class="check-number">
+    06
+  </span>
+
+  <h3>
+    Краен резултат
+  </h3>
+
+  <p>
+    Представяме резултата с ясна
+    оценка и обяснение.
+  </p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     PAYMENT
+===================================================== -->
+
+<section class="payment">
+
+<div class="container">
+
+<div class="payment-box">
+
+<div>
+
+  <div class="section-label">
+    Подробен анализ
+  </div>
+
+  <h2>
+    Провери продукта
+    преди да го избереш.
+  </h2>
+
+  <p>
+
+    След откриване на продукта можеш
+    да направиш подробен анализ на
+    състава и приложимите регулаторни
+    ограничения.
+
+    Първите 2 проверки на стандартно устройство са безплатни. След това всеки подробен анализ струва €0.99. OWNER устройството има отделен достъп.
+
+
+  </p>
+
+</div>
+
+
+<div class="price">
+
+  <strong>
+    €0.99
+  </strong>
+
+  <span>
+    за един анализ
+  </span>
+
+  <button
+    class="paypal"
+    onclick="startPayment()"
+  >
+    Плати с PayPal
+  </button>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     RESULT
+===================================================== -->
+
+<section class="section">
+
+<div class="container">
+
+<div class="section-head">
+
+  <div class="section-label">
+    Резултат
+  </div>
+
+  <h2>
+    Резултатът трябва да бъде разбираем.
+  </h2>
+
+  <p class="section-lead">
+
+    Вместо сложна таблица получаваш
+    информация за това какво е установено
+    и защо е важно.
+
+  </p>
+
+</div>
+
+
+<div class="result-demo">
+
+<div class="result-header">
+
+  <span class="result-badge">
+    ЛИМИТЪТ Е ПРЕВИШЕН
+  </span>
+
+  <h3>
+    Установено е превишаване
+  </h3>
+
+  <p>
+
+    При проверката е установена
+    хранителна добавка, за която
+    посоченото количество е над
+    приложимото максимално ниво.
+
+  </p>
+
+</div>
+
+
+<div class="result-data">
+
+<div class="data">
+
+  <span>
+    Добавка
+  </span>
+
+  <strong>
+    E 100
+  </strong>
+
+</div>
+
+
+<div class="data">
+
+  <span>
+    Установено количество
+  </span>
+
+  <strong>
+    120 mg/kg
+  </strong>
+
+</div>
+
+
+<div class="data">
+
+  <span>
+    Максимално ниво
+  </span>
+
+  <strong>
+    100 mg/kg
+  </strong>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     FAQ
+===================================================== -->
+
+<section
+  class="section section-white"
+  id="vuprosi"
+>
+
+<div class="container">
+
+<div class="section-head">
+
+  <div class="section-label">
+    Въпроси
+  </div>
+
+  <h2>
+    Най-важното накратко.
+  </h2>
+
+</div>
+
+
+<div class="faq">
+
+<details>
+
+<summary>
+  Какво трябва да направя?
+</summary>
+
+<p>
+
+Насочи камерата към баркода на продукта.
+Когато продуктът бъде разпознат, ще получиш
+информация за наличните данни и възможност
+да стартираш подробен анализ.
+
+</p>
+
+</details>
+
+
+<details>
+
+<summary>
+  Защо се заплаща подробният анализ?
+</summary>
+
+<p>
+
+Подробният анализ включва обработка
+на информацията за продукта и проверка
+спрямо приложимите регулаторни правила.
+Цената на единичния анализ е €0.99.
+
+</p>
+
+</details>
+
+
+<details>
+
+<summary>
+  Какво означава „лимитът е превишен“?
+</summary>
+
+<p>
+
+Това означава, че за конкретната проверка
+е установено количество, което надвишава
+наличното приложимо максимално ниво.
+
+</p>
+
+</details>
+
+
+<details>
+
+<summary>
+  Винаги ли може да бъде даден окончателен резултат?
+</summary>
+
+<p>
+
+Не. При липсващи данни, липсваща концентрация
+или случаи, изискващи допълнителна експертна
+оценка, проверката може да бъде маркирана
+за човешки преглед.
+
+</p>
+
+</details>
+
+
+<details>
+
+<summary>
+  Заменя ли системата официалния контрол?
+</summary>
+
+<p>
+
+Не. Системата е информационен инструмент
+и не заменя официален контрол, лабораторно
+изпитване или оценка от компетентен орган.
+
+</p>
+
+</details>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     FINAL
+===================================================== -->
+
+<section class="final">
+
+<div class="container">
+
+<h2>
+
+Следващият продукт,
+който купуваш,
+може да бъде проверен.
+
+</h2>
+
+<p>
+
+Сканирай баркода и получи информация,
+която ти помага да направиш
+по-информиран избор.
+
+</p>
+
+<button
+  class="btn btn-primary"
+  onclick="openScanner()"
+>
+  СКАНИРАЙ ПРОДУКТ
+</button>
+
+</div>
+
+</section>
+
+</main>
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer>
+
+<div class="container footer">
+
+<div>
+
+  <strong>
+    Провери продукта
+  </strong>
+
+  <br>
+
+  Контрол. Информация. Информиран избор.
+
+</div>
+
+<div>
+
+  Информационен инструмент.
+  Не замества официален контрол
+  или лабораторно изпитване.
+
+</div>
+
+</div>
+
+</footer>
+
+
+<!-- =====================================================
+     CAMERA MODAL
+===================================================== -->
+
+<div
+  class="camera-modal"
+  id="cameraModal"
+>
+
+<div class="camera-panel">
+
+<div class="camera-header">
+
+<div>
+
+  <div class="camera-title">
+    Сканиране на продукт
+  </div>
+
+  <div class="camera-subtitle">
+    Насочи камерата към баркода
+  </div>
+
+</div>
+
+
+<button
+  class="close-camera"
+  onclick="closeScanner()"
+  aria-label="Затвори"
+>
+  ×
+</button>
+
+</div>
+
+
+<div class="camera-area">
+
+  <div id="reader"></div>
+
+  <div class="camera-frame">
+
+    <div class="camera-line"></div>
+
+  </div>
+
+</div>
+
+
+<div class="camera-instruction">
+
+  Постави целия баркод в рамката
+
+</div>
+
+
+<div class="camera-help">
+
+  Дръж телефона стабилно и осигури
+  достатъчно светлина. Поддържат се и GS1 DataMatrix / GS1-128.
+
+</div>
+
+<div class="quota-pill camera-quota" id="cameraQuotaPill">
+  <span class="quota-dot"></span>
+  <span id="cameraQuotaText">Проверяваме безплатните проверки...</span>
+</div>
+
+
+<div
+  class="camera-error"
+  id="cameraError"
+></div>
+
+
+<div class="camera-footer">
+
+<button
+  class="camera-close-button"
+  onclick="closeScanner()"
+>
+  Затвори скенера
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+     SUCCESS MODAL
+===================================================== -->
+
+<div
+  class="success-modal"
+  id="successModal"
+>
+
+<div class="success-card">
+
+<div class="success-icon">
+  ✓
+</div>
+
+
+<h3>
+  Баркодът е разпознат
+</h3>
+
+
+<p>
+
+Получихме номера на продукта.
+Сега можем да проверим дали
+продуктът съществува в системата.
+
+</p>
+
+
+<div
+  class="detected-code"
+  id="detectedCode"
+>
+  —
+</div>
+
+<div
+  id="detectedFormat"
+  style="margin:-10px 0 18px;color:#68756d;font-size:12px;font-weight:700;"
+>
+  Форматът ще бъде определен автоматично
+</div>
+
+
+<div class="success-actions">
+
+<button
+  class="success-primary"
+  onclick="continueWithProduct()"
+>
+  Продължи с проверката
+</button>
+
+
+<button
+  class="success-secondary"
+  onclick="scanAgain()"
+>
+  Сканирай отново
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+     CUSTOM STATUS MODAL
+===================================================== -->
+
+<div class="status-modal" id="statusModal" aria-hidden="true">
+
+  <div class="status-card" role="dialog" aria-modal="true" aria-labelledby="statusTitle">
+
+    <button
+      class="status-close"
+      onclick="closeStatusModal()"
+      aria-label="Затвори"
+    >×</button>
+
+    <div class="status-icon" id="statusIcon">✓</div>
+
+    <div class="status-kicker" id="statusKicker">
+      ПРОВЕРКА
+    </div>
+
+    <h3 id="statusTitle">
+      Готово
+    </h3>
+
+    <p id="statusMessage">
+      Операцията е завършена.
+    </p>
+
+    <div class="status-detail" id="statusDetail"></div>
+
+    <div class="status-actions" id="statusActions">
+      <button class="status-primary" onclick="closeStatusModal()">
+        Продължи
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     LOADING
+===================================================== -->
+
+<div
+  class="loading"
+  id="loading"
+>
+
+<div class="loading-card">
+
+<div class="spinner"></div>
+
+<h3>
+  Проверяваме продукта
+</h3>
+
+<p>
+  Моля, изчакай няколко секунди...
+</p>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+
+<script>
+/* =====================================================
+   ПРОВЕРИ ПРОДУКТА — MOBILE / DESKTOP APP CLIENT
+   Реална връзка:
+   barcode + symbology -> Universal Barcode Resolver
+   -> local product / external staging
+   -> EU regulatory RPC
+   -> резултат -> UI
+
+   Scanner coverage:
+   EAN-13 / EAN-8 / UPC-A / UPC-E / CODE-128 / ITF-14 /
+   CODE-39 / Codabar / GS1 DataMatrix / QR / PDF417 / Aztec
+
+===================================================== */
+
+const SUPABASE_URL = "https://dojepjbuhsyhrouenoxr.supabase.co";
+
+/*
+ * ВАЖНО:
+ * Тук се поставя SUPABASE ANON/PUBLISHABLE KEY.
+ * Никога не поставяй service_role key в HTML/JavaScript.
+ */
+const SUPABASE_ANON_KEY = "sb_publishable_1WKrvi00WP5GXSKAM1O8uQ_zy3ZTa3C";
+
+const FREE_SCAN_ENDPOINT =
+  `${SUPABASE_URL}/functions/v1/check-free-scan`;
+
+const RESOLVE_BARCODE_ENDPOINT =
+  `${SUPABASE_URL}/functions/v1/resolve-barcode`;
+
+const BARCODE_RPC_ENDPOINT =
+  `${SUPABASE_URL}/rest/v1/rpc/evaluate_barcode_eu_food`;
+
+const DEVICE_STORAGE_KEY =
+  "product_safety_scanner_device_id_v2";
+
+const DEVICE_VERSION = "v1";
+
+let scanner = null;
+let scannerRunning = false;
+let detectedBarcode = null;
+let detectedSymbology = null;
+let currentBarcodeResult = null;
+let deviceId = null;
+
+let quotaState = {
+  free_scans_remaining: null,
+  free_scans_used: null,
+  access_type: null
+};
+
+/* =====================================================
+   DEVICE
+===================================================== */
+function getDeviceId(){
+  if(deviceId) return deviceId;
+
+  try{
+    const saved = localStorage.getItem(DEVICE_STORAGE_KEY);
+    if(saved && saved.length >= 16){
+      deviceId = saved;
+      return deviceId;
+    }
+
+    const generated =
+      (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + "-" +
+          Math.random().toString(36).slice(2) + "-" +
+          Math.random().toString(36).slice(2);
+
+    deviceId = DEVICE_VERSION + "-" + generated;
+    localStorage.setItem(DEVICE_STORAGE_KEY, deviceId);
+    return deviceId;
+  }catch{
+    if(!window.__fallbackDeviceId){
+      window.__fallbackDeviceId =
+        DEVICE_VERSION + "-" + Date.now().toString(36) + "-" +
+        Math.random().toString(36).slice(2);
+    }
+    return window.__fallbackDeviceId;
+  }
+}
+
+/* =====================================================
+   SUPABASE CONFIG CHECK
+===================================================== */
+function hasSupabaseClientConfig(){
+  return Boolean(
+    SUPABASE_URL &&
+    SUPABASE_ANON_KEY &&
+    SUPABASE_ANON_KEY !== "PASTE_YOUR_SUPABASE_ANON_KEY_HERE"
+  );
+}
+
+/* =====================================================
+   QUOTA UI
+===================================================== */
+function setQuotaUI(remaining, used, accessType = quotaState.access_type){
+  const heroPill = document.getElementById("quotaPill");
+  const heroText = document.getElementById("quotaText");
+  const cameraPill = document.getElementById("cameraQuotaPill");
+  const cameraText = document.getElementById("cameraQuotaText");
+
+  const isOwner =
+    String(accessType || "").toUpperCase() === "OWNER";
+
+  if(isOwner){
+    const text = "OWNER • неограничени проверки";
+
+    if(heroText) heroText.textContent = text;
+    if(cameraText) cameraText.textContent = text;
+
+    if(heroPill){
+      heroPill.classList.remove("empty");
+      heroPill.classList.add("owner");
+    }
+
+    if(cameraPill){
+      cameraPill.classList.remove("empty");
+      cameraPill.classList.add("owner");
+    }
+
+    quotaState.access_type = "OWNER";
+    quotaState.free_scans_remaining = 999999;
+    quotaState.free_scans_used =
+      typeof used === "number" ? used : 0;
+
+    return;
+  }
+
+  if(heroPill) heroPill.classList.remove("owner");
+  if(cameraPill) cameraPill.classList.remove("owner");
+
+  if(typeof remaining !== "number"){
+    if(heroText) heroText.textContent =
+      "До 2 безплатни проверки на устройство";
+    if(cameraText) cameraText.textContent =
+      "До 2 безплатни проверки на устройство";
+    return;
+  }
+
+  const text =
+    remaining === 1
+      ? "Остава 1 безплатна проверка"
+      : remaining > 1
+        ? `Остават ${remaining} безплатни проверки`
+        : "Безплатните проверки са изчерпани";
+
+  if(heroText) heroText.textContent = text;
+
+  if(cameraText){
+    cameraText.textContent =
+      remaining > 0
+        ? text
+        : "Безплатните проверки са изчерпани • Следващият анализ е €0.99";
+  }
+
+  if(heroPill)
+    heroPill.classList.toggle("empty", remaining <= 0);
+
+  if(cameraPill)
+    cameraPill.classList.toggle("empty", remaining <= 0);
+
+  quotaState.free_scans_remaining = remaining;
+  quotaState.free_scans_used = used;
+}
+
+/* =====================================================
+   FREE SCAN ACCESS
+===================================================== */
+async function claimFreeScan(){
+  const deviceId = await getDeviceId();
+
+  if(!hasSupabaseClientConfig()){
+    throw new Error(
+      "Supabase ANON/PUBLISHABLE KEY не е настроен във frontend-а."
+    );
+  }
+
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/rpc/claim_free_scan`,
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Accept":"application/json",
+        "apikey":SUPABASE_ANON_KEY,
+        "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
+      },
+      body:JSON.stringify({
+        p_device_id:deviceId
+      })
+    }
+  );
+
+  const raw = await response.text();
+  let data = null;
+
+  try{
+    data = raw ? JSON.parse(raw) : null;
+  }catch{}
+
+  if(!response.ok){
+    throw new Error(
+      data?.message ||
+      data?.detail ||
+      raw ||
+      `Грешка при проверката на достъпа (${response.status}).`
+    );
+  }
+
+  /*
+   * PostgreSQL RETURNS TABLE връща масив с един ред.
+   */
+  const row =
+    Array.isArray(data)
+      ? data[0]
+      : data;
+
+  if(!row){
+    throw new Error(
+      "claim_free_scan не върна резултат."
+    );
+  }
+
+  quotaState.access_type =
+    row.access_type || null;
+
+  if(
+    String(row.access_type || "").toUpperCase() === "OWNER"
+  ){
+    setQuotaUI(
+      999999,
+      typeof row.free_scans_used === "number"
+        ? row.free_scans_used
+        : 0,
+      "OWNER"
+    );
+
+    return {
+      success:true,
+      access_type:"OWNER",
+      free_scans_remaining:999999,
+      free_scans_used:
+        typeof row.free_scans_used === "number"
+          ? row.free_scans_used
+          : 0
+    };
+  }
+
+  const remaining =
+    typeof row.free_scans_remaining === "number"
+      ? row.free_scans_remaining
+      : 0;
+
+  const used =
+    typeof row.free_scans_used === "number"
+      ? row.free_scans_used
+      : 0;
+
+  setQuotaUI(
+    remaining,
+    used,
+    row.access_type
+  );
+
+  if(row.allowed !== true){
+    return {
+      success:false,
+      access_type:"PAYMENT_REQUIRED",
+      free_scans_remaining:0,
+      free_scans_used:used
+    };
+  }
+
+  return {
+    success:true,
+    access_type:row.access_type || "FREE",
+    free_scans_remaining:remaining,
+    free_scans_used:used
+  };
+}
+
+/* =====================================================
+   UNIVERSAL BARCODE RESOLVER
+   barcode -> local DB -> external product source -> staging
+===================================================== */
+async function resolveBarcode(barcode, symbology=null){
+  if(!hasSupabaseClientConfig()){
+    throw new Error(
+      "Supabase ANON/PUBLISHABLE KEY не е настроен във frontend-а."
+    );
+  }
+
+  const response = await fetch(RESOLVE_BARCODE_ENDPOINT,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Accept":"application/json",
+      "apikey":SUPABASE_ANON_KEY,
+      "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
+    },
+    body:JSON.stringify({
+      barcode:String(barcode).trim(),
+      symbology: symbology ? String(symbology) : null
+    })
+  });
+
+  const raw = await response.text();
+  let data = null;
+
+  try{ data = raw ? JSON.parse(raw) : null; }catch{}
+
+  if(!response.ok){
+    console.error(
+      "resolve-barcode error:",
+      response.status,
+      data,
+      raw
+    );
+
+    throw new Error(
+      data?.message ||
+      data?.detail ||
+      `Грешка при намирането на продукта (${response.status}).`
+    );
+  }
+
+  if(!data){
+    throw new Error(
+      "Resolver-ът не върна резултат."
+    );
+  }
+
+  return data;
+}
+
+/* =====================================================
+   REAL BARCODE RPC
+===================================================== */
+async function evaluateBarcode(barcode){
+  if(!hasSupabaseClientConfig()){
+    throw new Error(
+      "Supabase ANON/PUBLISHABLE KEY не е настроен във frontend-а."
+    );
+  }
+
+  const response = await fetch(BARCODE_RPC_ENDPOINT,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Accept":"application/json",
+      "apikey":SUPABASE_ANON_KEY,
+      "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
+    },
+    body:JSON.stringify({
+      p_barcode: String(barcode).trim()
+    })
+  });
+
+  const raw = await response.text();
+  let data = null;
+
+  try{ data = raw ? JSON.parse(raw) : null; }catch{}
+
+  if(!response.ok){
+    console.error("Supabase RPC error",response.status,data,raw);
+    throw new Error(
+      data?.message ||
+      data?.hint ||
+      `Грешка при проверката на продукта (${response.status}).`
+    );
+  }
+
+  /*
+   * RETURNS TABLE от PostgreSQL RPC обикновено идва като масив.
+   */
+  const row = Array.isArray(data) ? data[0] : data;
+
+  if(!row){
+    throw new Error("Системата не върна резултат за този баркод.");
+  }
+
+  return row;
+}
+
+/* =====================================================
+   OPEN SCANNER
+===================================================== */
+async function openScanner(){
+  const modal = document.getElementById("cameraModal");
+  const error = document.getElementById("cameraError");
+
+  error.classList.remove("active");
+  error.textContent = "";
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+
+  await new Promise(r => setTimeout(r,180));
+  await startCamera();
+}
+
+/* =====================================================
+   CAMERA
+===================================================== */
+async function startCamera(){
+  if(scannerRunning) return;
+
+  const errorBox = document.getElementById("cameraError");
+  errorBox.classList.remove("active");
+  errorBox.textContent = "";
+
+  /*
+   * Камерата на телефона работи само в secure context.
+   * Това означава HTTPS (или localhost при разработка).
+   */
+  if(!window.isSecureContext){
+    showCameraError(
+      "Камерата изисква HTTPS. Отвори сайта през https:// адрес, а не през http:// или file://."
+    );
+    return;
+  }
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showCameraError(
+      "Този браузър не предоставя достъп до камерата. Използвай актуален Chrome, Safari или Edge."
+    );
+    return;
+  }
+
+  if(typeof Html5Qrcode === "undefined"){
+    showCameraError(
+      "Скенерът още не е зареден. Провери интернет връзката и опитай отново."
+    );
+    return;
+  }
+
+  try{
+    /*
+     * Първо искаме реално разрешение за камерата.
+     * Това е по-надеждно на мобилни браузъри от директен
+     * start({facingMode:{ideal:"environment"}}).
+     */
+    let permissionStream = null;
+
+    try{
+      permissionStream = await navigator.mediaDevices.getUserMedia({
+        video:{
+          facingMode:{ideal:"environment"}
+        },
+        audio:false
+      });
+    }catch(permissionError){
+      console.error("getUserMedia permission error:", permissionError);
+      throw permissionError;
+    }
+
+    /*
+     * След като разрешението е дадено, освобождаваме
+     * тестовия stream. Html5-qrcode ще отвори камерата отново.
+     */
+    permissionStream.getTracks().forEach(track => track.stop());
+
+    await new Promise(resolve => setTimeout(resolve,250));
+
+    /*
+     * Извличаме камерите. На някои телефони първият
+     * start с facingMode не избира правилно задната камера.
+     * Ако имаме deviceId, използваме конкретната камера.
+     */
+    let cameras = [];
+
+    try{
+      cameras = await Html5Qrcode.getCameras();
+    }catch(cameraListError){
+      console.warn("Не успяхме да получим списък с камерите:",cameraListError);
+    }
+
+    document.getElementById("reader").innerHTML = "";
+
+    scanner = new Html5Qrcode("reader");
+
+    /*
+     * Не използваме experimentalFeatures — не са необходими
+     * за EAN сканирането и могат да създадат несъвместимост
+     * с различни мобилни браузъри.
+     */
+    const formats = [];
+
+    if(window.Html5QrcodeSupportedFormats){
+      const F = window.Html5QrcodeSupportedFormats;
+
+      /* 1D retail + logistics barcodes */
+      if(F.EAN_13 !== undefined) formats.push(F.EAN_13);
+      if(F.EAN_8 !== undefined) formats.push(F.EAN_8);
+      if(F.UPC_A !== undefined) formats.push(F.UPC_A);
+      if(F.UPC_E !== undefined) formats.push(F.UPC_E);
+      if(F.CODE_128 !== undefined) formats.push(F.CODE_128);
+      if(F.ITF_14 !== undefined) formats.push(F.ITF_14);
+      if(F.CODE_39 !== undefined) formats.push(F.CODE_39);
+      if(F.CODABAR !== undefined) formats.push(F.CODABAR);
+
+      /* 2D / GS1 formats */
+      if(F.DATA_MATRIX !== undefined) formats.push(F.DATA_MATRIX);
+      if(F.QR_CODE !== undefined) formats.push(F.QR_CODE);
+      if(F.PDF_417 !== undefined) formats.push(F.PDF_417);
+      if(F.AZTEC !== undefined) formats.push(F.AZTEC);
+    }
+
+    const config = {
+      fps:12,
+      qrbox:{width:280,height:150},
+      aspectRatio:1.7777778
+    };
+
+    if(formats.length){
+      config.formatsToSupport = formats;
+    }
+
+    /*
+     * Избираме за предпочитане камера, чието име подсказва
+     * rear/back/environment. Ако браузърът не дава имена,
+     * използваме последната камера като fallback.
+     */
+    let cameraConfig = {
+      facingMode:"environment"
+    };
+
+    if(cameras.length){
+      const rearCamera =
+        cameras.find(c => /back|rear|environment|задн|основ/i.test(c.label)) ||
+        cameras[cameras.length - 1];
+
+      cameraConfig = {
+        deviceId:{
+          exact:rearCamera.id
+        }
+      };
+    }
+
+    try{
+      await scanner.start(
+        cameraConfig,
+        config,
+        onBarcodeDetected,
+        () => {}
+      );
+    }catch(firstStartError){
+      /*
+       * Fallback: ако конкретният deviceId не работи,
+       * пробваме директно environment camera.
+       */
+      console.warn("Първият camera start не успя:",firstStartError);
+
+      try{
+        await scanner.clear();
+      }catch(_){}
+
+      document.getElementById("reader").innerHTML = "";
+      scanner = new Html5Qrcode("reader");
+
+      await scanner.start(
+        {facingMode:"environment"},
+        config,
+        onBarcodeDetected,
+        () => {}
+      );
+    }
+
+    scannerRunning = true;
+
+  }catch(error){
+    console.error("Camera start error:",error);
+    showCameraError(getCameraErrorMessage(error));
+    await stopScanner();
+  }
+}
+
+async function onBarcodeDetected(decodedText, decodedResult=null){
+  const code = String(decodedText || "").trim();
+  if(!code || detectedBarcode) return;
+
+  detectedBarcode = code;
+
+  /*
+   * html5-qrcode връща реалния формат на разпознатия код.
+   * Подаваме го към Universal Barcode Resolver, за да може
+   * backend-ът да различава EAN/UPC/GS1 DataMatrix/GS1-128 и др.
+   */
+  detectedSymbology =
+    decodedResult?.result?.format?.formatName ||
+    decodedResult?.result?.format?.format ||
+    null;
+
+  await stopScanner();
+
+  document.getElementById("detectedCode").textContent = code;
+
+  const formatEl = document.getElementById("detectedFormat");
+  if(formatEl){
+    formatEl.textContent =
+      detectedSymbology
+        ? `Формат: ${detectedSymbology}`
+        : "Форматът ще бъде определен автоматично";
+  }
+
+  document.getElementById("successModal").classList.add("active");
+}
+
+async function stopScanner(){
+  if(!scanner){
+    scannerRunning = false;
+    return;
+  }
+
+  try{
+    await scanner.stop();
+  }catch(error){
+    console.warn("Scanner stop:",error);
+  }
+
+  try{
+    await scanner.clear();
+  }catch(error){
+    console.warn("Scanner clear:",error);
+  }
+
+  scannerRunning = false;
+  scanner = null;
+}
+
+async function closeScanner(){
+  await stopScanner();
+  document.getElementById("cameraModal").classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+async function scanAgain(){
+  detectedBarcode = null;
+  detectedSymbology = null;
+  currentBarcodeResult = null;
+  document.getElementById("successModal").classList.remove("active");
+
+  await new Promise(r => setTimeout(r,150));
+  await startCamera();
+}
+
+/* =====================================================
+   REAL CHECK FLOW
+   1. barcode lookup
+   2. if product exists -> claim free scan
+   3. show real result
+===================================================== */
+async function continueWithProduct(){
+  if(!detectedBarcode) return;
+
+  document.getElementById("successModal").classList.remove("active");
+
+  showLoading(
+    "Намираме продукта",
+    "Проверяваме баркода в нашата база..."
+  );
+
+  try{
+    const resolved =
+      await resolveBarcode(detectedBarcode, detectedSymbology);
+
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_LOCAL"
+    ){
+      /*
+       * Backend определя дали устройството е OWNER.
+       * Само OWNER получава неограничен достъп.
+       */
+      const access =
+        await claimFreeScan();
+
+      if(
+        access.access_type === "PAYMENT_REQUIRED" &&
+        String(quotaState.access_type || "").toUpperCase() !== "OWNER"
+      ){
+        hideLoading();
+
+        /*
+         * Плащане се показва само за стандартно устройство.
+         * OWNER никога не влиза в този поток.
+         */
+        showPaymentRequired({
+          product_name:
+            resolved?.product?.name ||
+            "Продукт",
+          brand:
+            resolved?.product?.brand ||
+            ""
+        });
+
+        return;
+      }
+
+      showLoading(
+        "Продуктът е открит",
+        access.access_type === "OWNER"
+          ? "OWNER достъп • извършваме EU регулаторната проверка..."
+          : "Извършваме EU регулаторната проверка..."
+      );
+
+      const result =
+        await evaluateBarcode(detectedBarcode);
+
+      /* Запазваме продукта заедно с регулаторния резултат,
+         за да не се губят състав, E-та, алергени и хранителни данни. */
+      const resolvedProduct =
+        extractProductData(resolved?.product) ||
+        extractProductData(result);
+
+      if(resolvedProduct){
+        result.product = resolvedProduct;
+      }
+
+      currentBarcodeResult = result;
+
+      /*
+       * Не позволяваме резултатният UI да загуби OWNER състоянието.
+       */
+      if(String(access?.access_type || "").toUpperCase() === "OWNER"){
+        quotaState.access_type = "OWNER";
+        setQuotaUI(
+          999999,
+          typeof access.free_scans_used === "number"
+            ? access.free_scans_used
+            : 0,
+          "OWNER"
+        );
+      }
+
+      hideLoading();
+      showProductResult(result,access,resolved?.product || null);
+      return;
+    }
+
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_EXTERNAL" ||
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_STAGING"
+    ){
+      hideLoading();
+      showResolvedExternalProduct(resolved);
+      return;
+    }
+
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_NOT_FOUND"
+    ){
+      hideLoading();
+      showResolverNotFound(resolved);
+      return;
+    }
+
+    hideLoading();
+
+    showFriendlyError(
+      resolved.message ||
+      "Не успяхме да намерим продукта."
+    );
+
+  }catch(error){
+    hideLoading();
+
+    console.error(
+      "Product resolver/check error:",
+      error
+    );
+
+    await stopScanner();
+
+    showFriendlyError(
+      error?.message ||
+      "Не успяхме да извършим проверката."
+    );
+  }
+}
+
+
+/* =====================================================
+   PRODUCT DATA NORMALIZATION
+   Backend responses may place product data in:
+   resolved.product, result.product, or directly in the RPC row.
+===================================================== */
+function extractProductData(result, resolvedProduct = null){
+  const candidates = [
+    resolvedProduct,
+    result?.product,
+    result?.product_data,
+    result?.data?.product,
+    result
+  ];
+
+  const candidate = candidates.find(item =>
+    item &&
+    typeof item === "object" &&
+    (
+      item.name ||
+      item.product_name ||
+      item.brand ||
+      item.ingredients_text_raw ||
+      item.ingredients_text_bg ||
+      item.nutrition_data ||
+      item.additives_tags
+    )
+  );
+
+  if(!candidate) return null;
+
+  const product = {...candidate};
+
+  if(!product.name && product.product_name){
+    product.name = product.product_name;
+  }
+
+  if(!Array.isArray(product.additives_tags)){
+    const raw = product.additives_tags ?? product.additives ?? [];
+    if(Array.isArray(raw)){
+      product.additives_tags = raw;
+    }else if(typeof raw === "string" && raw.trim()){
+      try{
+        const parsed = JSON.parse(raw);
+        product.additives_tags = Array.isArray(parsed) ? parsed : [];
+      }catch(_){
+        product.additives_tags = raw
+          .split(",")
+          .map(x => x.trim())
+          .filter(Boolean);
+      }
+    }else{
+      product.additives_tags = [];
+    }
+  }
+
+  if(!Array.isArray(product.allergens_tags)){
+    const raw = product.allergens_tags ?? product.allergens ?? [];
+    product.allergens_tags = Array.isArray(raw)
+      ? raw
+      : (typeof raw === "string"
+          ? raw.split(",").map(x => x.trim()).filter(Boolean)
+          : []);
+  }
+
+  if(typeof product.nutrition_data === "string"){
+    try{
+      product.nutrition_data = JSON.parse(product.nutrition_data);
+    }catch(_){}
+  }
+
+  return product;
+}
+
+function regulatoryStatusLabel(item){
+  const comparison = String(
+    item?.comparison_status ||
+    item?.evaluation_status ||
+    ""
+  ).toUpperCase();
+
+  switch(comparison){
+    case "AUTHORISED":
+    case "AUTHORIZED":
+    case "AUTHORISED_NO_NUMERIC_LIMIT":
+    case "AUTHORIZED_NO_NUMERIC_LIMIT":
+      return "РАЗРЕШЕНА";
+    case "COMPLIANT_WITH_LIMIT":
+      return "В РАМКИТЕ НА ЛИМИТА";
+    case "LIMIT_EXCEEDED":
+      return "ПРЕВИШЕН ЛИМИТ";
+    case "CONCENTRATION_MISSING":
+      return "ЛИПСВА КОНЦЕНТРАЦИЯ";
+    case "LIMIT_CHECK_REQUIRED":
+      return "НУЖНА Е ПРОВЕРКА НА КОЛИЧЕСТВОТО";
+    case "REVIEW_REQUIRED":
+      return "НУЖЕН Е ДОПЪЛНИТЕЛЕН ПРЕГЛЕД";
+    case "QUANTUM_SATIS":
+      return "QUANTUM SATIS";
+    default:
+      return humanComparisonStatus(comparison);
+  }
+}
+
+function parseRegulatoryResults(result){
+  let items = result?.results;
+
+  if(typeof items === "string"){
+    try{ items = JSON.parse(items); }catch(_){}
+  }
+
+  return Array.isArray(items) ? items : [];
+}
+
+
+/* =====================================================
+   RESULT PRESENTATION
+===================================================== */
+function getResultPresentation(result){
+  const status = String(result?.final_status || "").toUpperCase();
+
+  if(status === "LIMIT_EXCEEDED"){
+    return {
+      type:"error", icon:"!", kicker:"ПРЕВИШЕН ЛИМИТ",
+      title:"Установено е превишаване",
+      message:"Открито е правило с количество над приложимия лимит."
+    };
+  }
+
+  if(status === "REVIEW_REQUIRED"){
+    return {
+      type:"warning", icon:"!",
+      kicker:"НУЖНА Е ДОПЪЛНИТЕЛНА ПРОВЕРКА",
+      title:"Не може да се даде окончателен резултат",
+      message:"Има условие или липсващи данни, които трябва да бъдат проверени."
+    };
+  }
+
+  if(status === "CONCENTRATION_REQUIRED"){
+    return {
+      type:"warning", icon:"!",
+      kicker:"ЛИПСВА КОНЦЕНТРАЦИЯ",
+      title:"Нужни са допълнителни данни",
+      message:"Има добавка с числов лимит, но липсва концентрация за сравнение."
+    };
+  }
+
+  if(
+    status === "COMPLIANT_WITH_LIMITS" ||
+    status === "AUTHORISED"
+  ){
+    return {
+      type:"success", icon:"✓", kicker:"ПРОВЕРКАТА Е ГОТОВА",
+      title:"Няма установено превишаване",
+      message:"Откритите добавки са разрешени според наличните данни."
+    };
+  }
+
+  return {
+    type:"warning", icon:"i", kicker:"ИНФОРМАЦИОНЕН РЕЗУЛТАТ",
+    title:"Проверка завършена",
+    message:"Получихме резултат от системата."
+  };
+}
+
+function buildResultDetails(result){
+  let items = result?.results;
+
+  if(typeof items === "string"){
+    try{ items = JSON.parse(items); }catch(_){}
+  }
+
+  if(!Array.isArray(items) || !items.length) return "";
+
+  const rows = items.map(item => {
+    const e = escapeHtml(item?.e_number || "—");
+    const comparison = escapeHtml(regulatoryStatusLabel(item));
+
+    const max = item?.maximum_level !== null &&
+                item?.maximum_level !== undefined
+      ? ` • лимит: ${escapeHtml(item.maximum_level)} ${escapeHtml(item.maximum_level_basis || "")}`
+      : "";
+
+    const concentration = item?.actual_value !== null &&
+                          item?.actual_value !== undefined
+      ? ` • установено: ${escapeHtml(item.actual_value)} ${escapeHtml(item.actual_unit || "")}`
+      : "";
+
+    return `<li><strong>${e}</strong> — ${comparison}${max}${concentration}</li>`;
+  }).join("");
+
+  const category = escapeHtml(result?.eu_food_category_code || "—");
+  const product = escapeHtml(result?.product_name || "Продукт");
+  const brand = escapeHtml(result?.brand || "");
+
+  return `
+    <div class="scan-result-card">
+      <div class="result-product-line">
+        <strong>${product}</strong>${brand ? ` <span>• ${brand}</span>` : ""}
+      </div>
+      <div class="result-category-line">EU категория: ${category}</div>
+      <strong>Открити добавки: ${Number(result?.detected_e_additives || 0)}</strong>
+      <ul>${rows}</ul>
+    </div>
+  `;
+}
+
+function humanComparisonStatus(status){
+  switch(String(status || "")){
+    case "AUTHORISED":
+    case "AUTHORIZED":
+      return "разрешена";
+    case "AUTHORISED_NO_NUMERIC_LIMIT":
+    case "AUTHORIZED_NO_NUMERIC_LIMIT":
+      return "разрешена — без числов лимит";
+    case "COMPLIANT_WITH_LIMIT":
+      return "в рамките на лимита";
+    case "LIMIT_EXCEEDED":
+      return "превишен лимит";
+    case "CONCENTRATION_MISSING":
+      return "липсва концентрация";
+    case "LIMIT_CHECK_REQUIRED":
+      return "трябва проверка на количеството";
+    case "REVIEW_REQUIRED":
+      return "нужна е допълнителна проверка";
+    case "QUANTUM_SATIS":
+      return "quantum satis";
+    default:
+      return status || "няма данни";
+  }
+}
+
+function parseNutritionData(product){
+  let n = product?.nutrition_data;
+
+  if(typeof n === "string"){
+    try{ n = JSON.parse(n); }catch(_){}
+  }
+
+  return n && typeof n === "object" ? n : {};
+}
+
+function numericNutrition(n, keys){
+  for(const key of keys){
+    const value = Number(n?.[key]);
+    if(Number.isFinite(value)) return value;
+  }
+  return null;
+}
+
+function formatNutritionValue(value, unit=""){
+  if(value === null || value === undefined || !Number.isFinite(Number(value))){
+    return "—";
+  }
+
+  const n = Number(value);
+  const formatted =
+    Math.abs(n) >= 100
+      ? Math.round(n).toString()
+      : n.toFixed(1).replace(/\.0$/,"").replace(".", ",");
+
+  return `${formatted}${unit ? " " + unit : ""}`;
+}
+
+/*
+ * Оценката е хранителен профил, а не медицинска диагноза.
+ * Използваме стойности за 100 g / 100 ml, когато са налични.
+ * По-високи захари, наситени мазнини, сол/натрий и енергия
+ * увеличават риска; фибри и протеин леко подобряват профила.
+ */
+function calculateProductAssessment(product){
+  const n = parseNutritionData(product);
+
+  const energy =
+    numericNutrition(n, [
+      "energy-kcal_100g",
+      "energy-kcal",
+      "energy_100g"
+    ]);
+
+  const sugars =
+    numericNutrition(n, [
+      "sugars_100g",
+      "sugars"
+    ]);
+
+  const satFat =
+    numericNutrition(n, [
+      "saturated-fat_100g",
+      "saturated-fat"
+    ]);
+
+  let salt =
+    numericNutrition(n, [
+      "salt_100g",
+      "salt"
+    ]);
+
+  const sodium =
+    numericNutrition(n, [
+      "sodium_100g",
+      "sodium"
+    ]);
+
+  if(salt === null && sodium !== null){
+    salt = sodium * 2.5;
+  }
+
+  const fiber =
+    numericNutrition(n, [
+      "fiber_100g",
+      "fiber"
+    ]);
+
+  const protein =
+    numericNutrition(n, [
+      "proteins_100g",
+      "proteins",
+      "protein_100g",
+      "protein"
+    ]);
+
+  const name = String(
+    product?.name ||
+    product?.product_name ||
+    ""
+  ).toLowerCase();
+
+  const categories = String(
+    product?.categories_raw ||
+    ""
+  ).toLowerCase();
+
+  const ingredients = String(
+    product?.ingredients_text_raw ||
+    ""
+  ).toLowerCase();
+
+  const combined = `${name} ${categories} ${ingredients}`;
+
+  /* Алкохолните напитки получават отделен предупредителен профил. */
+  const alcoholWords = [
+    "beer","bier","pivo","бира","пиво",
+    "wine","vino","вино","vodka","whisky",
+    "whiskey","rum","gin","alcohol","алкохол"
+  ];
+
+  const isAlcohol = alcoholWords.some(word => combined.includes(word));
+
+  if(isAlcohol){
+    return {
+      level:"bad",
+      icon:"!",
+      title:"ОГРАНИЧИ КОНСУМАЦИЯТА",
+      subtitle:"Алкохолна напитка",
+      reasons:[
+        "Съдържа алкохол — не е подходящ избор за деца и бременност.",
+        "Алкохолът е причина продуктът да получи предупредителна оценка."
+      ],
+      confidence:"high",
+      nutrition:{energy,sugars,satFat,salt,protein,fiber}
+    };
+  }
+
+  /*
+   * Опростена, обяснима оценка на хранителния профил.
+   * Праговете са консервативни и служат за потребителска ориентация.
+   */
+  let negative = 0;
+  let measured = 0;
+  const reasons = [];
+
+  if(energy !== null){
+    measured++;
+    if(energy > 3350) negative += 10;
+    else if(energy > 3015) negative += 9;
+    else if(energy > 2680) negative += 8;
+    else if(energy > 2345) negative += 7;
+    else if(energy > 2010) negative += 6;
+    else if(energy > 1675) negative += 5;
+    else if(energy > 1340) negative += 4;
+    else if(energy > 1005) negative += 3;
+    else if(energy > 670) negative += 2;
+    else if(energy > 335) negative += 1;
+
+    if(energy > 2000) reasons.push(`висока енергийна стойност (${formatNutritionValue(energy,"kcal/100 g")})`);
+  }
+
+  if(sugars !== null){
+    measured++;
+    if(sugars > 45) negative += 10;
+    else if(sugars > 40) negative += 9;
+    else if(sugars > 36) negative += 8;
+    else if(sugars > 31) negative += 7;
+    else if(sugars > 27) negative += 6;
+    else if(sugars > 22.5) negative += 5;
+    else if(sugars > 18) negative += 4;
+    else if(sugars > 13.5) negative += 3;
+    else if(sugars > 9) negative += 2;
+    else if(sugars > 4.5) negative += 1;
+
+    if(sugars > 22.5) reasons.push(`високо съдържание на захари (${formatNutritionValue(sugars,"g/100 g")})`);
+  }
+
+  if(satFat !== null){
+    measured++;
+    if(satFat > 10) negative += 10;
+    else if(satFat > 9) negative += 9;
+    else if(satFat > 8) negative += 8;
+    else if(satFat > 7) negative += 7;
+    else if(satFat > 6) negative += 6;
+    else if(satFat > 5) negative += 5;
+    else if(satFat > 4) negative += 4;
+    else if(satFat > 3) negative += 3;
+    else if(satFat > 2) negative += 2;
+    else if(satFat > 1) negative += 1;
+
+    if(satFat > 5) reasons.push(`високо съдържание на наситени мазнини (${formatNutritionValue(satFat,"g/100 g")})`);
+  }
+
+  if(salt !== null){
+    measured++;
+    if(salt > 9) negative += 10;
+    else if(salt > 8.1) negative += 9;
+    else if(salt > 7.2) negative += 8;
+    else if(salt > 6.3) negative += 7;
+    else if(salt > 5.4) negative += 6;
+    else if(salt > 4.5) negative += 5;
+    else if(salt > 3.6) negative += 4;
+    else if(salt > 2.7) negative += 3;
+    else if(salt > 1.8) negative += 2;
+    else if(salt > 0.9) negative += 1;
+
+    if(salt > 1.8) reasons.push(`високо съдържание на сол (${formatNutritionValue(salt,"g/100 g")})`);
+  }
+
+  let bonus = 0;
+
+  if(fiber !== null && fiber >= 3) bonus += 1;
+  if(fiber !== null && fiber >= 6) bonus += 1;
+  if(protein !== null && protein >= 8) bonus += 1;
+  if(protein !== null && protein >= 16) bonus += 1;
+
+  const score = Math.max(0, negative - bonus);
+
+  if(measured === 0){
+    return {
+      level:"unknown",
+      icon:"i",
+      title:"НЕДОСТАТЪЧНО ДАННИ",
+      subtitle:"Не можем надеждно да оценим хранителния профил",
+      reasons:[
+        "Продуктът е намерен, но липсват достатъчно хранителни стойности за сравнение."
+      ],
+      confidence:"low",
+      nutrition:{energy,sugars,satFat,salt,protein,fiber}
+    };
+  }
+
+  if(reasons.length === 0){
+    reasons.push(
+      score <= 4
+        ? "Няма открит силно неблагоприятен показател в наличните хранителни данни."
+        : "Наличните показатели изискват умерен прием."
+    );
+  }
+
+  let level = "good";
+  let title = "ДОБЪР ИЗБОР";
+  let subtitle = "Хранителният профил изглежда благоприятен";
+  let conclusion = "Може да бъде част от разнообразното хранене.";
+
+  if(score >= 10){
+    level = "bad";
+    title = "ПО-НЕБЛАГОПРИЯТЕН ИЗБОР";
+    subtitle = "По-подходящ е за рядка, а не за ежедневна консумация";
+    conclusion = "Подходящ е по-скоро като рядко лакомство, а не като ежедневен продукт.";
+  }else if(score >= 5){
+    level = "moderate";
+    title = "УМЕРЕН ИЗБОР";
+    subtitle = "Има показатели, които заслужават внимание";
+    conclusion = "Може да се консумира, но е по-добре да бъде умерен избор.";
+  }
+
+  return {
+    level,
+    icon: level === "good" ? "✓" : "!",
+    title,
+    subtitle,
+    conclusion,
+    reasons:reasons.slice(0,4),
+    confidence: measured >= 3 ? "high" : "medium",
+    score,
+    nutrition:{energy,sugars,satFat,salt,protein,fiber}
+  };
+}
+
+function buildNutritionGrid(nutrition){
+  const items = [
+    ["Енергия", nutrition.energy !== null ? formatNutritionValue(nutrition.energy,"kcal/100 g") : "—"],
+    ["Захари", nutrition.sugars !== null ? formatNutritionValue(nutrition.sugars,"g/100 g") : "—"],
+    ["Наситени мазнини", nutrition.satFat !== null ? formatNutritionValue(nutrition.satFat,"g/100 g") : "—"],
+    ["Сол", nutrition.salt !== null ? formatNutritionValue(nutrition.salt,"g/100 g") : "—"],
+    ["Протеини", nutrition.protein !== null ? formatNutritionValue(nutrition.protein,"g/100 g") : "—"],
+    ["Фибри", nutrition.fiber !== null ? formatNutritionValue(nutrition.fiber,"g/100 g") : "—"]
+  ];
+
+  return `
+    <div class="nutrition-grid">
+      ${items.map(([label,value]) => `
+        <div class="nutrition-item">
+          <strong>${escapeHtml(value)}</strong>
+          <span>${escapeHtml(label)}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function humanizeAllergen(value){
+  const key = String(value || "")
+    .toLowerCase()
+    .replace(/^en:/,"")
+    .trim();
+
+  const map = {
+    milk:"Мляко",
+    nuts:"Ядки",
+    peanuts:"Фъстъци",
+    soybeans:"Соя",
+    gluten:"Глутен",
+    eggs:"Яйца",
+    fish:"Риба",
+    crustaceans:"Ракообразни",
+    molluscs:"Мекотели",
+    celery:"Целина",
+    mustard:"Синап",
+    sesame:"Сусам",
+    lupin:"Лупина",
+    sulphur_dioxide_and_sulphites:"Сулфити"
+  };
+
+  return map[key] || String(value || "")
+    .replace(/^en:/i,"")
+    .replace(/_/g," ");
+}
+
+function buildProductAssessment(product){
+  const assessment = calculateProductAssessment(product);
+
+  const reasons = assessment.reasons
+    .map(reason => `<li>${escapeHtml(reason)}</li>`)
+    .join("");
+
+  const confidenceText =
+    assessment.confidence === "high"
+      ? "Оценката е базирана на достатъчно налични хранителни данни."
+      : assessment.confidence === "medium"
+        ? "Оценката е ориентировъчна — налични са само част от показателите."
+        : "Оценката е ограничена поради липсващи хранителни данни.";
+
+  return `
+    <div class="product-assessment ${assessment.level}">
+      <div class="assessment-badge">
+        <div class="assessment-dot">${assessment.icon}</div>
+        <div>
+          <div class="assessment-title">${escapeHtml(assessment.title)}</div>
+          <div class="assessment-subtitle">${escapeHtml(assessment.subtitle)}</div>
+        </div>
+      </div>
+
+      <strong>Защо?</strong>
+      <ul class="assessment-reasons">${reasons}</ul>
+
+      ${buildNutritionGrid(assessment.nutrition)}
+
+      <div class="assessment-conclusion">
+        <strong>Извод:</strong>
+        <span>${escapeHtml(assessment.conclusion || "Оценката е ориентировъчна според наличните данни.")}</span>
+      </div>
+
+      <div class="assessment-note">
+        ${escapeHtml(confidenceText)}
+        Това е потребителска оценка на хранителния профил, а не медицинска диагноза.
+      </div>
+    </div>
+  `;
+}
+
+function normalizeAllergenLabel(value){
+  const raw=String(value||"").trim().toLowerCase().replace(/^en:/,"");
+  const map={milk:"мляко",nuts:"ядки",soybeans:"соя",peanuts:"фъстъци",gluten:"глутен",wheat:"пшеница",eggs:"яйца",fish:"риба",crustaceans:"ракообразни",molluscs:"мекотели",mustard:"синап",sesame:"сусам",celery:"целина",lupin:"лупина",sulphur_dioxide_and_sulphites:"сулфити"};
+  return map[raw]||raw.replace(/_/g," ");
+}
+function cleanProductText(value){
+  return String(value||"").replace(/&quot;/g,'"').replace(/\s+/g," ").trim();
+}
+function clearStatusResult(){
+  const old=document.getElementById("statusResultContent");
+  if(old) old.remove();
+}
+
+function showResolvedExternalProduct(resolved){
+  const product=extractProductData(resolved?.product) || {};
+  const status=resolved?.lookup_status||"";
+  const name=product.name||product.product_name||"Намерен продукт";
+  const brand=product.brand||"";
+
+  let title="Продуктът е намерен";
+  let message="Получихме продуктови данни и можем да направим хранителна оценка.";
+  let kicker="ПРОДУКТЪТ Е НАМЕРЕН";
+
+  if(status==="PRODUCT_NOT_FOUND"){
+    kicker="БАРКОДЪТ НЕ Е НАМЕРЕН";
+    title="Продуктът не е намерен";
+    message="Не открихме продуктови данни за този баркод.";
+  }
+
+  showStatusModal({
+    type:status==="PRODUCT_NOT_FOUND"?"warning":"success",
+    kicker,
+    icon:status==="PRODUCT_NOT_FOUND"?"i":"✓",
+    title,
+    message,
+    detail:`${escapeHtml(name)}${brand?` • ${escapeHtml(brand)}`:""}`,
+    primaryText:"Затвори",
+    primaryAction:"closeStatusModal()"
+  });
+
+  /* Критично: всеки нов скан заменя предишния резултат. */
+  clearStatusResult();
+
+  if(status==="PRODUCT_FOUND_EXTERNAL"||status==="PRODUCT_FOUND_STAGING"){
+    const card=document.querySelector("#statusModal .status-card");
+    const actions=document.getElementById("statusActions");
+    if(!card||!actions)return;
+
+    const ingredients=cleanProductText(product.ingredients_text_bg||product.ingredients_text_raw||"няма данни");
+    const categories=cleanProductText(product.categories_raw||"няма данни");
+    const additives=Array.isArray(product.additives_tags)?product.additives_tags:[];
+    const allergens=Array.isArray(product.allergens_tags)?product.allergens_tags:[];
+
+    const wrapper=document.createElement("div");
+    wrapper.id="statusResultContent";
+    wrapper.className="status-result-content";
+
+    const additiveText=additives.map(x=>String(x).replace(/^en:/i,"")).join(", ");
+    const allergenText=allergens.map(normalizeAllergenLabel).filter(Boolean).join(", ");
+
+    wrapper.innerHTML=`
+      ${buildProductAssessment(product)}
+      <div class="scan-result-card">
+        <div class="result-product-line">
+          <strong>${escapeHtml(name)}</strong>
+          ${brand?` <span>• ${escapeHtml(brand)}</span>`:""}
+        </div>
+        <div class="result-category-line">${escapeHtml(categories)}</div>
+
+        <strong>Състав</strong>
+        <ul><li>${escapeHtml(ingredients)}</li></ul>
+
+        ${additiveText?`
+          <strong>Добавки</strong>
+          <ul><li>${escapeHtml(additiveText)}</li></ul>
+        `:""}
+
+        ${allergenText?`
+          <strong>Алергени</strong>
+          <ul><li>${escapeHtml(allergenText)}</li></ul>
+        `:""}
+      </div>
+    `;
+
+    /* Един резултат, едно съдържание, без смесване на стари сканирания. */
+    card.insertBefore(wrapper,actions);
+  }
+}
+
+function showResolverNotFound(resolved){
+  showResolvedExternalProduct({
+    ...resolved,
+    lookup_status:"PRODUCT_NOT_FOUND"
+  });
+}
+
+function buildFullConsumerReport(result,product){
+  const p = product || {};
+
+  const name =
+    cleanProductText(
+      p.name ||
+      p.product_name ||
+      result?.product_name ||
+      "Продукт"
+    );
+
+  const brand =
+    cleanProductText(
+      p.brand ||
+      result?.brand ||
+      ""
+    );
+
+  const ingredients =
+    cleanProductText(
+      p.ingredients_text_bg ||
+      p.ingredients_text_raw ||
+      p.ingredients ||
+      "Няма налични данни за състава."
+    );
+
+  const categories =
+    cleanProductText(
+      p.categories_raw ||
+      p.categories ||
+      result?.eu_food_category_code ||
+      "Няма налични данни."
+    );
+
+  const additives =
+    Array.isArray(p.additives_tags)
+      ? p.additives_tags
+      : [];
+
+  const allergens =
+    Array.isArray(p.allergens_tags)
+      ? p.allergens_tags
+      : [];
+
+  const labels =
+    Array.isArray(p.labels_tags)
+      ? p.labels_tags
+      : [];
+
+  const nutrition = calculateProductAssessment(p).nutrition;
+
+  const eText = additives.length
+    ? additives
+        .map(x => String(x).replace(/^en:/i,"").toUpperCase())
+        .join(", ")
+    : "Не са открити E-number добавки в наличните данни.";
+
+  const allergenText = allergens.length
+    ? allergens.map(normalizeAllergenLabel).filter(Boolean).join(", ")
+    : "Няма открити алергени в наличните данни.";
+
+  const gmoText =
+    p.gmo_status ??
+    p.gmo ??
+    p.contains_gmo ??
+    "Няма достатъчно данни за ГМО.";
+
+  const bioText =
+    p.bio_status ??
+    p.organic_status ??
+    p.organic ??
+    "Няма достатъчно данни за BIO/органичен статут.";
+
+  const regulatoryItems = parseRegulatoryResults(result);
+
+  const regulatoryRows = regulatoryItems.length
+    ? regulatoryItems.map(item => {
+        const e = escapeHtml(item?.e_number || item?.regulatory_e_number || "—");
+        const comparison = escapeHtml(regulatoryStatusLabel(item));
+
+        const max =
+          item?.maximum_level !== null &&
+          item?.maximum_level !== undefined
+            ? ` • лимит: ${escapeHtml(item.maximum_level)} ${escapeHtml(item.maximum_level_unit || item.maximum_level_basis || "")}`
+            : "";
+
+        const concentration =
+          item?.actual_value !== null &&
+          item?.actual_value !== undefined
+            ? ` • установено: ${escapeHtml(item.actual_value)} ${escapeHtml(item.actual_unit || "")}`
+            : "";
+
+        const review =
+          item?.requires_human_review === true
+            ? " • изисква човешки преглед"
+            : "";
+
+        return `<li><strong>${e}</strong> — ${comparison}${max}${concentration}${review}</li>`;
+      }).join("")
+    : `<li>Няма подробни регулаторни редове за показване.</li>`;
+
+  const regMessage =
+    result?.regulatory_message_bg ||
+    result?.decision_reason ||
+    (
+      result?.final_status === "PASS"
+        ? "Не е установено несъответствие според наличните данни."
+        : result?.final_status === "REVIEW_REQUIRED"
+          ? "Необходим е допълнителен преглед поради условие или липсващи данни."
+          : "Резултатът е информационен и се основава на наличните данни."
+    );
+
+  return `
+    <div id="statusResultContent" class="status-result-content">
+
+      ${buildProductAssessment(p)}
+
+      <div class="scan-result-card">
+
+        <div class="result-product-line">
+          <strong>${escapeHtml(name)}</strong>
+          ${brand ? ` <span>• ${escapeHtml(brand)}</span>` : ""}
+        </div>
+
+        <div class="result-category-line">
+          ${escapeHtml(categories)}
+        </div>
+
+        <strong>СЪСТАВ</strong>
+        <ul>
+          <li>${escapeHtml(ingredients)}</li>
+        </ul>
+
+        <strong>ХРАНИТЕЛНИ СТОЙНОСТИ</strong>
+        ${buildNutritionGrid(nutrition)}
+
+        <strong>E-ТА / ДОБАВКИ</strong>
+        <ul>
+          <li>${escapeHtml(eText)}</li>
+        </ul>
+
+        <strong>АЛЕРГЕНИ</strong>
+        <ul>
+          <li>${escapeHtml(allergenText)}</li>
+        </ul>
+
+        <strong>ГМО</strong>
+        <ul>
+          <li>${escapeHtml(String(gmoText))}</li>
+        </ul>
+
+        <strong>BIO / ОРГАНИЧЕН СТАТУТ</strong>
+        <ul>
+          <li>${escapeHtml(String(bioText))}</li>
+        </ul>
+
+        <strong>РЕГУЛАТОРНА ПРОВЕРКА</strong>
+        <ul>${regulatoryRows}</ul>
+
+        <div class="assessment-conclusion">
+          <strong>КАКВО ОЗНАЧАВА ТОВА?</strong>
+          <span>${escapeHtml(regMessage)}</span>
+        </div>
+
+        <div class="assessment-note">
+          Това е информационна потребителска оценка според наличните
+          продуктови и регулаторни данни. При липсващи данни системата
+          не измисля стойности.
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+function showProductResult(result,access=null,product=null){
+  const p = getResultPresentation(result);
+
+  const resolvedProduct =
+    extractProductData(result, product) ||
+    extractProductData(currentBarcodeResult, product) ||
+    null;
+
+  const name =
+    resolvedProduct?.name ||
+    resolvedProduct?.product_name ||
+    result?.product_name ||
+    "Продукт";
+
+  const brand =
+    resolvedProduct?.brand ||
+    result?.brand ||
+    "";
+
+  const detail =
+    result.lookup_status === "BARCODE_NOT_FOUND"
+      ? "Баркодът не е намерен в базата."
+      : result.lookup_status === "PRODUCT_NOT_FOUND_OR_INACTIVE"
+        ? "Продуктът не е наличен или не е активен."
+        : `${name}${brand ? ` • ${brand}` : ""}`;
+
+  const remaining =
+    access && typeof access.free_scans_remaining === "number"
+      ? access.free_scans_remaining
+      : quotaState.free_scans_remaining;
+
+  showStatusModal({
+    type:p.type,
+    kicker:p.kicker,
+    icon:p.icon,
+    title:p.title,
+    message:p.message,
+    detail:detail,
+    primaryText:"Затвори",
+    primaryAction:"closeStatusModal()"
+  });
+
+  clearStatusResult();
+
+  const card =
+    document.querySelector("#statusModal .status-card");
+
+  const actions =
+    document.getElementById("statusActions");
+
+  if(card && actions && resolvedProduct){
+    actions.insertAdjacentHTML(
+      "beforebegin",
+      buildFullConsumerReport(result,resolvedProduct)
+    );
+  }else{
+    const extra =
+      result.lookup_status === "PRODUCT_FOUND"
+        ? buildResultDetails(result)
+        : "";
+
+    if(extra && actions){
+      actions.insertAdjacentHTML(
+        "beforebegin",
+        extra
+      );
+    }
+  }
+
+  if(typeof remaining === "number"){
+    setQuotaUI(
+      remaining,
+      access?.free_scans_used ??
+      quotaState.free_scans_used ??
+      0,
+      access?.access_type ??
+      quotaState.access_type
+    );
+  }
+}
+
+/* =====================================================
+   PAYMENT
+===================================================== */
+function showPaymentRequired(result=currentBarcodeResult){
+  /*
+   * OWNER никога не трябва да вижда платежния прозорец.
+   * Това е допълнителна frontend защита; окончателното право
+   * на достъп се определя от Supabase claim_free_scan().
+   */
+  if(String(quotaState.access_type || "").toUpperCase() === "OWNER"){
+    showStatusModal({
+      type:"success",
+      kicker:"OWNER ДОСТЪП",
+      icon:"✓",
+      title:"Неограничена проверка",
+      message:"Това устройство е регистрирано като OWNER и не се таксува.",
+      detail:`${result?.product_name || "Продукт"} • ${result?.brand || ""}`,
+      primaryText:"Продължи",
+      primaryAction:"closeStatusModal()"
+    });
+    return;
+  }
+
+  showStatusModal({
+    type:"warning",
+    kicker:"ПЛАЩАНЕ",
+    icon:"€",
+    title:"Безплатните проверки са изчерпани",
+    message:"Продуктът е намерен. Следващият подробен анализ е €0.99.",
+    detail:`${result?.product_name || "Продукт"} • ${result?.brand || ""}`,
+    primaryText:"Плати €0.99 с PayPal",
+    primaryAction:"startPaymentForProduct()"
+  });
+}
+
+function startPaymentForProduct(){
+  /*
+   * Допълнителна защита: OWNER не може да бъде изпратен
+   * към платежен поток дори при грешно извикване от UI.
+   */
+  if(String(quotaState.access_type || "").toUpperCase() === "OWNER"){
+    showStatusModal({
+      type:"success",
+      kicker:"OWNER ДОСТЪП",
+      icon:"✓",
+      title:"Плащане не е необходимо",
+      message:"Това устройство е OWNER и анализите му са неограничени.",
+      detail:"Supabase е източникът на истината за OWNER достъпа.",
+      primaryText:"Затвори",
+      primaryAction:"closeStatusModal()"
+    });
+    return;
+  }
+
+  /*
+   * PayPal Secret не трябва да е във frontend.
+   * Тук се извиква бъдещата защитена Supabase Edge Function
+   * за create-order/capture.
+   */
+  showStatusModal({
+    type:"warning",
+    kicker:"PAYPAL",
+    icon:"€",
+    title:"Плащането не е свързано",
+    message:"Backend PayPal order/capture endpoint още не е предоставен в този HTML.",
+    detail:"Не поставяй PayPal Secret в сайта.",
+    primaryText:"Затвори",
+    primaryAction:"closeStatusModal()"
+  });
+}
+
+function startPayment(){
+  /*
+   * OWNER не се изпраща към платежен поток.
+   */
+  if(String(quotaState.access_type || "").toUpperCase() === "OWNER"){
+    showStatusModal({
+      type:"success",
+      kicker:"OWNER ДОСТЪП",
+      icon:"✓",
+      title:"Неограничена проверка",
+      message:"Това устройство има OWNER достъп. Не е необходимо плащане.",
+      detail:"OWNER устройството се управлява от Supabase.",
+      primaryText:"Затвори",
+      primaryAction:"closeStatusModal()"
+    });
+    return;
+  }
+
+  if(currentBarcodeResult){
+    showPaymentRequired(currentBarcodeResult);
+    return;
+  }
+
+  document.querySelector(".payment").scrollIntoView({behavior:"smooth"});
+}
+
+/* =====================================================
+   MODALS
+===================================================== */
+function showStatusModal({
+  type="success", kicker="ПРОВЕРКА", icon="✓",
+  title="Готово", message="", detail="",
+  primaryText="Продължи", primaryAction="closeStatusModal()"
+}={}){
+  const modal = document.getElementById("statusModal");
+  const iconEl = document.getElementById("statusIcon");
+  const kickerEl = document.getElementById("statusKicker");
+  const titleEl = document.getElementById("statusTitle");
+  const messageEl = document.getElementById("statusMessage");
+  const detailEl = document.getElementById("statusDetail");
+  const actionsEl = document.getElementById("statusActions");
+
+  const extra = modal.querySelector(".scan-result-card");
+  if(extra) extra.remove();
+
+  iconEl.className = "status-icon";
+  kickerEl.className = "status-kicker";
+
+  if(type === "warning"){
+    iconEl.classList.add("warning");
+    kickerEl.classList.add("warning");
+  }
+  if(type === "error"){
+    iconEl.classList.add("error");
+    kickerEl.classList.add("error");
+  }
+
+  iconEl.textContent = icon;
+  kickerEl.textContent = kicker;
+  titleEl.textContent = title;
+  messageEl.textContent = message;
+
+  detailEl.textContent = detail;
+  detailEl.style.display = detail ? "block" : "none";
+
+  actionsEl.innerHTML = `
+    <button class="status-primary" onclick="${escapeHtml(primaryAction)}">
+      ${escapeHtml(primaryText)}
+    </button>
+  `;
+
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden","false");
+}
+
+function closeStatusModal(){
+  const modal = document.getElementById("statusModal");
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden","true");
+  const extra = modal.querySelector(".scan-result-card");
+  if(extra) extra.remove();
+}
+
+function showLoading(title="Проверяваме продукта",message="Моля, изчакай няколко секунди..."){
+  document.querySelector("#loading h3").textContent = title;
+  document.querySelector("#loading p").textContent = message;
+  document.getElementById("loading").classList.add("active");
+}
+
+function hideLoading(){
+  document.getElementById("loading").classList.remove("active");
+}
+
+function showFriendlyError(message){
+  showStatusModal({
+    type:"error",
+    kicker:"ГРЕШКА",
+    icon:"!",
+    title:"Не успяхме да продължим",
+    message:String(message),
+    detail:"Можеш да опиташ отново.",
+    primaryText:"Сканирай отново",
+    primaryAction:"scanAgain()"
+  });
+}
+
+function closeSuccessModal(){
+  document.getElementById("successModal").classList.remove("active");
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* =====================================================
+   CAMERA ERRORS
+===================================================== */
+function showCameraError(message){
+  const error = document.getElementById("cameraError");
+  error.textContent = message;
+  error.classList.add("active");
+}
+
+function getCameraErrorMessage(error){
+  const text = String(error?.message || error?.name || error || "").toLowerCase();
+
+  if(text.includes("permission") || text.includes("notallowed")){
+    return "Достъпът до камерата е отказан. Разреши камерата от настройките на браузъра.";
+  }
+  if(text.includes("notfound") || text.includes("devicesnotfound")){
+    return "Не открихме камера на това устройство.";
+  }
+  if(text.includes("notreadable") || text.includes("trackstart")){
+    return "Камерата се използва от друго приложение. Затвори го и опитай отново.";
+  }
+  if(text.includes("secure") || text.includes("https")){
+    return "Камерата работи само през HTTPS.";
+  }
+  return "Не успяхме да стартираме камерата. Провери разрешението за камера.";
+}
+
+/* =====================================================
+   MOBILE NAV
+===================================================== */
+function scrollToTop(){
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+function initializeQuota(){
+  getDeviceId();
+  quotaState.access_type = null;
+  setQuotaUI(null,null,null);
+
+  /*
+   * ВАЖНО:
+   * Не извикваме claim_free_scan() при зареждане на страницата.
+   * Тази функция увеличава брояча при стандартно устройство.
+   * OWNER се разпознава сигурно в реалния scan flow,
+   * непосредствено преди регулаторния анализ.
+   */
+
+  if(!hasSupabaseClientConfig()){
+    console.warn(
+      "Supabase ANON/PUBLISHABLE KEY липсва. Barcode RPC няма да работи."
+    );
+  }
+}
+
+document.addEventListener("keydown",event=>{
+  if(event.key === "Escape"){
+    closeScanner();
+    closeSuccessModal();
+    closeStatusModal();
+  }
+});
+
+document.getElementById("statusModal").addEventListener("click",event=>{
+  if(event.target.id === "statusModal") closeStatusModal();
+});
+
+document.getElementById("successModal").addEventListener("click",event=>{
+  if(event.target.id === "successModal") closeSuccessModal();
+});
+
+initializeQuota();
+</script>
+
+
+
+<nav class="app-bottom-nav" aria-label="Основна навигация">
+  <button class="active" onclick="scrollToTop()"><span class="nav-icon">⌂</span>Начало</button>
+  <button onclick="openScanner()"><span class="nav-icon">▣</span>Сканирай</button>
+  <button onclick="startPayment()"><span class="nav-icon">€</span>Плати</button>
+  <button onclick="document.getElementById('vuprosi').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">?</span>Помощ</button>
+</nav>
+
+</body>
+</html>
