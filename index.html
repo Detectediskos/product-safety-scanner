@@ -2128,6 +2128,9 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
   font-size:11px;
   color:#7a857f;
 }
+.status-result-content{margin-top:16px;}
+.status-result-content>.product-assessment{margin-top:0;}
+
 
 @media (max-width:720px){
   .nutrition-grid{
@@ -4643,105 +4646,92 @@ function buildProductAssessment(product){
   `;
 }
 
+function normalizeAllergenLabel(value){
+  const raw=String(value||"").trim().toLowerCase().replace(/^en:/,"");
+  const map={milk:"мляко",nuts:"ядки",soybeans:"соя",peanuts:"фъстъци",gluten:"глутен",wheat:"пшеница",eggs:"яйца",fish:"риба",crustaceans:"ракообразни",molluscs:"мекотели",mustard:"синап",sesame:"сусам",celery:"целина",lupin:"лупина",sulphur_dioxide_and_sulphites:"сулфити"};
+  return map[raw]||raw.replace(/_/g," ");
+}
+function cleanProductText(value){
+  return String(value||"").replace(/&quot;/g,'"').replace(/\s+/g," ").trim();
+}
+function clearStatusResult(){
+  const old=document.getElementById("statusResultContent");
+  if(old) old.remove();
+}
+
 function showResolvedExternalProduct(resolved){
-  const product = resolved?.product || {};
-  const status = resolved?.lookup_status || "";
+  const product=resolved?.product||{};
+  const status=resolved?.lookup_status||"";
+  const name=product.name||product.product_name||"Намерен продукт";
+  const brand=product.brand||"";
 
-  const name =
-    product.name ||
-    product.product_name ||
-    "Намерен продукт";
+  let title="Продуктът е намерен";
+  let message="Получихме продуктови данни и можем да направим хранителна оценка.";
+  let kicker="ПРОДУКТЪТ Е НАМЕРЕН";
 
-  const brand =
-    product.brand ||
-    "";
-
-  let title = "Продуктът е намерен";
-  let message =
-    "Получихме продуктови данни и можем да направим хранителна оценка.";
-
-  let kicker = "ПРОДУКТЪТ Е НАМЕРЕН";
-
-  if(status === "PRODUCT_FOUND_STAGING"){
-    kicker = "ПРОДУКТЪТ Е НАМЕРЕН";
-  }
-
-  if(status === "PRODUCT_NOT_FOUND"){
-    kicker = "БАРКОДЪТ НЕ Е НАМЕРЕН";
-    title = "Продуктът не е намерен";
-    message =
-      "Не открихме продуктови данни за този баркод.";
+  if(status==="PRODUCT_NOT_FOUND"){
+    kicker="БАРКОДЪТ НЕ Е НАМЕРЕН";
+    title="Продуктът не е намерен";
+    message="Не открихме продуктови данни за този баркод.";
   }
 
   showStatusModal({
-    type: status === "PRODUCT_NOT_FOUND" ? "warning" : "success",
+    type:status==="PRODUCT_NOT_FOUND"?"warning":"success",
     kicker,
-    icon: status === "PRODUCT_NOT_FOUND" ? "i" : "✓",
+    icon:status==="PRODUCT_NOT_FOUND"?"i":"✓",
     title,
     message,
-    detail:`${escapeHtml(name)}${brand ? ` • ${escapeHtml(brand)}` : ""}`,
+    detail:`${escapeHtml(name)}${brand?` • ${escapeHtml(brand)}`:""}`,
     primaryText:"Затвори",
     primaryAction:"closeStatusModal()"
   });
 
-  if(status === "PRODUCT_FOUND_EXTERNAL" || status === "PRODUCT_FOUND_STAGING"){
-    const card = document.querySelector("#statusModal .status-card");
-    const actions = document.getElementById("statusActions");
+  /* Критично: всеки нов скан заменя предишния резултат. */
+  clearStatusResult();
 
-    if(card && actions){
-      const ingredients =
-        product.ingredients_text_bg ||
-        product.ingredients_text_raw ||
-        "няма данни";
+  if(status==="PRODUCT_FOUND_EXTERNAL"||status==="PRODUCT_FOUND_STAGING"){
+    const card=document.querySelector("#statusModal .status-card");
+    const actions=document.getElementById("statusActions");
+    if(!card||!actions)return;
 
-      const categories =
-        product.categories_raw ||
-        "няма данни";
+    const ingredients=cleanProductText(product.ingredients_text_bg||product.ingredients_text_raw||"няма данни");
+    const categories=cleanProductText(product.categories_raw||"няма данни");
+    const additives=Array.isArray(product.additives_tags)?product.additives_tags:[];
+    const allergens=Array.isArray(product.allergens_tags)?product.allergens_tags:[];
 
-      const additives = Array.isArray(product.additives_tags)
-        ? product.additives_tags
-        : [];
+    const wrapper=document.createElement("div");
+    wrapper.id="statusResultContent";
+    wrapper.className="status-result-content";
 
-      const allergens = Array.isArray(product.allergens_tags)
-        ? product.allergens_tags
-        : [];
+    const additiveText=additives.map(x=>String(x).replace(/^en:/i,"")).join(", ");
+    const allergenText=allergens.map(normalizeAllergenLabel).filter(Boolean).join(", ");
 
-      const html = `
-        ${buildProductAssessment(product)}
-
-        <div class="scan-result-card">
-          <div class="result-product-line">
-            <strong>${escapeHtml(name)}</strong>
-            ${brand ? ` <span>• ${escapeHtml(brand)}</span>` : ""}
-          </div>
-
-          <div class="result-category-line">
-            ${escapeHtml(categories)}
-          </div>
-
-          <strong>Състав</strong>
-          <ul>
-            <li>${escapeHtml(ingredients)}</li>
-          </ul>
-
-          ${additives.length ? `
-            <strong>Добавки</strong>
-            <ul>
-              <li>${escapeHtml(additives.map(x => String(x).replace(/^en:/,"E")).join(", "))}</li>
-            </ul>
-          ` : ""}
-
-          ${allergens.length ? `
-            <strong>Алергени</strong>
-            <ul>
-              <li>${escapeHtml(allergens.join(", "))}</li>
-            </ul>
-          ` : ""}
+    wrapper.innerHTML=`
+      ${buildProductAssessment(product)}
+      <div class="scan-result-card">
+        <div class="result-product-line">
+          <strong>${escapeHtml(name)}</strong>
+          ${brand?` <span>• ${escapeHtml(brand)}</span>`:""}
         </div>
-      `;
+        <div class="result-category-line">${escapeHtml(categories)}</div>
 
-      actions.insertAdjacentHTML("beforebegin",html);
-    }
+        <strong>Състав</strong>
+        <ul><li>${escapeHtml(ingredients)}</li></ul>
+
+        ${additiveText?`
+          <strong>Добавки</strong>
+          <ul><li>${escapeHtml(additiveText)}</li></ul>
+        `:""}
+
+        ${allergenText?`
+          <strong>Алергени</strong>
+          <ul><li>${escapeHtml(allergenText)}</li></ul>
+        `:""}
+      </div>
+    `;
+
+    /* Един резултат, едно съдържание, без смесване на стари сканирания. */
+    card.insertBefore(wrapper,actions);
   }
 }
 
