@@ -3081,7 +3081,7 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 <div class="camera-help">
 
   Дръж телефона стабилно и осигури
-  достатъчно светлина.
+  достатъчно светлина. Поддържат се и GS1 DataMatrix / GS1-128.
 
 </div>
 
@@ -3148,6 +3148,13 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
   id="detectedCode"
 >
   —
+</div>
+
+<div
+  id="detectedFormat"
+  style="margin:-10px 0 18px;color:#68756d;font-size:12px;font-weight:700;"
+>
+  Форматът ще бъде определен автоматично
 </div>
 
 
@@ -3251,10 +3258,15 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 /* =====================================================
    ПРОВЕРИ ПРОДУКТА — MOBILE / DESKTOP APP CLIENT
    Реална връзка:
-   barcode -> Universal Barcode Resolver
+   barcode + symbology -> Universal Barcode Resolver
    -> local product / external staging
    -> EU regulatory RPC
    -> резултат -> UI
+
+   Scanner coverage:
+   EAN-13 / EAN-8 / UPC-A / UPC-E / CODE-128 / ITF-14 /
+   CODE-39 / Codabar / GS1 DataMatrix / QR / PDF417 / Aztec
+
 ===================================================== */
 
 const SUPABASE_URL = "https://dojepjbuhsyhrouenoxr.supabase.co";
@@ -3283,6 +3295,7 @@ const DEVICE_VERSION = "v1";
 let scanner = null;
 let scannerRunning = false;
 let detectedBarcode = null;
+let detectedSymbology = null;
 let currentBarcodeResult = null;
 let deviceId = null;
 
@@ -3529,7 +3542,7 @@ async function claimFreeScan(){
    UNIVERSAL BARCODE RESOLVER
    barcode -> local DB -> external product source -> staging
 ===================================================== */
-async function resolveBarcode(barcode){
+async function resolveBarcode(barcode, symbology=null){
   if(!hasSupabaseClientConfig()){
     throw new Error(
       "Supabase ANON/PUBLISHABLE KEY не е настроен във frontend-а."
@@ -3545,7 +3558,8 @@ async function resolveBarcode(barcode){
       "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
     },
     body:JSON.stringify({
-      barcode:String(barcode).trim()
+      barcode:String(barcode).trim(),
+      symbology: symbology ? String(symbology) : null
     })
   });
 
@@ -3734,10 +3748,21 @@ async function startCamera(){
     if(window.Html5QrcodeSupportedFormats){
       const F = window.Html5QrcodeSupportedFormats;
 
+      /* 1D retail + logistics barcodes */
       if(F.EAN_13 !== undefined) formats.push(F.EAN_13);
       if(F.EAN_8 !== undefined) formats.push(F.EAN_8);
       if(F.UPC_A !== undefined) formats.push(F.UPC_A);
       if(F.UPC_E !== undefined) formats.push(F.UPC_E);
+      if(F.CODE_128 !== undefined) formats.push(F.CODE_128);
+      if(F.ITF_14 !== undefined) formats.push(F.ITF_14);
+      if(F.CODE_39 !== undefined) formats.push(F.CODE_39);
+      if(F.CODABAR !== undefined) formats.push(F.CODABAR);
+
+      /* 2D / GS1 formats */
+      if(F.DATA_MATRIX !== undefined) formats.push(F.DATA_MATRIX);
+      if(F.QR_CODE !== undefined) formats.push(F.QR_CODE);
+      if(F.PDF_417 !== undefined) formats.push(F.PDF_417);
+      if(F.AZTEC !== undefined) formats.push(F.AZTEC);
     }
 
     const config = {
@@ -3809,14 +3834,34 @@ async function startCamera(){
   }
 }
 
-async function onBarcodeDetected(decodedText){
+async function onBarcodeDetected(decodedText, decodedResult=null){
   const code = String(decodedText || "").trim();
   if(!code || detectedBarcode) return;
 
   detectedBarcode = code;
+
+  /*
+   * html5-qrcode връща реалния формат на разпознатия код.
+   * Подаваме го към Universal Barcode Resolver, за да може
+   * backend-ът да различава EAN/UPC/GS1 DataMatrix/GS1-128 и др.
+   */
+  detectedSymbology =
+    decodedResult?.result?.format?.formatName ||
+    decodedResult?.result?.format?.format ||
+    null;
+
   await stopScanner();
 
   document.getElementById("detectedCode").textContent = code;
+
+  const formatEl = document.getElementById("detectedFormat");
+  if(formatEl){
+    formatEl.textContent =
+      detectedSymbology
+        ? `Формат: ${detectedSymbology}`
+        : "Форматът ще бъде определен автоматично";
+  }
+
   document.getElementById("successModal").classList.add("active");
 }
 
@@ -3850,6 +3895,7 @@ async function closeScanner(){
 
 async function scanAgain(){
   detectedBarcode = null;
+  detectedSymbology = null;
   currentBarcodeResult = null;
   document.getElementById("successModal").classList.remove("active");
 
@@ -3875,7 +3921,7 @@ async function continueWithProduct(){
 
   try{
     const resolved =
-      await resolveBarcode(detectedBarcode);
+      await resolveBarcode(detectedBarcode, detectedSymbology);
 
     if(
       resolved.lookup_status ===
@@ -4193,7 +4239,7 @@ function showProductResult(result,access=null){
       ? "Баркодът не е намерен в базата."
       : result.lookup_status === "PRODUCT_NOT_FOUND_OR_INACTIVE"
         ? "Продуктът не е наличен или не е активен."
-        : `${escapeHtml(result.product_name || "Продукт")} • ${escapeHtml(result.brand || "")}`;
+        : `${result.product_name || "Продукт"} • ${result.brand || ""}`;
 
   const extra = result.lookup_status === "PRODUCT_FOUND"
     ? buildResultDetails(result)
