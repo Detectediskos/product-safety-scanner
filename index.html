@@ -1940,7 +1940,11 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 .scan-result-card .result-status.ok{background:var(--green-light);color:var(--green-dark);}
 .scan-result-card .result-status.warning{background:var(--orange-light);color:var(--orange);}
 .scan-result-card .result-status.error{background:var(--red-light);color:var(--red);}
-.scan-result-card ul{margin:10px 0 0 18px;color:#526058;font-size:13px;line-height:1.7;}
+.scan-result-card ul{margin:10px 0 0 18px;color:#526058;font-size:13px;line-height:1.75;}
+.scan-result-card li{margin:4px 0;}
+.result-product-line{font-size:17px;color:var(--ink);margin-bottom:3px;}
+.result-product-line span{font-weight:600;color:var(--muted);}
+.result-category-line{font-size:12px;color:var(--muted);margin-bottom:13px;}
 .result-action-grid{display:grid;gap:10px;margin-top:16px;}
 
 </style>
@@ -1957,7 +1961,7 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
     bottom:12px !important;
     width:auto !important;
     max-width:none !important;
-    height:72px !<nav class="nav-links">
+    height:72px !important;
 
     <a href="#kak-raboti">
       Как работи
@@ -3736,6 +3740,8 @@ async function continueWithProduct(){
     hideLoading();
     console.error("Product check error:",error);
 
+    await stopScanner();
+
     showFriendlyError(
       error?.message ||
       "Не успяхме да извършим проверката."
@@ -3794,22 +3800,44 @@ function getResultPresentation(result){
 }
 
 function buildResultDetails(result){
-  const items = Array.isArray(result?.results) ? result.results : [];
+  let items = result?.results;
 
-  if(!items.length) return "";
+  if(typeof items === "string"){
+    try{ items = JSON.parse(items); }catch(_){}
+  }
+
+  if(!Array.isArray(items) || !items.length) return "";
 
   const rows = items.map(item => {
-    const e = escapeHtml(item.e_number || "—");
+    const e = escapeHtml(item?.e_number || "—");
     const comparison = escapeHtml(
-      humanComparisonStatus(item.comparison_status)
+      humanComparisonStatus(item?.comparison_status)
     );
 
-    return `<li><strong>${e}</strong> — ${comparison}</li>`;
+    const max = item?.maximum_level !== null &&
+                item?.maximum_level !== undefined
+      ? ` • лимит: ${escapeHtml(item.maximum_level)} ${escapeHtml(item.maximum_level_basis || "")}`
+      : "";
+
+    const concentration = item?.actual_value !== null &&
+                          item?.actual_value !== undefined
+      ? ` • установено: ${escapeHtml(item.actual_value)} ${escapeHtml(item.actual_unit || "")}`
+      : "";
+
+    return `<li><strong>${e}</strong> — ${comparison}${max}${concentration}</li>`;
   }).join("");
+
+  const category = escapeHtml(result?.eu_food_category_code || "—");
+  const product = escapeHtml(result?.product_name || "Продукт");
+  const brand = escapeHtml(result?.brand || "");
 
   return `
     <div class="scan-result-card">
-      <strong>Открити добавки: ${Number(result.detected_e_additives || 0)}</strong>
+      <div class="result-product-line">
+        <strong>${product}</strong>${brand ? ` <span>• ${brand}</span>` : ""}
+      </div>
+      <div class="result-category-line">EU категория: ${category}</div>
+      <strong>Открити добавки: ${Number(result?.detected_e_additives || 0)}</strong>
       <ul>${rows}</ul>
     </div>
   `;
@@ -3825,6 +3853,8 @@ function humanComparisonStatus(status){
       return "превишен лимит";
     case "CONCENTRATION_MISSING":
       return "липсва концентрация";
+    case "LIMIT_CHECK_REQUIRED":
+      return "трябва проверка на количеството";
     case "REVIEW_REQUIRED":
       return "нужна е допълнителна проверка";
     case "QUANTUM_SATIS":
