@@ -1508,11 +1508,36 @@ footer{
   inset:0;
   z-index:1250;
   display:none;
-  align-items:center;
+  align-items:flex-start;
   justify-content:center;
-  padding:20px;
+  padding:14px 10px;
   background:rgba(8,15,11,.72);
   backdrop-filter:blur(14px);
+
+  /* Критично за дълги продуктови справки на телефон */
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:#8aa99a rgba(255,255,255,.18);
+}
+
+.status-modal::-webkit-scrollbar{
+  width:7px;
+}
+
+.status-modal::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.18);
+  border-radius:20px;
+}
+
+.status-modal::-webkit-scrollbar-thumb{
+  background:#8aa99a;
+  border-radius:20px;
+}
+
+.status-modal::-webkit-scrollbar-thumb:hover{
+  background:#5f806f;
 }
 
 .status-modal.active{
@@ -1522,7 +1547,12 @@ footer{
 .status-card{
   position:relative;
   width:min(460px,100%);
+  max-height:calc(100vh - 28px);
+  max-height:calc(100dvh - 28px);
+  overflow-y:auto;
+  overflow-x:hidden;
   padding:34px 28px 28px;
+  margin:auto 0;
   background:#fff;
   color:var(--ink);
   border:1px solid rgba(220,229,222,.95);
@@ -1530,6 +1560,28 @@ footer{
   text-align:center;
   box-shadow:0 30px 100px rgba(0,0,0,.28);
   animation:statusIn .22s ease-out;
+
+  /* Видим scrollbar и на Android/Chrome */
+  scrollbar-width:thin;
+  scrollbar-color:#8aa99a #edf3ef;
+}
+
+.status-card::-webkit-scrollbar{
+  width:7px;
+}
+
+.status-card::-webkit-scrollbar-track{
+  background:#edf3ef;
+  border-radius:20px;
+}
+
+.status-card::-webkit-scrollbar-thumb{
+  background:#8aa99a;
+  border-radius:20px;
+}
+
+.status-card::-webkit-scrollbar-thumb:hover{
+  background:#5f806f;
 }
 
 @keyframes statusIn{
@@ -1652,6 +1704,9 @@ footer{
   }
 
   .status-card{
+    width:100%;
+    max-height:calc(100vh - 24px);
+    max-height:calc(100dvh - 24px);
     border-radius:25px;
     padding:30px 20px 22px;
   }
