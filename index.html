@@ -3254,7 +3254,9 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 /* =====================================================
    ПРОВЕРИ ПРОДУКТА — MOBILE / DESKTOP APP CLIENT
    Реална връзка:
-   barcode -> Supabase RPC evaluate_barcode_eu_food
+   barcode -> Universal Barcode Resolver
+   -> local product / external staging
+   -> EU regulatory RPC
    -> резултат -> UI
 ===================================================== */
 
@@ -3269,6 +3271,9 @@ const SUPABASE_ANON_KEY = "sb_publishable_1WKrvi00WP5GXSKAM1O8uQ_zy3ZTa3C";
 
 const FREE_SCAN_ENDPOINT =
   `${SUPABASE_URL}/functions/v1/check-free-scan`;
+
+const RESOLVE_BARCODE_ENDPOINT =
+  `${SUPABASE_URL}/functions/v1/resolve-barcode`;
 
 const BARCODE_RPC_ENDPOINT =
   `${SUPABASE_URL}/rest/v1/rpc/evaluate_barcode_eu_food`;
@@ -3397,6 +3402,59 @@ async function claimFreeScan(){
 
   if(typeof data.free_scans_remaining === "number"){
     setQuotaUI(data.free_scans_remaining,data.free_scans_used);
+  }
+
+  return data;
+}
+
+/* =====================================================
+   UNIVERSAL BARCODE RESOLVER
+   barcode -> local DB -> external product source -> staging
+===================================================== */
+async function resolveBarcode(barcode){
+  if(!hasSupabaseClientConfig()){
+    throw new Error(
+      "Supabase ANON/PUBLISHABLE KEY не е настроен във frontend-а."
+    );
+  }
+
+  const response = await fetch(RESOLVE_BARCODE_ENDPOINT,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Accept":"application/json",
+      "apikey":SUPABASE_ANON_KEY,
+      "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
+    },
+    body:JSON.stringify({
+      barcode:String(barcode).trim()
+    })
+  });
+
+  const raw = await response.text();
+  let data = null;
+
+  try{ data = raw ? JSON.parse(raw) : null; }catch{}
+
+  if(!response.ok){
+    console.error(
+      "resolve-barcode error:",
+      response.status,
+      data,
+      raw
+    );
+
+    throw new Error(
+      data?.message ||
+      data?.detail ||
+      `Грешка при намирането на продукта (${response.status}).`
+    );
+  }
+
+  if(!data){
+    throw new Error(
+      "Resolver-ът не върна резултат."
+    );
   }
 
   return data;
@@ -3693,52 +3751,97 @@ async function continueWithProduct(){
   document.getElementById("successModal").classList.remove("active");
 
   showLoading(
-    "Проверяваме продукта",
-    "Свързваме се със системата..."
+    "Намираме продукта",
+    "Проверяваме баркода в нашата база..."
   );
 
   try{
     /*
-     * Първо реалната barcode проверка.
-     * Така неизвестен баркод не харчи безплатна проверка.
+     * ПЪРВА СТЪПКА:
+     * Universal Barcode Resolver.
+     *
+     * Това НЕ консумира безплатен анализ.
      */
-    const result = await evaluateBarcode(detectedBarcode);
-    currentBarcodeResult = result;
+    const resolved =
+      await resolveBarcode(detectedBarcode);
 
-    if(result.lookup_status === "BARCODE_NOT_FOUND"){
-      hideLoading();
-      showProductResult(result);
-      return;
-    }
+    /*
+     * Ако продуктът вече е в нашата база,
+     * продължаваме към съществуващия EU regulatory engine.
+     */
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_LOCAL"
+    ){
+      showLoading(
+        "Продуктът е открит",
+        "Извършваме EU регулаторната проверка..."
+      );
 
-    if(result.lookup_status === "PRODUCT_NOT_FOUND_OR_INACTIVE"){
+      const result =
+        await evaluateBarcode(detectedBarcode);
+
+      currentBarcodeResult = result;
+
+      /*
+       * Едва след успешно намиране на локален продукт
+       * консумираме безплатния анализ.
+       */
+      const access =
+        await claimFreeScan();
+
+      if(access.access_type === "PAYMENT_REQUIRED"){
+        hideLoading();
+        showPaymentRequired(result);
+        return;
+      }
+
       hideLoading();
-      showProductResult(result);
+      showProductResult(result,access);
       return;
     }
 
     /*
-     * Едва след намерен продукт консумираме free scan.
+     * Ако продуктът е намерен във външен източник,
+     * засега НЕ харчим free scan и НЕ го считаме
+     * за EU verified.
      */
-    showLoading(
-      "Продуктът е открит",
-      "Проверяваме достъпа до безплатния анализ..."
-    );
-
-    const access = await claimFreeScan();
-
-    if(access.access_type === "PAYMENT_REQUIRED"){
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_EXTERNAL" ||
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_STAGING"
+    ){
       hideLoading();
-      showPaymentRequired(result);
+      showResolvedExternalProduct(resolved);
       return;
     }
 
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_NOT_FOUND"
+    ){
+      hideLoading();
+      showResolverNotFound(resolved);
+      return;
+    }
+
+    /*
+     * За неизвестен/невалиден резултат
+     * не продължаваме към regulatory engine.
+     */
     hideLoading();
-    showProductResult(result,access);
+    showFriendlyError(
+      resolved.message ||
+      "Не успяхме да намерим продукта."
+    );
 
   }catch(error){
     hideLoading();
-    console.error("Product check error:",error);
+    console.error(
+      "Product resolver/check error:",
+      error
+    );
 
     await stopScanner();
 
@@ -3862,6 +3965,92 @@ function humanComparisonStatus(status){
     default:
       return status || "няма данни";
   }
+}
+
+function showResolvedExternalProduct(resolved){
+  const product = resolved?.product || {};
+  const status = resolved?.lookup_status || "";
+
+  const name =
+    product.name ||
+    product.product_name ||
+    "Намерен продукт";
+
+  const brand =
+    product.brand ||
+    "";
+
+  let title = "Продуктът е намерен";
+  let message =
+    "Продуктовите данни са получени, но EU регулаторната класификация все още не е потвърдена.";
+
+  let kicker = "ВЪНШЕН ПРОДУКТОВ ИЗТОЧНИК";
+
+  if(status === "PRODUCT_FOUND_STAGING"){
+    kicker = "ПРОДУКТЪТ Е В STAGING";
+    message =
+      "Продуктът вече е получен от външен източник и чака регулаторна валидация.";
+  }
+
+  if(status === "PRODUCT_NOT_FOUND"){
+    kicker = "БАРКОДЪТ НЕ Е НАМЕРЕН";
+    title = "Продуктът не е намерен";
+    message =
+      "Не открихме данни за този баркод във вътрешната база или външния продуктов източник.";
+  }
+
+  showStatusModal({
+    type:"warning",
+    kicker,
+    icon:"i",
+    title,
+    message,
+    detail:`${escapeHtml(name)}${brand ? ` • ${escapeHtml(brand)}` : ""}`,
+    primaryText:"Затвори",
+    primaryAction:"closeStatusModal()"
+  });
+
+  if(status === "PRODUCT_FOUND_EXTERNAL" || status === "PRODUCT_FOUND_STAGING"){
+    const card = document.querySelector("#statusModal .status-card");
+    const actions = document.getElementById("statusActions");
+
+    if(card && actions){
+      const ingredients =
+        product.ingredients_text_raw ||
+        "няма данни";
+
+      const categories =
+        product.categories_raw ||
+        "няма данни";
+
+      const html = `
+        <div class="scan-result-card">
+          <div class="result-product-line">
+            <strong>${escapeHtml(name)}</strong>
+            ${brand ? ` <span>• ${escapeHtml(brand)}</span>` : ""}
+          </div>
+          <div class="result-category-line">
+            Източник: Open Food Facts • EU статус: НЕПОТВЪРДЕН
+          </div>
+          <strong>Данни за състава</strong>
+          <ul>
+            <li><strong>Категории:</strong> ${escapeHtml(categories)}</li>
+            <li><strong>Състав:</strong> ${escapeHtml(ingredients)}</li>
+            <li><strong>Staging ID:</strong> ${escapeHtml(resolved?.staging_id || "—")}</li>
+          </ul>
+        </div>
+      `;
+
+      actions.insertAdjacentHTML("beforebegin",html);
+    }
+  }
+}
+
+function showResolverNotFound(resolved){
+  showResolvedExternalProduct({
+    ...resolved,
+    lookup_status:"PRODUCT_NOT_FOUND"
+  });
 }
 
 function showProductResult(result,access=null){
