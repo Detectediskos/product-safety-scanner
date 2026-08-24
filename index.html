@@ -3888,11 +3888,15 @@ async function continueWithProduct(){
       const access =
         await claimFreeScan();
 
-      if(access.access_type === "PAYMENT_REQUIRED"){
+      if(
+        access.access_type === "PAYMENT_REQUIRED" &&
+        String(quotaState.access_type || "").toUpperCase() !== "OWNER"
+      ){
         hideLoading();
 
         /*
-         * Показваме плащане само за стандартно устройство.
+         * Плащане се показва само за стандартно устройство.
+         * OWNER никога не влиза в този поток.
          */
         showPaymentRequired({
           product_name:
@@ -3917,6 +3921,20 @@ async function continueWithProduct(){
         await evaluateBarcode(detectedBarcode);
 
       currentBarcodeResult = result;
+
+      /*
+       * Не позволяваме резултатният UI да загуби OWNER състоянието.
+       */
+      if(String(access?.access_type || "").toUpperCase() === "OWNER"){
+        quotaState.access_type = "OWNER";
+        setQuotaUI(
+          999999,
+          typeof access.free_scans_used === "number"
+            ? access.free_scans_used
+            : 0,
+          "OWNER"
+        );
+      }
 
       hideLoading();
       showProductResult(result,access);
@@ -4221,6 +4239,25 @@ function showProductResult(result,access=null){
    PAYMENT
 ===================================================== */
 function showPaymentRequired(result=currentBarcodeResult){
+  /*
+   * OWNER никога не трябва да вижда платежния прозорец.
+   * Това е допълнителна frontend защита; окончателното право
+   * на достъп се определя от Supabase claim_free_scan().
+   */
+  if(String(quotaState.access_type || "").toUpperCase() === "OWNER"){
+    showStatusModal({
+      type:"success",
+      kicker:"OWNER ДОСТЪП",
+      icon:"✓",
+      title:"Неограничена проверка",
+      message:"Това устройство е регистрирано като OWNER и не се таксува.",
+      detail:`${result?.product_name || "Продукт"} • ${result?.brand || ""}`,
+      primaryText:"Продължи",
+      primaryAction:"closeStatusModal()"
+    });
+    return;
+  }
+
   showStatusModal({
     type:"warning",
     kicker:"ПЛАЩАНЕ",
@@ -4234,6 +4271,24 @@ function showPaymentRequired(result=currentBarcodeResult){
 }
 
 function startPaymentForProduct(){
+  /*
+   * Допълнителна защита: OWNER не може да бъде изпратен
+   * към платежен поток дори при грешно извикване от UI.
+   */
+  if(String(quotaState.access_type || "").toUpperCase() === "OWNER"){
+    showStatusModal({
+      type:"success",
+      kicker:"OWNER ДОСТЪП",
+      icon:"✓",
+      title:"Плащане не е необходимо",
+      message:"Това устройство е OWNER и анализите му са неограничени.",
+      detail:"Supabase е източникът на истината за OWNER достъпа.",
+      primaryText:"Затвори",
+      primaryAction:"closeStatusModal()"
+    });
+    return;
+  }
+
   /*
    * PayPal Secret не трябва да е във frontend.
    * Тук се извиква бъдещата защитена Supabase Edge Function
@@ -4252,6 +4307,23 @@ function startPaymentForProduct(){
 }
 
 function startPayment(){
+  /*
+   * OWNER не се изпраща към платежен поток.
+   */
+  if(String(quotaState.access_type || "").toUpperCase() === "OWNER"){
+    showStatusModal({
+      type:"success",
+      kicker:"OWNER ДОСТЪП",
+      icon:"✓",
+      title:"Неограничена проверка",
+      message:"Това устройство има OWNER достъп. Не е необходимо плащане.",
+      detail:"OWNER устройството се управлява от Supabase.",
+      primaryText:"Затвори",
+      primaryAction:"closeStatusModal()"
+    });
+    return;
+  }
+
   if(currentBarcodeResult){
     showPaymentRequired(currentBarcodeResult);
     return;
@@ -4394,6 +4466,14 @@ function initializeQuota(){
   getDeviceId();
   quotaState.access_type = null;
   setQuotaUI(null,null,null);
+
+  /*
+   * ВАЖНО:
+   * Не извикваме claim_free_scan() при зареждане на страницата.
+   * Тази функция увеличава брояча при стандартно устройство.
+   * OWNER се разпознава сигурно в реалния scan flow,
+   * непосредствено преди регулаторния анализ.
+   */
 
   if(!hasSupabaseClientConfig()){
     console.warn(
