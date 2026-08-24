@@ -3446,8 +3446,6 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
   Информационен инструмент.
   Не замества официален контрол
   или лабораторно изпитване.
-  <br>
-  <span style="opacity:.72">Scanner pipeline ${INDEX_PIPELINE_VERSION}</span>
 
 </div>
 
@@ -3725,11 +3723,7 @@ const BARCODE_RPC_ENDPOINT =
 const DEVICE_STORAGE_KEY =
   "product_safety_scanner_device_id_v2";
 
-const SCAN_REQUEST_STORAGE_KEY =
-  "product_safety_scanner_last_request_v1";
-
 const DEVICE_VERSION = "v1";
-const INDEX_PIPELINE_VERSION = "v2";
 
 let scanner = null;
 let scannerRunning = false;
@@ -3978,192 +3972,40 @@ async function claimFreeScan(){
 }
 
 /* =====================================================
-   INDEX PIPELINE HELPERS — V2
-   Централизира входа към вече съществуващия backend.
-   НЕ променя схемата на Supabase и НЕ замества работещите RPC.
-===================================================== */
-
-function normalizeBarcode(value){
-  const raw = String(value ?? "").trim();
-
-  /*
-   * За стандартните retail баркодове премахваме интервали,
-   * тирета и други визуални разделители.
-   * GS1/2D кодовете могат да съдържат допълнителна информация,
-   * затова не режем произволно съдържанието им.
-   */
-  return raw.replace(/[\s\-]+/g,"");
-}
-
-function createScanRequestId(){
-  const id =
-    (window.crypto && crypto.randomUUID)
-      ? crypto.randomUUID()
-      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-
-  try{
-    localStorage.setItem(
-      SCAN_REQUEST_STORAGE_KEY,
-      JSON.stringify({
-        request_id:id,
-        created_at:new Date().toISOString(),
-        pipeline:INDEX_PIPELINE_VERSION
-      })
-    );
-  }catch(_){}
-
-  return id;
-}
-
-function getLastScanRequestId(){
-  try{
-    const raw = localStorage.getItem(SCAN_REQUEST_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : null;
-    return parsed?.request_id || null;
-  }catch{
-    return null;
-  }
-}
-
-function buildPipelineHeaders(requestId){
-  return {
-    "Content-Type":"application/json",
-    "Accept":"application/json",
-    "apikey":SUPABASE_ANON_KEY,
-    "Authorization":`Bearer ${SUPABASE_ANON_KEY}`,
-    "X-Product-Scanner-Request-Id":requestId || createScanRequestId(),
-    "X-Product-Scanner-Version":INDEX_PIPELINE_VERSION
-  };
-}
-
-function normalizeLookupStatus(value){
-  return String(value || "").trim().toUpperCase();
-}
-
-function isLocalProductFound(resolved){
-  const status = normalizeLookupStatus(resolved?.lookup_status);
-
-  return [
-    "PRODUCT_FOUND_LOCAL",
-    "PRODUCT_FOUND",
-    "LOCAL_PRODUCT_FOUND"
-  ].includes(status);
-}
-
-function isExternalProductFound(resolved){
-  const status = normalizeLookupStatus(resolved?.lookup_status);
-
-  return [
-    "PRODUCT_FOUND_EXTERNAL",
-    "PRODUCT_FOUND_STAGING"
-  ].includes(status);
-}
-
-function isProductNotFound(resolved){
-  const status = normalizeLookupStatus(resolved?.lookup_status);
-
-  return [
-    "PRODUCT_NOT_FOUND",
-    "BARCODE_NOT_FOUND",
-    "PRODUCT_NOT_FOUND_OR_INACTIVE"
-  ].includes(status);
-}
-
-function extractResolvedProduct(resolved){
-  if(!resolved || typeof resolved !== "object") return null;
-
-  return (
-    resolved.product ||
-    resolved.product_data ||
-    resolved.local_product ||
-    resolved.data?.product ||
-    null
-  );
-}
-
-function buildLocalProductSummary(product){
-  if(!product) return "";
-
-  const name =
-    product.name ||
-    product.product_name ||
-    "Продукт";
-
-  const brand = product.brand || "";
-
-  const barcode =
-    product.barcode ||
-    product.gtin ||
-    product.ean ||
-    "";
-
-  const category =
-    product.eu_food_category_code ||
-    product.category_code ||
-    product.food_category ||
-    "";
-
-  return `
-    <div class="scan-result-card">
-      <div class="result-product-line">
-        <strong>${escapeHtml(name)}</strong>
-        ${brand ? `<span> • ${escapeHtml(brand)}</span>` : ""}
-      </div>
-      ${category ? `<div class="result-category-line">EU категория: ${escapeHtml(category)}</div>` : ""}
-      ${barcode ? `<div class="external-meta">Баркод: ${escapeHtml(barcode)}</div>` : ""}
-    </div>
-  `;
-}
-
-async function safeResolveBarcode(barcode, symbology, requestId){
-  try{
-    return await resolveBarcode(barcode, symbology, requestId);
-  }catch(error){
-    /*
-     * Не скриваме грешката. Връщаме я към единния flow,
-     * за да има едно място за обработка.
-     */
-    error.pipeline_stage = "resolver";
-    error.request_id = requestId;
-    throw error;
-  }
-}
-
-async function safeEvaluateBarcode(barcode, requestId){
-  try{
-    return await evaluateBarcode(barcode, requestId);
-  }catch(error){
-    error.pipeline_stage = "regulatory";
-    error.request_id = requestId;
-    throw error;
-  }
-}
-
-/* =====================================================
    UNIVERSAL BARCODE RESOLVER
    barcode -> local DB -> external product source -> staging
 ===================================================== */
-async function resolveBarcode(barcode, symbology=null, requestId=null){
+async function resolveBarcode(barcode, symbology=null){
   if(!hasSupabaseClientConfig()){
     throw new Error(
       "Supabase ANON/PUBLISHABLE KEY не е настроен във frontend-а."
     );
   }
 
-  const normalizedBarcode = normalizeBarcode(barcode);
+  const normalizedBarcode =
+    String(barcode ?? "")
+      .trim()
+      .replace(/[\s-]+/g,"");
 
   if(!normalizedBarcode){
     throw new Error("Баркодът е празен или невалиден.");
   }
 
+  /*
+   * Запазен е оригиналният договор с Edge Function-а.
+   * Няма custom X-* headers и няма допълнителни полета.
+   */
   const response = await fetch(RESOLVE_BARCODE_ENDPOINT,{
     method:"POST",
-    headers:buildPipelineHeaders(requestId),
+    headers:{
+      "Content-Type":"application/json",
+      "Accept":"application/json",
+      "apikey":SUPABASE_ANON_KEY,
+      "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
+    },
     body:JSON.stringify({
       barcode:normalizedBarcode,
-      symbology: symbology ? String(symbology) : null,
-      request_id:requestId || null,
-      pipeline_version:INDEX_PIPELINE_VERSION
+      symbology: symbology ? String(symbology) : null
     })
   });
 
@@ -4199,24 +4041,35 @@ async function resolveBarcode(barcode, symbology=null, requestId=null){
 /* =====================================================
    REAL BARCODE RPC
 ===================================================== */
-async function evaluateBarcode(barcode, requestId=null){
+async function evaluateBarcode(barcode){
   if(!hasSupabaseClientConfig()){
     throw new Error(
       "Supabase ANON/PUBLISHABLE KEY не е настроен във frontend-а."
     );
   }
 
-  const normalizedBarcode = normalizeBarcode(barcode);
+  const normalizedBarcode =
+    String(barcode ?? "")
+      .trim()
+      .replace(/[\s-]+/g,"");
 
   if(!normalizedBarcode){
     throw new Error("Баркодът е празен или невалиден.");
   }
 
+  /*
+   * PostgreSQL RPC договорът остава непроменен.
+   */
   const response = await fetch(BARCODE_RPC_ENDPOINT,{
     method:"POST",
-    headers:buildPipelineHeaders(requestId),
+    headers:{
+      "Content-Type":"application/json",
+      "Accept":"application/json",
+      "apikey":SUPABASE_ANON_KEY,
+      "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
+    },
     body:JSON.stringify({
-      p_barcode: normalizedBarcode
+      p_barcode:normalizedBarcode
     })
   });
 
@@ -4519,44 +4372,23 @@ async function continueWithProduct(){
 
   document.getElementById("successModal").classList.remove("active");
 
-  const requestId = createScanRequestId();
-  const barcode = normalizeBarcode(detectedBarcode);
-
-  if(!barcode){
-    showFriendlyError("Не успяхме да прочетем валиден баркод.");
-    return;
-  }
-
   showLoading(
     "Намираме продукта",
-    "Проверяваме баркода в цялата налична продуктова система..."
+    "Проверяваме баркода в нашата база..."
   );
 
   try{
-    /*
-     * ЕТАП 1 — Universal Barcode Resolver.
-     * Това е входът към локалната база + наличните external/staging
-     * източници. Не четем директно таблици от frontend-а.
-     */
     const resolved =
-      await safeResolveBarcode(
-        barcode,
-        detectedSymbology,
-        requestId
-      );
+      await resolveBarcode(detectedBarcode, detectedSymbology);
 
-    const lookupStatus =
-      normalizeLookupStatus(resolved?.lookup_status);
-
-    const resolvedProduct =
-      extractResolvedProduct(resolved);
-
-    /*
-     * ЕТАП 2 — продуктът е намерен локално.
-     * Само тук стартираме платения/безплатния регулаторен анализ.
-     */
-    if(isLocalProductFound(resolved)){
-
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_LOCAL"
+    ){
+      /*
+       * Backend определя дали устройството е OWNER.
+       * Само OWNER получава неограничен достъп.
+       */
       const access =
         await claimFreeScan();
 
@@ -4566,13 +4398,16 @@ async function continueWithProduct(){
       ){
         hideLoading();
 
+        /*
+         * Плащане се показва само за стандартно устройство.
+         * OWNER никога не влиза в този поток.
+         */
         showPaymentRequired({
           product_name:
-            resolvedProduct?.name ||
-            resolvedProduct?.product_name ||
+            resolved?.product?.name ||
             "Продукт",
           brand:
-            resolvedProduct?.brand ||
+            resolved?.product?.brand ||
             ""
         });
 
@@ -4580,36 +4415,22 @@ async function continueWithProduct(){
       }
 
       showLoading(
-        "Проверяваме продукта",
-        String(access?.access_type || "").toUpperCase() === "OWNER"
-          ? "OWNER достъп • извършваме пълната регулаторна проверка..."
-          : "Извършваме пълната регулаторна проверка..."
+        "Продуктът е открит",
+        access.access_type === "OWNER"
+          ? "OWNER достъп • извършваме EU регулаторната проверка..."
+          : "Извършваме EU регулаторната проверка..."
       );
 
-      /*
-       * ЕТАП 3 — съществуващият EU regulatory RPC.
-       * Не променяме неговия SQL договор.
-       */
       const result =
-        await safeEvaluateBarcode(
-          barcode,
-          requestId
-        );
+        await evaluateBarcode(detectedBarcode);
 
-      currentBarcodeResult = {
-        ...result,
-        request_id:requestId,
-        barcode,
-        symbology:detectedSymbology,
-        resolver_status:lookupStatus
-      };
+      currentBarcodeResult = result;
 
       /*
-       * OWNER UI остава синхронизиран.
+       * Не позволяваме резултатният UI да загуби OWNER състоянието.
        */
       if(String(access?.access_type || "").toUpperCase() === "OWNER"){
         quotaState.access_type = "OWNER";
-
         setQuotaUI(
           999999,
           typeof access.free_scans_used === "number"
@@ -4620,104 +4441,53 @@ async function continueWithProduct(){
       }
 
       hideLoading();
-
-      showProductResult(
-        currentBarcodeResult,
-        access
-      );
-
+      showProductResult(result,access);
       return;
     }
 
-    /*
-     * ЕТАП 2B — намерен е външен/staging продукт.
-     * Не го представяме като регулаторно проверен.
-     */
-    if(isExternalProductFound(resolved)){
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_EXTERNAL" ||
+      resolved.lookup_status ===
+      "PRODUCT_FOUND_STAGING"
+    ){
       hideLoading();
-
-      showResolvedExternalProduct({
-        ...resolved,
-        request_id:requestId
-      });
-
+      showResolvedExternalProduct(resolved);
       return;
     }
 
-    /*
-     * ЕТАП 2C — няма продукт.
-     */
-    if(isProductNotFound(resolved)){
+    if(
+      resolved.lookup_status ===
+      "PRODUCT_NOT_FOUND"
+    ){
       hideLoading();
-
-      showResolverNotFound({
-        ...resolved,
-        request_id:requestId
-      });
-
+      showResolverNotFound(resolved);
       return;
     }
 
-    /*
-     * Неизвестен lookup status — не гадаем.
-     */
     hideLoading();
 
-    showStatusModal({
-      type:"warning",
-      kicker:"НЕПЪЛЕН РЕЗУЛТАТ",
-      icon:"i",
-      title:"Не можем да потвърдим продукта",
-      message:
-        resolved?.message ||
-        "Системата върна непознат статус при търсенето.",
-      detail:
-        `Статус: ${lookupStatus || "—"} • Заявка: ${requestId}`,
-      primaryText:"Сканирай отново",
-      primaryAction:"scanAgain()"
-    });
+    showFriendlyError(
+      resolved.message ||
+      "Не успяхме да намерим продукта."
+    );
 
   }catch(error){
     hideLoading();
 
     console.error(
-      "Product pipeline error:",
-      {
-        error,
-        request_id:requestId,
-        barcode,
-        symbology:detectedSymbology,
-        stage:error?.pipeline_stage || "unknown"
-      }
+      "Product resolver/check error:",
+      error
     );
 
-    /*
-     * Важно: не показваме „продуктът е безопасен“, когато
-     * регулаторният engine е недостъпен. Показваме технически
-     * преглед с идентификатор на заявката.
-     */
-    const stage =
-      error?.pipeline_stage === "regulatory"
-        ? "регулаторния анализ"
-        : error?.pipeline_stage === "resolver"
-          ? "намирането на продукта"
-          : "проверката";
+    await stopScanner();
 
-    showStatusModal({
-      type:"error",
-      kicker:"ПРОВЕРКАТА НЕ Е ЗАВЪРШЕНА",
-      icon:"!",
-      title:"Не дадохме предположение",
-      message:
-        `Не успяхме да завършим ${stage}. Няма да маркираме продукта като проверен.`,
-      detail:
-        `Заявка: ${requestId}`,
-      primaryText:"Опитай отново",
-      primaryAction:"scanAgain()"
-    });
+    showFriendlyError(
+      error?.message ||
+      "Не успяхме да извършим проверката."
+    );
   }
 }
-
 
 /* =====================================================
    RESULT PRESENTATION
@@ -5211,7 +4981,7 @@ function showResolvedExternalProduct(resolved){
   const brand=product.brand||"";
 
   let title="Продуктът е намерен";
-  let message="Получихме налични продуктови данни. Те са информационни и не означават, че продуктът е преминал регулаторния engine.";
+  let message="Получихме продуктови данни и можем да направим хранителна оценка.";
   let kicker="ПРОДУКТЪТ Е НАМЕРЕН";
 
   if(status==="PRODUCT_NOT_FOUND"){
@@ -5289,21 +5059,12 @@ function showResolverNotFound(resolved){
 
 function showProductResult(result,access=null){
   const p = getResultPresentation(result);
-  const baseDetail =
+  const detail =
     result.lookup_status === "BARCODE_NOT_FOUND"
       ? "Баркодът не е намерен в базата."
       : result.lookup_status === "PRODUCT_NOT_FOUND_OR_INACTIVE"
         ? "Продуктът не е наличен или не е активен."
         : `${result.product_name || "Продукт"} • ${result.brand || ""}`;
-
-  const requestId =
-    result.request_id ||
-    getLastScanRequestId();
-
-  const detail =
-    requestId
-      ? `${baseDetail} • Заявка: ${requestId}`
-      : baseDetail;
 
   const extra = result.lookup_status === "PRODUCT_FOUND"
     ? buildResultDetails(result)
@@ -5620,32 +5381,6 @@ function getCameraErrorMessage(error){
 function scrollToTop(){
   window.scrollTo({top:0,behavior:"smooth"});
 }
-
-/* =====================================================
-   PIPELINE DIAGNOSTICS
-   Само за диагностика — не променя база и не таксува.
-===================================================== */
-window.ProductScannerDiagnostics = {
-  version: INDEX_PIPELINE_VERSION,
-
-  getState(){
-    return {
-      version: INDEX_PIPELINE_VERSION,
-      device_id: getDeviceId(),
-      last_request_id: getLastScanRequestId(),
-      quota: {...quotaState},
-      supabase_configured: hasSupabaseClientConfig(),
-      endpoints:{
-        resolver:RESOLVE_BARCODE_ENDPOINT,
-        regulatory:BARCODE_RPC_ENDPOINT
-      }
-    };
-  },
-
-  normalizeBarcode,
-
-  createScanRequestId
-};
 
 /* =====================================================
    INITIALIZE
