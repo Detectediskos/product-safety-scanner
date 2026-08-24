@@ -2087,6 +2087,24 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
   color:#47554d !important;
 }
 
+.assessment-conclusion{
+  margin-top:14px;
+  padding:13px 14px;
+  border-radius:14px;
+  background:#ffffff;
+  border:1px solid #e0e8e3;
+  font-size:13px;
+  line-height:1.5;
+  color:#344139;
+}
+
+.assessment-conclusion strong{
+  display:block;
+  margin-bottom:3px;
+  color:#17211c;
+  font-size:14px;
+}
+
 .assessment-note{
   margin-top:12px;
   padding-top:10px;
@@ -4353,7 +4371,7 @@ function formatNutritionValue(value, unit=""){
   const formatted =
     Math.abs(n) >= 100
       ? Math.round(n).toString()
-      : n.toFixed(1).replace(/\.0$/,"");
+      : n.toFixed(1).replace(/\.0$/,"").replace(".", ",");
 
   return `${formatted}${unit ? " " + unit : ""}`;
 }
@@ -4543,8 +4561,8 @@ function calculateProductAssessment(product){
     return {
       level:"unknown",
       icon:"i",
-      title:"НЯМА ДОСТАТЪЧНО ДАННИ",
-      subtitle:"Не можем да направим надеждна хранителна оценка",
+      title:"НЕДОСТАТЪЧНО ДАННИ",
+      subtitle:"Не можем надеждно да оценим хранителния профил",
       reasons:[
         "Продуктът е намерен, но липсват достатъчно хранителни стойности за сравнение."
       ],
@@ -4564,22 +4582,26 @@ function calculateProductAssessment(product){
   let level = "good";
   let title = "ДОБЪР ИЗБОР";
   let subtitle = "Хранителният профил изглежда благоприятен";
+  let conclusion = "Може да бъде част от разнообразното хранене.";
 
   if(score >= 10){
     level = "bad";
-    title = "ПО-НЕБЛАГОПРИЯТЕН ПРОФИЛ";
-    subtitle = "Препоръчва се ограничена и по-рядка консумация";
+    title = "ПО-НЕБЛАГОПРИЯТЕН ИЗБОР";
+    subtitle = "По-подходящ е за рядка, а не за ежедневна консумация";
+    conclusion = "Подходящ е по-скоро като рядко лакомство, а не като ежедневен продукт.";
   }else if(score >= 5){
     level = "moderate";
-    title = "КОНСУМИРАЙ УМЕРЕНО";
+    title = "УМЕРЕН ИЗБОР";
     subtitle = "Има показатели, които заслужават внимание";
+    conclusion = "Може да се консумира, но е по-добре да бъде умерен избор.";
   }
 
   return {
     level,
-    icon: level === "good" ? "✓" : level === "moderate" ? "!" : "!",
+    icon: level === "good" ? "✓" : "!",
     title,
     subtitle,
+    conclusion,
     reasons:reasons.slice(0,4),
     confidence: measured >= 3 ? "high" : "medium",
     score,
@@ -4607,6 +4629,34 @@ function buildNutritionGrid(nutrition){
       `).join("")}
     </div>
   `;
+}
+
+function humanizeAllergen(value){
+  const key = String(value || "")
+    .toLowerCase()
+    .replace(/^en:/,"")
+    .trim();
+
+  const map = {
+    milk:"Мляко",
+    nuts:"Ядки",
+    peanuts:"Фъстъци",
+    soybeans:"Соя",
+    gluten:"Глутен",
+    eggs:"Яйца",
+    fish:"Риба",
+    crustaceans:"Ракообразни",
+    molluscs:"Мекотели",
+    celery:"Целина",
+    mustard:"Синап",
+    sesame:"Сусам",
+    lupin:"Лупина",
+    sulphur_dioxide_and_sulphites:"Сулфити"
+  };
+
+  return map[key] || String(value || "")
+    .replace(/^en:/i,"")
+    .replace(/_/g," ");
 }
 
 function buildProductAssessment(product){
@@ -4637,6 +4687,11 @@ function buildProductAssessment(product){
       <ul class="assessment-reasons">${reasons}</ul>
 
       ${buildNutritionGrid(assessment.nutrition)}
+
+      <div class="assessment-conclusion">
+        <strong>Извод:</strong>
+        <span>${escapeHtml(assessment.conclusion || "Оценката е ориентировъчна според наличните данни.")}</span>
+      </div>
 
       <div class="assessment-note">
         ${escapeHtml(confidenceText)}
