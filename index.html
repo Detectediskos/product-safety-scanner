@@ -3982,19 +3982,6 @@ async function resolveBarcode(barcode, symbology=null){
     );
   }
 
-  const normalizedBarcode =
-    String(barcode ?? "")
-      .trim()
-      .replace(/[\s-]+/g,"");
-
-  if(!normalizedBarcode){
-    throw new Error("Баркодът е празен или невалиден.");
-  }
-
-  /*
-   * Запазен е оригиналният договор с Edge Function-а.
-   * Няма custom X-* headers и няма допълнителни полета.
-   */
   const response = await fetch(RESOLVE_BARCODE_ENDPOINT,{
     method:"POST",
     headers:{
@@ -4004,7 +3991,7 @@ async function resolveBarcode(barcode, symbology=null){
       "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
     },
     body:JSON.stringify({
-      barcode:normalizedBarcode,
+      barcode:String(barcode).trim(),
       symbology: symbology ? String(symbology) : null
     })
   });
@@ -4048,18 +4035,6 @@ async function evaluateBarcode(barcode){
     );
   }
 
-  const normalizedBarcode =
-    String(barcode ?? "")
-      .trim()
-      .replace(/[\s-]+/g,"");
-
-  if(!normalizedBarcode){
-    throw new Error("Баркодът е празен или невалиден.");
-  }
-
-  /*
-   * PostgreSQL RPC договорът остава непроменен.
-   */
   const response = await fetch(BARCODE_RPC_ENDPOINT,{
     method:"POST",
     headers:{
@@ -4069,7 +4044,7 @@ async function evaluateBarcode(barcode){
       "Authorization":`Bearer ${SUPABASE_ANON_KEY}`
     },
     body:JSON.stringify({
-      p_barcode:normalizedBarcode
+      p_barcode: String(barcode).trim()
     })
   });
 
