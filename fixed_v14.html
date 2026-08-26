@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Провери продукта</title>
+<meta name="app-build" content="INDEX-PRODUCTION-DB-CACHE-OFF-INTERNAL-AI-MASTER-20260826">
 
 <meta
   name="description"
@@ -2486,7 +2487,7 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
   </h3>
 
   <p>
-    Системата проверява собствената база и при нужда свързва наличните вътрешни данни.
+    Системата първо използва запазените данни, а при нужда resolver-ът допълва продукта от интегрираните източници.
   </p>
 
 </div>
@@ -2507,7 +2508,7 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
   </h3>
 
   <p>
-    Системата обединява състава, категорията и приложимите MASTER правила в една справка.
+    Свързваме продуктовите данни със съставките, категорията и MASTER правилата.
   </p>
 
 </div>
@@ -2528,7 +2529,7 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
   </h3>
 
   <p>
-    Първите 2 проверки на стандартно устройство са безплатни. След това анализът е €0.99. OWNER устройството не се таксува.''
+    Първите 2 проверки на стандартно устройство са безплатни. След това анализът е €0.99. OWNER устройството не се таксува.
 
   </p>
 
@@ -3453,19 +3454,19 @@ body{min-height:100vh;-webkit-tap-highlight-color:transparent;}
 
 
 <script>
-/* PRODUCTION FLOW PATCH 2026-08-26: LOCAL DB -> INTERNAL LINKER -> MASTER -> CONSUMER RESULT */
+/* PRODUCTION FLOW PATCH v2 2026-08-26: merged data output + MASTER classification + transparent result */
 /* =====================================================
    ПРОВЕРИ ПРОДУКТА — MOBILE / DESKTOP APP CLIENT
 
-   АРХИТЕКТУРНО ПРАВИЛО:
-   1) Баркодът се проверява в собствената база.
-   2) Ако вътрешните връзки са достатъчни -> MASTER -> UI.
-   3) Ако вътрешните връзки са непълни -> вътрешният linker свързва
-      САМО наличните записи в нашата база -> MASTER -> UI.
-   4) Няма клиентско web търсене и няма измисляне на факти.
-   5) MASTER/DB са източникът на истина; AI/linker е само bridge layer.
-
-   Scanner coverage:
+   ПРАВИЛО НА СИСТЕМАТА:
+   - Готовият запис/backup в нашата база е с най-висок приоритет.
+   - resolve-barcode остава backend resolver и може да зарежда
+     Open Food Facts и други интегрирани продуктови източници.
+   - AI НЕ обикаля сайтове и НЕ прави самостоятелни web заявки.
+   - AI се използва само вътрешно върху вече постъпили при нас данни,
+     когато липсва връзка/нормализация.
+   - Веднъж потвърдена връзка се пази и се използва повторно.
+   - MASTER/регулаторната база е източникът на истина за нормите.
 
    Scanner coverage:
    EAN-13 / EAN-8 / UPC-A / UPC-E / CODE-128 / ITF-14 /
@@ -3743,9 +3744,11 @@ async function claimFreeScan(){
 }
 
 /* =====================================================
-   BARCODE RESOLVER
-   ВАЖНО: frontend-ът приема само вътрешни продуктови данни.
-   Външни продуктови резултати НЕ се използват за платената справка.
+   UNIVERSAL BARCODE RESOLVER
+   ВАЖНО:
+   resolve-barcode е backend resolver и НЕ се променя от index.
+   Той може да върне LOCAL / STAGING / EXTERNAL продукт.
+   AI не прави тези web заявки — backend интеграциите ги правят.
 ===================================================== */
 async function resolveBarcode(barcode, symbology=null){
   if(!hasSupabaseClientConfig()){
@@ -4120,83 +4123,133 @@ async function continueWithProduct(){
   document.getElementById("successModal").classList.remove("active");
 
   showLoading(
-    "Проверяваме продукта",
-    "Свързваме баркода с нашата база и MASTER правилата..."
+    "Намираме продукта",
+    "Проверяваме запазения резултат и интегрираните продуктови източници..."
   );
 
   try{
+    /*
+     * resolve-barcode НЕ се променя.
+     * Той решава LOCAL / STAGING / EXTERNAL и при нужда зарежда OFF.
+     * Това НЕ е AI web browsing.
+     */
     const resolved = await resolveBarcode(
       detectedBarcode,
       detectedSymbology
     );
 
-    /*
-     * КРИТИЧНО:
-     * Платената справка приема само вътрешен/local продукт.
-     * Ако resolve-barcode върне EXTERNAL/STAGING, frontend-ът НЕ го
-     * представя като валидиран продукт и НЕ използва външните данни.
-     *
-     * За пълния INTERNAL AI fallback backend функцията resolve-barcode
-     * трябва да бъде коригирана отделно да работи само с нашата база.
-     */
     const lookupStatus = String(resolved?.lookup_status || "").toUpperCase();
+    const product = resolved?.product || null;
 
-    if(lookupStatus !== "PRODUCT_FOUND_LOCAL"){
+    /*
+     * Първо опитваме MASTER без да харчим free scan/payment.
+     * Така клиентът не плаща за продукт, за който още няма завършен
+     * регулаторен резултат. При успех чак тогава се отчита достъпът.
+     */
+    if(
+      lookupStatus === "PRODUCT_FOUND_LOCAL" ||
+      lookupStatus === "PRODUCT_FOUND_STAGING" ||
+      lookupStatus === "PRODUCT_FOUND_EXTERNAL"
+    ){
+      showLoading(
+        "Свързваме справката",
+        "Проверяваме дали за продукта вече има готов MASTER резултат..."
+      );
+
+      let masterResult = null;
+
+      try{
+        masterResult = await evaluateBarcode(detectedBarcode);
+      }catch(masterError){
+        console.info(
+          "MASTER result is not ready for this resolver product:",
+          masterError
+        );
+      }
+
+      /*
+       * Готов MASTER резултат -> едва сега проверяваме FREE/OWNER/PAYMENT.
+       * Запазеният резултат се извежда, без да създаваме нов AI анализ.
+       */
+      if(masterResult){
+        const access = await claimFreeScan();
+
+        if(
+          access.access_type === "PAYMENT_REQUIRED" &&
+          String(quotaState.access_type || "").toUpperCase() !== "OWNER"
+        ){
+          hideLoading();
+          currentBarcodeResult = {
+            ...masterResult,
+            product_name:
+              product?.name ||
+              product?.product_name ||
+              masterResult?.product_name ||
+              "Продукт",
+            brand:
+              product?.brand ||
+              masterResult?.brand ||
+              ""
+          };
+          showPaymentRequired(currentBarcodeResult);
+          return;
+        }
+
+        currentBarcodeResult = masterResult;
+
+        if(String(access?.access_type || "").toUpperCase() === "OWNER"){
+          quotaState.access_type = "OWNER";
+          setQuotaUI(
+            999999,
+            typeof access.free_scans_used === "number"
+              ? access.free_scans_used
+              : 0,
+            "OWNER"
+          );
+        }
+
+        hideLoading();
+        showProductResult(masterResult, access, product);
+        return;
+      }
+
+      /*
+       * Resolver-ът има продукт, но MASTER още няма завършен запис.
+       * НЕ харчим free scan и НЕ показваме измислен регулаторен извод.
+       * Показваме само фактическите продуктови данни, които вече са при нас.
+       *
+       * Вътрешният AI/linker, когато бъде включен на backend ниво,
+       * трябва да работи само върху тези постъпили данни, да запази
+       * връзката/cache и при следваща проверка да се използва готовият запис.
+       */
       hideLoading();
-
-      showStatusModal({
-        type:"warning",
-        kicker:"ВЪТРЕШНА ПРОВЕРКА",
-        icon:"i",
-        title:"Продуктът се обработва",
-        message:"Системата не използва непотвърдени външни данни. Баркодът ще бъде анализиран само чрез собствената база и MASTER правилата.",
-        detail:`Баркод: ${escapeHtml(String(detectedBarcode))}`,
-        primaryText:"Затвори",
-        primaryAction:"closeStatusModal()"
-      });
+      showResolverProductProfile(resolved);
       return;
     }
-
-    const access = await claimFreeScan();
 
     if(
-      access.access_type === "PAYMENT_REQUIRED" &&
-      String(quotaState.access_type || "").toUpperCase() !== "OWNER"
+      lookupStatus === "PRODUCT_NOT_FOUND" ||
+      lookupStatus === "INVALID_OR_UNRESOLVED_BARCODE"
     ){
       hideLoading();
-      showPaymentRequired({
-        product_name: resolved?.product?.name || resolved?.product?.product_name || "Продукт",
-        brand: resolved?.product?.brand || ""
-      });
+      showResolverNoProduct(resolved);
       return;
-    }
-
-    showLoading(
-      "Изготвяме справката",
-      "Проверяваме състава, категорията и приложимите MASTER правила..."
-    );
-
-    const result = await evaluateBarcode(detectedBarcode);
-    currentBarcodeResult = result;
-
-    if(String(access?.access_type || "").toUpperCase() === "OWNER"){
-      quotaState.access_type = "OWNER";
-      setQuotaUI(
-        999999,
-        typeof access.free_scans_used === "number" ? access.free_scans_used : 0,
-        "OWNER"
-      );
     }
 
     hideLoading();
-    showProductResult(result, access, resolved?.product || null);
+    showFriendlyError(
+      resolved?.message ||
+      "Проверката не можа да бъде завършена."
+    );
 
   }catch(error){
     hideLoading();
-    console.error("Product check error:", error);
+    console.error("Product resolver/check error:", error);
+    await stopScanner();
 
     showFriendlyError(
-      "Справката не можа да бъде завършена в момента. Опитай отново."
+      error?.message ||
+      "Не успяхме да извършим проверката."
     );
   }
 }
