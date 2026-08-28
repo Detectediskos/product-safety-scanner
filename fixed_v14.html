@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Провери продукта</title>
-<meta name="app-build" content="INDEX-REPORT-RESTORED-20260826">
+<meta name="app-build" content="INDEX-PROJECT-CURRENT-V4.7.3-20260828">
 
 <meta
   name="description"
@@ -3841,7 +3841,7 @@ async function evaluateBarcode(barcode){
     throw new Error("Системата не върна резултат за този баркод.");
   }
 
-  return row;
+  return normalizeCurrentProjectResult(row);
 }
 
 /* =====================================================
@@ -4282,6 +4282,81 @@ async function continueWithProduct(){
 }
 
 /* =====================================================
+   CURRENT PROJECT RESULT BRIDGE — V4.7.3
+
+   IMPORTANT:
+   - Identity Resolution is current through V4.7.3.
+   - Regulatory crosswalk V4.8 is not complete yet.
+   - Never upgrade an incomplete backend response to PASS.
+   - LIMIT_EXCEEDED always wins.
+   - Missing detail for detected additives becomes REVIEW_REQUIRED.
+===================================================== */
+function normalizeCurrentProjectResult(input){
+  const result = input && typeof input === "object"
+    ? {...input}
+    : {};
+
+  let rows = result?.results;
+  if(typeof rows === "string"){
+    try{ rows = JSON.parse(rows); }catch(_){ rows = []; }
+  }
+  if(!Array.isArray(rows)) rows = [];
+
+  const statuses = rows
+    .map(x => String(x?.comparison_status || "").toUpperCase())
+    .filter(Boolean);
+
+  const detected = Number(result?.detected_e_additives ?? 0);
+  let finalStatus = String(result?.final_status || "").toUpperCase();
+
+  if(statuses.includes("LIMIT_EXCEEDED")){
+    finalStatus = "LIMIT_EXCEEDED";
+  }else if(statuses.includes("REVIEW_REQUIRED")){
+    finalStatus = "REVIEW_REQUIRED";
+  }else if(
+    statuses.includes("CONCENTRATION_MISSING") ||
+    statuses.includes("LIMIT_CHECK_REQUIRED")
+  ){
+    finalStatus = "CONCENTRATION_MISSING";
+  }
+
+  const backendClaimsPass = [
+    "PASS",
+    "COMPLIANT_WITH_LIMITS",
+    "AUTHORISED"
+  ].includes(finalStatus);
+
+  /*
+   * Until V4.8 is complete, a PASS with detected additives but
+   * without detailed regulatory rows is not strong enough for a
+   * final consumer compliance statement. Keep it in REVIEW.
+   */
+  if(backendClaimsPass && detected > 0 && rows.length === 0){
+    finalStatus = "REVIEW_REQUIRED";
+    result.decision_reason =
+      result.decision_reason ||
+      "Открити са добавки, но липсват достатъчно детайлни регулаторни редове за окончателно заключение. Identity engine V4.7.3 е активен; regulatory crosswalk V4.8 предстои.";
+    result.project_guard_reason =
+      "V4_8_CROSSWALK_PENDING_OR_REGULATORY_DETAILS_MISSING";
+  }
+
+  if(!finalStatus){
+    finalStatus = "REVIEW_REQUIRED";
+    result.decision_reason =
+      result.decision_reason ||
+      "Няма достатъчно данни за окончателен регулаторен резултат.";
+  }
+
+  result.final_status = finalStatus;
+  result.results = rows;
+  result.project_engine_version = "IDENTITY_V4_7_3";
+  result.project_regulatory_stage = "V4_8_CROSSWALK_PENDING";
+  result.project_result_policy = "CONSERVATIVE_NO_GUESSING";
+
+  return result;
+}
+
+/* =====================================================
    RESULT PRESENTATION
 ===================================================== */
 function getResultPresentation(result){
@@ -4320,8 +4395,8 @@ function getResultPresentation(result){
   ){
     return {
       type:"success", icon:"✓", kicker:"ПРОВЕРКАТА Е ГОТОВА",
-      title:"Няма установено превишаване",
-      message:"Откритите добавки са разрешени според наличните данни."
+      title:"Няма установено несъответствие",
+      message:"В наличните проверени регулаторни редове не е установено несъответствие."
     };
   }
 
@@ -5029,7 +5104,7 @@ function buildFullConsumerReport(result,product){
     result?.decision_reason ||
     (
       result?.final_status === "PASS"
-        ? "Не е установено несъответствие според наличните данни."
+        ? "Не е установено несъответствие в наличните проверени регулаторни данни."
         : result?.final_status === "REVIEW_REQUIRED"
           ? "Необходим е допълнителен преглед поради условие или липсващи данни."
           : "Резултатът е информационен и се основава на наличните данни."
@@ -5059,6 +5134,8 @@ function buildFullConsumerReport(result,product){
           <li>Открити E-добавки: ${escapeHtml(String(detectedAdditives))}</li>
           ${result?.verification_status ? `<li>Класификация: ${escapeHtml(result.verification_status)}</li>` : ""}
           ${result?.classification_confidence !== undefined && result?.classification_confidence !== null ? `<li>Confidence: ${escapeHtml(String(result.classification_confidence))}</li>` : ""}
+          <li>Identity engine: ${escapeHtml(result?.project_engine_version || "IDENTITY_V4_7_3")}</li>
+          <li>Regulatory stage: ${escapeHtml(result?.project_regulatory_stage || "V4_8_CROSSWALK_PENDING")}</li>
         </ul>
 
         <strong>СЪСТАВ</strong>
@@ -5105,7 +5182,9 @@ function buildFullConsumerReport(result,product){
         <div class="assessment-note">
           Това е информационна потребителска оценка според наличните
           продуктови и регулаторни данни. При липсващи данни системата
-          не измисля стойности.
+          не измисля стойности. Identity Resolution е актуален до V4.7.3.
+          Regulatory Crosswalk V4.8 все още не е завършен, затова непълните
+          регулаторни случаи автоматично остават за REVIEW, а не се показват като PASS.
         </div>
 
       </div>
