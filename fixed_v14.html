@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Провери продукта</title>
-<meta name="app-build" content="INDEX-PROJECT-CURRENT-V4.7.3-20260828">
+<meta name="app-build" content="INDEX-PROJECT-CURRENT-V4.10.1-20260828">
 
 <meta
   name="description"
@@ -4291,31 +4291,72 @@ async function continueWithProduct(){
    - LIMIT_EXCEEDED always wins.
    - Missing detail for detected additives becomes REVIEW_REQUIRED.
 ===================================================== */
+function getRegulatoryResultItems(result){
+  let payload = result?.results;
+
+  if(typeof payload === "string"){
+    try{
+      payload = JSON.parse(payload);
+    }catch(_){
+      return [];
+    }
+  }
+
+  // Legacy RPC format: results: [...]
+  if(Array.isArray(payload)){
+    return payload;
+  }
+
+  // V4.10.1 RPC format:
+  // results: { v410_concentration_results: [...] }
+  if(
+    payload &&
+    typeof payload === "object" &&
+    Array.isArray(payload.v410_concentration_results)
+  ){
+    return payload.v410_concentration_results;
+  }
+
+  return [];
+}
+
 function normalizeCurrentProjectResult(input){
   const result = input && typeof input === "object"
     ? {...input}
     : {};
 
-  let rows = result?.results;
-  if(typeof rows === "string"){
-    try{ rows = JSON.parse(rows); }catch(_){ rows = []; }
-  }
-  if(!Array.isArray(rows)) rows = [];
+  const rows = getRegulatoryResultItems(result);
 
   const statuses = rows
-    .map(x => String(x?.comparison_status || "").toUpperCase())
+    .map(x =>
+      String(
+        x?.ingredient_final_status ||
+        x?.comparison_status ||
+        ""
+      ).toUpperCase()
+    )
     .filter(Boolean);
 
   const detected = Number(result?.detected_e_additives ?? 0);
   let finalStatus = String(result?.final_status || "").toUpperCase();
 
+  /*
+   * Backend V4.10.1 is authoritative.
+   * Frontend may only downgrade to a safer state, never upgrade.
+   */
   if(statuses.includes("LIMIT_EXCEEDED")){
     finalStatus = "LIMIT_EXCEEDED";
-  }else if(statuses.includes("REVIEW_REQUIRED")){
+  }else if(
+    !finalStatus &&
+    statuses.includes("REVIEW_REQUIRED")
+  ){
     finalStatus = "REVIEW_REQUIRED";
   }else if(
-    statuses.includes("CONCENTRATION_MISSING") ||
-    statuses.includes("LIMIT_CHECK_REQUIRED")
+    !finalStatus &&
+    (
+      statuses.includes("CONCENTRATION_MISSING") ||
+      statuses.includes("LIMIT_CHECK_REQUIRED")
+    )
   ){
     finalStatus = "CONCENTRATION_MISSING";
   }
@@ -4327,17 +4368,17 @@ function normalizeCurrentProjectResult(input){
   ].includes(finalStatus);
 
   /*
-   * Until V4.8 is complete, a PASS with detected additives but
-   * without detailed regulatory rows is not strong enough for a
-   * final consumer compliance statement. Keep it in REVIEW.
+   * Conservative client guard:
+   * if backend claims compliance for detected additives but provides
+   * no concentration/regulatory detail rows, never fabricate a PASS.
    */
   if(backendClaimsPass && detected > 0 && rows.length === 0){
     finalStatus = "REVIEW_REQUIRED";
     result.decision_reason =
       result.decision_reason ||
-      "Открити са добавки, но липсват достатъчно детайлни регулаторни редове за окончателно заключение. Identity engine V4.7.3 е активен; regulatory crosswalk V4.8 предстои.";
+      "Открити са добавки, но липсват достатъчно детайлни регулаторни редове за окончателно заключение.";
     result.project_guard_reason =
-      "V4_8_CROSSWALK_PENDING_OR_REGULATORY_DETAILS_MISSING";
+      "REGULATORY_DETAILS_MISSING";
   }
 
   if(!finalStatus){
@@ -4348,9 +4389,19 @@ function normalizeCurrentProjectResult(input){
   }
 
   result.final_status = finalStatus;
+
+  /*
+   * Keep the rich backend JSON intact in result.backend_results.
+   * Expose a flat array in result.results for all existing UI sections.
+   */
+  result.backend_results = result?.results;
   result.results = rows;
+
   result.project_engine_version = "IDENTITY_V4_7_3";
-  result.project_regulatory_stage = "V4_8_CROSSWALK_PENDING";
+  result.project_crosswalk_version = "V4_8";
+  result.project_regulatory_stage = "V4_9";
+  result.project_concentration_engine = "V4_10";
+  result.project_barcode_engine = "V4_10_1";
   result.project_result_policy = "CONSERVATIVE_NO_GUESSING";
 
   return result;
@@ -4408,31 +4459,45 @@ function getResultPresentation(result){
 }
 
 function buildResultDetails(result){
-  let items = result?.results;
+  const items = getRegulatoryResultItems(result);
 
-  if(typeof items === "string"){
-    try{ items = JSON.parse(items); }catch(_){}
-  }
-
-  if(!Array.isArray(items) || !items.length) return "";
+  if(!items.length) return "";
 
   const rows = items.map(item => {
     const e = escapeHtml(item?.e_number || "—");
+
     const comparison = escapeHtml(
-      humanComparisonStatus(item?.comparison_status)
+      humanComparisonStatus(
+        item?.ingredient_final_status ||
+        item?.comparison_status
+      )
     );
 
-    const max = item?.maximum_level !== null &&
-                item?.maximum_level !== undefined
-      ? ` • лимит: ${escapeHtml(item.maximum_level)} ${escapeHtml(item.maximum_level_basis || "")}`
-      : "";
+    const max =
+      item?.maximum_level !== null &&
+      item?.maximum_level !== undefined
+        ? ` • лимит: ${escapeHtml(item.maximum_level)} ${escapeHtml(item.maximum_level_basis || "")}`
+        : "";
 
-    const concentration = item?.actual_value !== null &&
-                          item?.actual_value !== undefined
-      ? ` • установено: ${escapeHtml(item.actual_value)} ${escapeHtml(item.actual_unit || "")}`
-      : "";
+    const concentration =
+      item?.actual_value !== null &&
+      item?.actual_value !== undefined
+        ? ` • установено: ${escapeHtml(item.actual_value)} ${escapeHtml(item.actual_unit || "")}`
+        : "";
 
-    return `<li><strong>${e}</strong> — ${comparison}${max}${concentration}</li>`;
+    const percentage =
+      item?.percentage_of_limit !== null &&
+      item?.percentage_of_limit !== undefined
+        ? ` • ${escapeHtml(item.percentage_of_limit)}% от лимита`
+        : "";
+
+    const margin =
+      item?.margin_to_limit !== null &&
+      item?.margin_to_limit !== undefined
+        ? ` • разлика: ${escapeHtml(item.margin_to_limit)}`
+        : "";
+
+    return `<li><strong>${e}</strong> — ${comparison}${max}${concentration}${percentage}${margin}</li>`;
   }).join("");
 
   const category = escapeHtml(result?.eu_food_category_code || "—");
@@ -5063,11 +5128,7 @@ function buildFullConsumerReport(result,product){
     p.organic ??
     "Няма достатъчно данни за BIO/органичен статут.";
 
-  let regulatoryItems = result?.results;
-  if(typeof regulatoryItems === "string"){
-    try{ regulatoryItems = JSON.parse(regulatoryItems); }catch(_){}
-  }
-  if(!Array.isArray(regulatoryItems)) regulatoryItems = [];
+  const regulatoryItems = getRegulatoryResultItems(result);
 
   const detectedAdditives = Number(result?.detected_e_additives ?? additives.length ?? 0);
   const finalStatus = String(result?.final_status || "").toUpperCase();
@@ -5076,7 +5137,10 @@ function buildFullConsumerReport(result,product){
     ? regulatoryItems.map(item => {
         const e = escapeHtml(item?.e_number || "—");
         const comparison = escapeHtml(
-          humanComparisonStatus(item?.comparison_status)
+          humanComparisonStatus(
+            item?.ingredient_final_status ||
+            item?.comparison_status
+          )
         );
 
         const max =
@@ -5091,7 +5155,19 @@ function buildFullConsumerReport(result,product){
             ? ` • установено: ${escapeHtml(item.actual_value)} ${escapeHtml(item.actual_unit || "")}`
             : "";
 
-        return `<li><strong>${e}</strong> — ${comparison}${max}${concentration}</li>`;
+        const percentage =
+          item?.percentage_of_limit !== null &&
+          item?.percentage_of_limit !== undefined
+            ? ` • ${escapeHtml(item.percentage_of_limit)}% от лимита`
+            : "";
+
+        const margin =
+          item?.margin_to_limit !== null &&
+          item?.margin_to_limit !== undefined
+            ? ` • разлика: ${escapeHtml(item.margin_to_limit)}`
+            : "";
+
+        return `<li><strong>${e}</strong> — ${comparison}${max}${concentration}${percentage}${margin}</li>`;
       }).join("")
     : detectedAdditives === 0
       ? `<li>Не са открити E-добавки, за които да се прилагат индивидуални лимитни редове.</li>`
@@ -5135,7 +5211,7 @@ function buildFullConsumerReport(result,product){
           ${result?.verification_status ? `<li>Класификация: ${escapeHtml(result.verification_status)}</li>` : ""}
           ${result?.classification_confidence !== undefined && result?.classification_confidence !== null ? `<li>Confidence: ${escapeHtml(String(result.classification_confidence))}</li>` : ""}
           <li>Identity engine: ${escapeHtml(result?.project_engine_version || "IDENTITY_V4_7_3")}</li>
-          <li>Regulatory stage: ${escapeHtml(result?.project_regulatory_stage || "V4_8_CROSSWALK_PENDING")}</li>
+          <li>Regulatory stage: ${escapeHtml(result?.project_regulatory_stage || "V4_9")}</li>
         </ul>
 
         <strong>СЪСТАВ</strong>
